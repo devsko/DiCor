@@ -1,0 +1,10 @@
+{
+    "sdk": {
+        //"version": "5.0.100-alpha1-015777",
+        //"allowPrerelease": true,
+        //"rollForward": "major"
+    },
+    "tools": {
+        //"dotnet": "5.0.100-alpha1-015777"
+    }
+}

@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\Client\**\*.cs">
+      <Link>Client\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\Hosting\**\*.cs">
+      <Link>Hosting\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\Infrastructure\**\*.cs">
+      <Link>Infrastructure\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\Middleware\**\*.cs">
+      <Link>Middleware\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\Transports\Sockets\*.cs">
+      <Link>Transports\Sockets\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\Protocols\Protocol.cs">
+      <Link>Protocols\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\Protocols\WebSocketProtocol.cs">
+      <Link>Protocols\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\Server\**\*.cs">
+      <Link>Server\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\BedrockTransports\Bedrock.Framework\*.cs">
+      <Link>%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+</Project>
