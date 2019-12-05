@@ -36,10 +36,15 @@ namespace DiCor.ConsoleApp
             {
                 Console.WriteLine($"Connected {connection.LocalEndPoint} to {connection.RemoteEndPoint}");
 
+                X(connection);
+                await connection.Transport.Output.FlushAsync();
+            }
+
+            static void X(ConnectionContext connection)
+            {
                 var pduWriter = new PduWriter(connection.Transport.Output);
                 pduWriter.WriteAAssociateReq(null!);
 
-                await connection.Transport.Output.FlushAsync();
             }
         }
 

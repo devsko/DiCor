@@ -13,17 +13,17 @@ namespace DiCor.Buffers
             public int _lengthPrefixCount;
         }
 
+        private readonly IBufferWriter<byte> _output;
+        private readonly Refs _refs;
+
+        public Span<byte> Span { get; private set; }
+
         public BufferWriter(IBufferWriter<byte> output)
         {
             _output = output;
             _refs = new Refs();
             Span = output.GetSpan();
         }
-
-        private readonly IBufferWriter<byte> _output;
-        private readonly Refs _refs;
-
-        public Span<byte> Span { get; private set; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Commit()

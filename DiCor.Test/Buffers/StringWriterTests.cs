@@ -13,7 +13,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAscii("Hello world!", 5);
+                    buffer.WriteAsciiFixed("Hello world!", 5);
                     buffer.Commit();
                 });
         }
@@ -25,7 +25,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAscii("He", 5);
+                    buffer.WriteAsciiFixed("He", 5);
                     buffer.Commit();
                 });
         }

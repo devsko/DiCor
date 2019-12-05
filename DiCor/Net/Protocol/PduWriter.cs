@@ -4,130 +4,119 @@ using DiCor.Buffers;
 
 namespace DiCor.Net.Protocol
 {
-    public class PduWriter
+    public ref struct PduWriter
     {
-        private const byte PduTypeAAssociateRq = 0x01;
-
-        private const byte ItemTypeApplicationContext = 0x10;
-        private const byte ItemTypePresentationContext = 0x20;
-        private const byte ItemTypeAbstractSyntax = 0x30;
-        private const byte ItemTypeTransferSyntax = 0x40;
-        private const byte ItemTypeUserInformation = 0x50;
-        private const byte ItemTypeMaximumLength = 0x51;
-        private const byte ItemTypeImplementationClassUid = 0x52;
-        private const byte ItemTypeAsynchronousOperations = 0x53;
-        private const byte ItemTypeScpScuRoleSelection = 0x54;
-        private const byte ItemTypeImplementationVersionName = 0x55;
-
-
-        private readonly IBufferWriter<byte> _buffer;
+        private BufferWriter _buffer;
 
         public PduWriter(IBufferWriter<byte> buffer)
         {
-            _buffer = buffer;
+            _buffer = new BufferWriter(buffer);
         }
 
         public void WriteAAssociateReq(Association association)
         {
-            var buffer = new BufferWriter(_buffer);
-
-            buffer.Write(PduTypeAAssociateRq); // PDU-type
-            buffer.Reserved(1);
-            using (buffer.BeginLengthPrefix(sizeof(uint)))
+            //ref BufferWriter buffer = ref _buffer;
+            _buffer.Write(Pdu.PduTypeAAssociateReq); // PDU-type
+            _buffer.Reserved(1);
+            using (_buffer.BeginLengthPrefix(sizeof(uint)))
             {
-                buffer.Write((ushort)0x0001); // Protocol-version
-                buffer.Reserved(2);
-                buffer.WriteAscii(association.CalledAE, 16); // Called-AE-title
-                buffer.WriteAscii(association.CallingAE, 16); // Calling-AE-title
-                buffer.Reserved(32);
+                _buffer.Write((ushort)0x0001); // Protocol-version
+                _buffer.Reserved(2);
+                _buffer.WriteAsciiFixed(association.CalledAE, 16); // Called-AE-title
+                _buffer.WriteAsciiFixed(association.CallingAE, 16); // Calling-AE-title
+                _buffer.Reserved(32);
 
                 // Application Context Item
 
-                buffer.Write(ItemTypeApplicationContext); // Item-type
-                buffer.Reserved(1);
-                buffer.WriteAsciiWithLength(Uid.DICOMApplicationContextName.Value); // Application-context-name
+                _buffer.Write(Pdu.ItemTypeApplicationContext); // Item-type
+                _buffer.Reserved(1);
+                _buffer.WriteAscii(Uid.DICOMApplicationContextName.Value); // Application-context-name
 
                 bool needsScpScuRoleNegotiation = false;
+                byte presentationContextId = 1;
                 foreach (PresentationContext presentationContext in association.PresentationContexts)
                 {
-                    needsScpScuRoleNegotiation |= (presentationContext.SupportsScuRole != null || presentationContext.SupportsScpRole != null);
-
                     // Presentation Context Item
 
-                    buffer.Write(ItemTypePresentationContext); // Item-type
-                    buffer.Reserved(1);
-                    using (buffer.BeginLengthPrefix())
+                    _buffer.Write(Pdu.ItemTypePresentationContext); // Item-type
+                    _buffer.Reserved(1);
+                    using (_buffer.BeginLengthPrefix())
                     {
-                        buffer.Write(presentationContext.Id); // Presentation-context-ID
-                        buffer.Reserved(3);
+                        _buffer.Write(presentationContextId); // Presentation-context-ID
+                        _buffer.Reserved(3);
 
                         // Abstract Syntax Sub-Item
 
-                        buffer.Write(ItemTypeAbstractSyntax); // Item-Type
-                        buffer.Reserved(1);
-                        buffer.WriteAsciiWithLength(presentationContext.AbstractSyntax.Value); // Abstract-syntax-name
+                        _buffer.Write(Pdu.ItemTypeAbstractSyntax); // Item-Type
+                        _buffer.Reserved(1);
+                        _buffer.WriteAscii(presentationContext.AbstractSyntax.Value); // Abstract-syntax-name
 
                         foreach (Uid transferSyntax in presentationContext.TransferSyntaxes)
                         {
                             // Transfer Syntax Sub-Item
 
-                            buffer.Write(ItemTypeTransferSyntax); // Item-Type
-                            buffer.Reserved(1);
-                            buffer.WriteAsciiWithLength(transferSyntax.Value); // Abstract-syntax-name
+                            _buffer.Write(Pdu.ItemTypeTransferSyntax); // Item-Type
+                            _buffer.Reserved(1);
+                            _buffer.WriteAscii(transferSyntax.Value); // Abstract-syntax-name
                         }
                     }
 
-                    // User Information Item
+                    needsScpScuRoleNegotiation |= (presentationContext.SupportsScuRole != null || presentationContext.SupportsScpRole != null);
+                    association.PresentationContextsById.Add(presentationContextId, presentationContext);
+                    presentationContextId += 2;
+                }
 
-                    buffer.Write(ItemTypeUserInformation); // Item-Type
-                    buffer.Reserved(1);
-                    using (buffer.BeginLengthPrefix())
+                // User Information Item
+
+                _buffer.Write(Pdu.ItemTypeUserInformation); // Item-Type
+                _buffer.Reserved(1);
+                using (_buffer.BeginLengthPrefix())
+                {
+                    // Maximum Length
+
+                    _buffer.Write(Pdu.ItemTypeMaximumLength); // Item-type
+                    _buffer.Reserved(1);
+                    _buffer.Write((ushort)0x0004); // Item-length
+                    _buffer.Write(association.MaxReceiveDataLength); // Maximum-length-received
+
+                    // Implementation Class UID
+
+                    _buffer.Write(Pdu.ItemTypeImplementationClassUid); // Item-type
+                    _buffer.Reserved(1);
+                    _buffer.WriteAscii(Implementation.ClassUid.Value); // Implementation-class-uid
+
+                    // Asynchronous Operations Window
+
+                    _buffer.Write(Pdu.ItemTypeAsynchronousOperations); // Item-type
+                    _buffer.Reserved(1);
+                    _buffer.Write((ushort)0x0004); // Item-length
+                    _buffer.Write((ushort)0); // Maximum-number-operations-invoked
+                    _buffer.Write((ushort)0); // Maximum-number-operations-performed
+
+                    if (needsScpScuRoleNegotiation)
                     {
-                        // Maximum Length
-
-                        buffer.Write(ItemTypeMaximumLength); // Item-type
-                        buffer.Reserved(1);
-                        buffer.Write((ushort)0x0004); // Item-length
-                        buffer.Write(association.MaxReceiveDataLength); // Maximum-length-received
-
-                        // Implementation Class UID
-
-                        buffer.Write(ItemTypeImplementationClassUid); // Item-type
-                        buffer.Reserved(1);
-                        buffer.WriteAsciiWithLength(Implementation.ClassUid.Value); // Implementation-class-uid
-
-                        // Asynchronous Operations Window
-
-                        buffer.Write(ItemTypeAsynchronousOperations); // Item-type
-                        buffer.Reserved(1);
-                        buffer.Write((ushort)0x0004); // Item-length
-                        buffer.Write((ushort)0); // Maximum-number-operations-invoked
-                        buffer.Write((ushort)0); // Maximum-number-operations-performed
-
-                        if (needsScpScuRoleNegotiation)
+                        foreach (PresentationContext presentationContext1 in association.PresentationContexts)
                         {
-                            foreach (PresentationContext presentationContext1 in association.PresentationContexts)
+                            _buffer.Write(Pdu.ItemTypeScpScuRoleSelection); // Item-type
+                            _buffer.Reserved(1);
+                            using (_buffer.BeginLengthPrefix())
                             {
-                                buffer.Write(ItemTypeScpScuRoleSelection); // Item-type
-                                buffer.Reserved(1);
-                                using (buffer.BeginLengthPrefix())
-                                {
-                                    buffer.WriteAsciiWithLength(presentationContext1.AbstractSyntax.Value); // SOP-class-uid
-                                    buffer.Write((byte)((presentationContext1.SupportsScuRole ?? false) ? 0 : 1)); // SCU-role
-                                    buffer.Write((byte)((presentationContext1.SupportsScpRole ?? false) ? 0 : 1)); // SCP-role
-                                }
+                                _buffer.WriteAscii(presentationContext1.AbstractSyntax.Value); // SOP-class-uid
+                                _buffer.Write((byte)((presentationContext1.SupportsScuRole ?? false) ? 0 : 1)); // SCU-role
+                                _buffer.Write((byte)((presentationContext1.SupportsScpRole ?? false) ? 0 : 1)); // SCP-role
                             }
                         }
-
-                        // Implementation Version Name
-
-                        buffer.Write(ItemTypeImplementationVersionName); // Item-type
-                        buffer.Reserved(1);
-                        buffer.WriteAsciiWithLength(Implementation.VersionName); // Implementation-version-name
                     }
+
+                    // Implementation Version Name
+
+                    _buffer.Write(Pdu.ItemTypeImplementationVersionName); // Item-type
+                    _buffer.Reserved(1);
+                    _buffer.WriteAscii(Implementation.VersionName); // Implementation-version-name
                 }
             }
-            buffer.Commit();
+
+            _buffer.Commit();
         }
 
     }

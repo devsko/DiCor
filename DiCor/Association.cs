@@ -5,15 +5,12 @@ namespace DiCor
 {
     public class Association
     {
-        public Association(string calledAE, string callingAE)
-        {
-            CalledAE = calledAE ?? throw new ArgumentNullException(nameof(calledAE));
-            CallingAE = callingAE ?? throw new ArgumentNullException(nameof(callingAE));
-        }
+        public const uint DefaultMaxDataLength = 256 * 1024;
 
-        public string CalledAE { get; }
-        public string CallingAE { get; }
-        public IEnumerable<PresentationContext> PresentationContexts { get; internal set; }
-        public uint MaxReceiveDataLength { get; internal set; }
+        public uint MaxReceiveDataLength { get; set; } = DefaultMaxDataLength;
+        public string? CalledAE { get; set; }
+        public string? CallingAE { get; set; }
+        public IList<PresentationContext> PresentationContexts { get; } = new List<PresentationContext>();
+        public IDictionary<byte, PresentationContext> PresentationContextsById { get; } = new Dictionary<byte, PresentationContext>();
     }
 }

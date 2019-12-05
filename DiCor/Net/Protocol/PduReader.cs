@@ -1,29 +1,66 @@
 ﻿using System;
 using System.Buffers;
 using System.Threading;
+using DiCor.Net.Protocol;
 
 namespace DiCor
 {
     public ref struct PduReader
     {
-        private readonly SequenceReader<byte> _reader;
+        private SequenceReader<byte> _input;
 
         public PduReader(in ReadOnlySequence<byte> sequence)
         {
-            _reader = new SequenceReader<byte>(sequence);
-            CancellationToken = default;
+            _input = new SequenceReader<byte>(sequence);
         }
 
-        public CancellationToken CancellationToken { get; set; }
+        public bool TryRead()
+        {
+            if (_input.Remaining < 6)
+                return false;
 
-        public ReadOnlySequence<byte> Sequence => _reader.Sequence;
+            _input.TryRead(out byte type);
+            _input.Advance(1);
+            _input.TryReadBigEndian(out uint length);
 
-        public SequencePosition Position => _reader.Position;
+            if (_input.Remaining < length)
+                return false;
 
-        public long Consumed => _reader.Consumed;
+            switch (type)
+            {
+                case Pdu.PduTypeAAssociateReq:
+                    ReadAAssociateReq();
+                    break;
+                case Pdu.PduTypeAAssociateAcc:
+                    ReadAAssociateAcc();
 
-        public bool End => _reader.End;
+                    // RAUS
+                    _input.Advance(length);
 
 
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            return true;
+        }
+
+        private void ReadAAssociateReq()
+        {
+            // TODO
+        }
+
+        private void ReadAAssociateAcc()
+        {
+        }
+
+        public ReadOnlySequence<byte> Sequence => _input.Sequence;
+
+        public SequencePosition Position => _input.Position;
+
+        public long Consumed => _input.Consumed;
+
+        public bool End => _input.End;
     }
 }

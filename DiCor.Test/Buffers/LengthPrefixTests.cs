@@ -13,16 +13,13 @@ namespace DiCor.Test.Buffers
         [Fact]
         public void WriteSmallBlock()
         {
-            Assert.Produces(new byte[] { (byte)'A', (byte)'B', (byte)'C', 0x00, 0x00, 0x00, 0x07, (byte)'7', (byte)' ', (byte)'B', (byte)'y', (byte)'t', (byte)'e', (byte)'s', (byte)'X', (byte)'Y', (byte)'Z' },
+            Assert.Produces(new byte[] { (byte)'A', (byte)'B', (byte)'C', 0x00, 0x07, (byte)'7', (byte)' ', (byte)'B', (byte)'y', (byte)'t', (byte)'e', (byte)'s', (byte)'X', (byte)'Y', (byte)'Z' },
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAscii("ABC");
-                    using (buffer.BeginLengthPrefix(4))
-                    {
-                        buffer.WriteAscii("7 Bytes");
-                    }
-                    buffer.WriteAscii("XYZ");
+                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"ABC", 3);
+                    buffer.WriteAscii((ReadOnlySpan<char>)"7 Bytes");
+                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"XYZ", 3);
                     buffer.Commit();
                 });
         }
@@ -38,14 +35,14 @@ namespace DiCor.Test.Buffers
         {
             int length = blockLength * blockCount;
             Assert.Produces(
-                new byte[] { (byte)'A', (byte)'B', (byte)'C' }
+                (new byte[] { (byte)'A', (byte)'B', (byte)'C' })
                     .Concat(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness((uint)length)))
                     .Concat(Enumerable.Repeat((byte)0x42, length))
                     .Concat(new byte[] { (byte)'X', (byte)'Y', (byte)'Z' }),
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAscii("ABC");
+                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"ABC", 3);
                     using (buffer.BeginLengthPrefix(4))
                     {
                         for (int i = 0; i < blockCount; i++)
@@ -53,7 +50,7 @@ namespace DiCor.Test.Buffers
                             buffer.Write(0x42, blockLength);
                         }
                     }
-                    buffer.WriteAscii("XYZ");
+                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"XYZ", 3);
                     buffer.Commit();
                 });
         }
@@ -62,22 +59,19 @@ namespace DiCor.Test.Buffers
         public void NestedBlocks()
         {
             Assert.Produces(
-                new byte[] { (byte)'A', (byte)'B', (byte)'C' }
-                    .Concat(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness((uint)17)))
+                (new byte[] { (byte)'A', (byte)'B', (byte)'C' })
+                    .Concat(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness((ushort)15)))
                     .Concat(new byte[] { (byte)'D', (byte)'E', (byte)'F', (byte)'1', (byte)'2', (byte)'3' })
-                    .Concat(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness((uint)7)))
+                    .Concat(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness((ushort)7)))
                     .Concat(new byte[] { (byte)'G', (byte)'H', (byte)'I', (byte)'_', (byte)'4', (byte)'5', (byte)'6' }),
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAscii("ABC");
-                    using (buffer.BeginLengthPrefix(4))
+                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"ABC", 3);
+                    using (buffer.BeginLengthPrefix())
                     {
-                        buffer.WriteAscii("DEF123");
-                        using (buffer.BeginLengthPrefix(4))
-                        {
-                            buffer.WriteAscii("GHI_456");
-                        }
+                        buffer.WriteAsciiFixed((ReadOnlySpan<char>)"DEF123", 6);
+                        buffer.WriteAscii((ReadOnlySpan<char>)"GHI_456");
                     }
                     buffer.Commit();
                 });

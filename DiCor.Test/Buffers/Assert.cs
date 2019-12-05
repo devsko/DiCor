@@ -24,9 +24,9 @@ namespace DiCor.Test.Buffers
             producer(pipe.Writer);
 
             pipe.Writer.Complete();
-            var x = pipe.Reader.TryRead(out ReadResult result);
+            pipe.Reader.TryRead(out ReadResult result);
 
-            var buffer = result.Buffer.ToArray();
+            byte[] buffer = result.Buffer.ToArray();
             Equal(expected, buffer);
         }
     }
