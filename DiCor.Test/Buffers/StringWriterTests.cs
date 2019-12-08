@@ -7,7 +7,7 @@ namespace DiCor.Test.Buffers
     public class StringWriterTests
     {
         [Fact]
-        public void WriteASCIITrims()
+        public void WriteAsciiTrims()
         {
             Assert.Produces(new byte[] { (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o' },
                 writer =>
@@ -19,7 +19,7 @@ namespace DiCor.Test.Buffers
         }
 
         [Fact]
-        public void WriteASCIIPads()
+        public void WriteAsciiPads()
         {
             Assert.Produces(new byte[] { (byte)'H', (byte)'e', (byte)' ', (byte)' ', (byte)' ' },
                 writer =>

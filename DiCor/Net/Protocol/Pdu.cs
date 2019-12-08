@@ -2,8 +2,21 @@
 {
     public static class Pdu
     {
-        public const byte PduTypeAAssociateReq = 0x01;
-        public const byte PduTypeAAssociateAcc = 0x02;
+        public enum AbortSource : byte
+        {
+            ServiceUser = 0x00,
+            ServiceProvider = 0x02,
+        }
+
+        public enum AbortReason : byte
+        {
+            ReasonNotSpecified = 0x00,
+            UnrecognizedPdu = 0x01,
+            UnexpectedPdu = 0x02,
+            UnrecognizedPduParameter = 0x04,
+            UnexpectedPduParameter = 0x05,
+            InvalidPduParameterValue = 0x06,
+        }
 
         public const byte ItemTypeApplicationContext = 0x10;
         public const byte ItemTypePresentationContext = 0x20;

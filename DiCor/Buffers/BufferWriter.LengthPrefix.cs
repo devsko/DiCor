@@ -14,7 +14,7 @@ namespace DiCor.Buffers
         public ref struct LengthPrefix
         {
             private Span<byte> _span;
-            private readonly Refs _refs;
+            private readonly Span<State> _stateRef;
             private readonly int _position;
             private readonly int _currentPrefixCount;
 
@@ -24,9 +24,10 @@ namespace DiCor.Buffers
                 _span = buffer.Span.Slice(0, prefixLength);
                 buffer.Advance(prefixLength);
 
-                Refs refs = _refs = buffer._refs;
-                _position = refs._committed + refs._buffered;
-                _currentPrefixCount = refs._lengthPrefixCount++;
+                _stateRef = buffer._state.AsSpan();
+                ref State state = ref _stateRef[0];
+                _position = state._committed + state._buffered;
+                _currentPrefixCount = state._lengthPrefixCount++;
             }
 
             public void Write()
@@ -34,24 +35,18 @@ namespace DiCor.Buffers
                 if (_span.Length == 0)
                     throw new InvalidOperationException("Length prefix already written.");
 
-                Refs refs = _refs;
-                if (_currentPrefixCount != --refs._lengthPrefixCount)
+                ref State state = ref _stateRef[0];
+                if (_currentPrefixCount != --state._lengthPrefixCount)
                     throw new InvalidOperationException("Legnth prefix mismatch");
 
-                uint length = (uint)(refs._committed + refs._buffered - _position);
+                uint length = (uint)(state._committed + state._buffered - _position);
 
                 if (_span.Length == sizeof(uint))
-                {
                     BinaryPrimitives.WriteUInt32BigEndian(_span, length);
-                }
                 else if (_span.Length == sizeof(ushort))
-                {
                     BinaryPrimitives.WriteUInt16BigEndian(_span, (ushort)length);
-                }
                 else
-                {
                     throw new InvalidOperationException();
-                }
 
                 _span = default;
             }

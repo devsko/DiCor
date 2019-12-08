@@ -17,9 +17,12 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"ABC", 3);
-                    buffer.WriteAscii((ReadOnlySpan<char>)"7 Bytes");
-                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"XYZ", 3);
+                    buffer.WriteAsciiFixed("ABC", 3);
+                    using (buffer.BeginLengthPrefix())
+                    {
+                        buffer.WriteAsciiFixed("7 Bytes", 7);
+                    }
+                    buffer.WriteAsciiFixed("XYZ", 3);
                     buffer.Commit();
                 });
         }

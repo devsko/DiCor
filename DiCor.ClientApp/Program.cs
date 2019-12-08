@@ -3,7 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 
 using Bedrock.Framework;
-
+using DiCor.Buffers;
 using DiCor.Net.Protocol;
 
 using Microsoft.AspNetCore.Connections;
@@ -36,16 +36,10 @@ namespace DiCor.ConsoleApp
             {
                 Console.WriteLine($"Connected {connection.LocalEndPoint} to {connection.RemoteEndPoint}");
 
-                X(connection);
+                new PduWriter(new BufferWriter(connection.Transport.Output)).WriteAAssociateRq(null!);
                 await connection.Transport.Output.FlushAsync();
             }
 
-            static void X(ConnectionContext connection)
-            {
-                var pduWriter = new PduWriter(connection.Transport.Output);
-                pduWriter.WriteAAssociateReq(null!);
-
-            }
         }
 
     }

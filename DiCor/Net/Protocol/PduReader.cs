@@ -9,49 +9,17 @@ namespace DiCor
     {
         private SequenceReader<byte> _input;
 
-        public PduReader(in ReadOnlySequence<byte> sequence)
+        public PduReader(in SequenceReader<byte> input)
         {
-            _input = new SequenceReader<byte>(sequence);
+            _input = input;
         }
 
-        public bool TryRead()
-        {
-            if (_input.Remaining < 6)
-                return false;
-
-            _input.TryRead(out byte type);
-            _input.Advance(1);
-            _input.TryReadBigEndian(out uint length);
-
-            if (_input.Remaining < length)
-                return false;
-
-            switch (type)
-            {
-                case Pdu.PduTypeAAssociateReq:
-                    ReadAAssociateReq();
-                    break;
-                case Pdu.PduTypeAAssociateAcc:
-                    ReadAAssociateAcc();
-
-                    // RAUS
-                    _input.Advance(length);
-
-
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-
-            return true;
-        }
-
-        private void ReadAAssociateReq()
+        public void ReadAAssociateRq()
         {
             // TODO
         }
 
-        private void ReadAAssociateAcc()
+        public void ReadAAssociateAc(Association association)
         {
         }
 

@@ -4,9 +4,15 @@ using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Net;
 using System.Threading.Tasks;
+using Bedrock.Framework;
+using Bedrock.Framework.Protocols;
+using DiCor.Buffers;
 using DiCor.Net.Protocol;
+using DiCor.Net.UpperLayer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace DiCor.Test
@@ -16,47 +22,26 @@ namespace DiCor.Test
         [Fact]
         public async Task AAssociateReq()
         {
-            await using (var connection = new Bedrock.Framework.SocketConnection(new DnsEndPoint("dicomserver.co.uk", 11112)))
+            var services = new ServiceCollection();
+            services.AddLogging(builder =>
             {
-                await connection.StartAsync();
+                builder.SetMinimumLevel(LogLevel.Debug);
+                builder.AddConsole();
+            });
 
-                Console.WriteLine(connection.LocalEndPoint);
-                Console.WriteLine(connection.RemoteEndPoint);
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-                PipeWriter output = connection.Transport.Output;
-                PipeReader input = connection.Transport.Input;
+            ILogger logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<PduWriterTests>();
 
-                var association = new Association();
-                var presentationContext = new PresentationContext();
-                association.PresentationContexts.Add(presentationContext);
-                presentationContext.AbstractSyntax = Uid.PatientRootQueryRetrieveInformationModelFIND;
-                presentationContext.TransferSyntaxes.Add(Uid.ImplicitVRLittleEndian);
+            Client client = new ClientBuilder(serviceProvider)
+                .UseSockets()
+                .UseConnectionLogging()
+                .Build();
 
-                new PduWriter(output).WriteAAssociateReq(association);
-                FlushResult flush = await output.FlushAsync();
-
-
-                while (true)
-                {
-                    ReadResult result = await input.ReadAsync();
-                    Process(result.Buffer);
-
-                    if (result.IsCompleted)
-                        break;
-
-                    void Process(ReadOnlySequence<byte> buffer)
-                    {
-                        var reader = new PduReader(buffer);
-                        SequencePosition consumed = reader.Position;
-
-                        while (reader.TryRead())
-                            input.AdvanceTo(consumed = reader.Position);
-
-                        if (!consumed.Equals(buffer.End))
-                            input.AdvanceTo(consumed, buffer.End);
-                    }
-                }
-            }
+            ULClient ulClient = new ULClient(client);
+            await ulClient
+                .AssociateAsync(new DnsEndPoint("dicomserver.co.uk", 11112), AssociationType.Find)
+                .ConfigureAwait(false);
         }
     }
 }
