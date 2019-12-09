@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Bedrock.Framework.Protocols;
-using DiCor.Net.Protocol;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 
@@ -60,7 +59,7 @@ namespace DiCor.Net.UpperLayer
 
             _ = ReadLoop();
 
-            await _writer.WriteAsync(new ULMessage(ULPduType.AAssociateRq), cancellationToken).ConfigureAwait(false);
+            await _writer.WriteAsync(new ULMessage(Pdu.Type.AAssociateRq), cancellationToken).ConfigureAwait(false);
 
             _state = ULConnectionState.Sta5_AwaitingAssociateResponse;
         }
@@ -87,8 +86,8 @@ namespace DiCor.Net.UpperLayer
 
             return message.Type switch
             {
-                ULPduType.AAssociateAc => true,
-                ULPduType.AAssociateRj => true,
+                Pdu.Type.AAssociateAc => true,
+                Pdu.Type.AAssociateRj => true,
                 _ => throw new ArgumentException(nameof(message)),
             };
         }
@@ -96,8 +95,8 @@ namespace DiCor.Net.UpperLayer
         private ValueTask ProcessAsync(ULMessage message)
             => message.Type switch
             {
-                ULPduType.AAssociateAc => OnAAssociateResponseAsync(message),
-                ULPduType.AAssociateRj => OnAAssociateResponseAsync(message),
+                Pdu.Type.AAssociateAc => OnAAssociateResponseAsync(message),
+                Pdu.Type.AAssociateRj => OnAAssociateResponseAsync(message),
                 _ => throw new ArgumentException(nameof(message)),
             };
 
@@ -116,14 +115,14 @@ namespace DiCor.Net.UpperLayer
                 case ULConnectionState.Sta2_TransportConnectionOpen:
                     // AA-1
                     await _writer.WriteAsync(
-                        new ULMessage(ULPduType.AAbort, (byte)Pdu.AbortSource.ServiceUser)
+                        new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceUser)
                     ).ConfigureAwait(false);
                     // TODO Start or restart ARTIM
                     _state = ULConnectionState.Sta13_AwaitingTransportConnectionClose;
                     break;
 
                 case ULConnectionState.Sta5_AwaitingAssociateResponse:
-                    if (message.Type == ULPduType.AAssociateAc)
+                    if (message.Type == Pdu.Type.AAssociateAc)
                     {
                         // AE-3
                         _state = ULConnectionState.Sta6_Ready;
@@ -144,7 +143,7 @@ namespace DiCor.Net.UpperLayer
                 default:
                     // AA-8
                     await _writer.WriteAsync(
-                        new ULMessage(ULPduType.AAbort, (byte)Pdu.AbortSource.ServiceProvider)
+                        new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceProvider)
                     ).ConfigureAwait(false);
                     // TODO Start ARTIM
                     _state = ULConnectionState.Sta13_AwaitingTransportConnectionClose;

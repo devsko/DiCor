@@ -2,7 +2,6 @@
 using System.Buffers;
 using Bedrock.Framework.Protocols;
 using DiCor.Buffers;
-using DiCor.Net.Protocol;
 
 namespace DiCor.Net.UpperLayer
 {
@@ -29,7 +28,7 @@ namespace DiCor.Net.UpperLayer
             if (buffer.Remaining < length)
                 goto ReturnFalse;
 
-            message = new ULMessage((ULPduType)type);
+            message = new ULMessage((Pdu.Type)type);
             if (!_uLConnection.CanReceive(message))
             {
                 buffer.Advance(length);
@@ -39,7 +38,7 @@ namespace DiCor.Net.UpperLayer
                 var reader = new PduReader(in buffer);
                 switch (message.Type)
                 {
-                    case ULPduType.AAssociateAc:
+                    case Pdu.Type.AAssociateAc:
                         reader.ReadAAssociateAc(_uLConnection.Association);
                         break;
                 }
@@ -62,12 +61,12 @@ namespace DiCor.Net.UpperLayer
             {
                 switch (message.Type)
                 {
-                    case ULPduType.AAssociateRq:
+                    case Pdu.Type.AAssociateRq:
                         writer.WriteAAssociateRq(_uLConnection.Association);
                         break;
-                    case ULPduType.AAssociateAc:
+                    case Pdu.Type.AAssociateAc:
                         break;
-                    case ULPduType.AAbort:
+                    case Pdu.Type.AAbort:
                         writer.WriteAAbort((Pdu.AbortSource)message.B1, (Pdu.AbortReason)message.B2);
                         break;
                     default:

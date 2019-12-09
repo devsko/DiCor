@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Buffers;
 using System.Threading;
-using DiCor.Net.Protocol;
 
-namespace DiCor
+namespace DiCor.Net.UpperLayer
 {
     public ref struct PduReader
     {

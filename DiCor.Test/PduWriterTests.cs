@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Bedrock.Framework;
 using Bedrock.Framework.Protocols;
 using DiCor.Buffers;
-using DiCor.Net.Protocol;
 using DiCor.Net.UpperLayer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Connections;

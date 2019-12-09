@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DiCor.Buffers;
-using DiCor.Net.Protocol;
 using DiCor.Net.UpperLayer;
 using Xunit;
 
@@ -45,7 +44,7 @@ namespace DiCor.Test.Net
 
             void Write()
             {
-                using (var writer = new PduWriter(pipe.Writer, new ULMessage(ULPduType.AAssociateRq)))
+                using (var writer = new PduWriter(pipe.Writer, new ULMessage(Pdu.Type.AAssociateRq)))
                     writer.WriteAAssociateRq(new Association(AssociationType.Find));
             }
         }

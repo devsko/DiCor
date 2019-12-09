@@ -1,7 +1,15 @@
-﻿namespace DiCor.Net.Protocol
+﻿namespace DiCor.Net.UpperLayer
 {
     public static class Pdu
     {
+        public enum Type : byte
+        {
+            AAssociateRq = 0x01,
+            AAssociateAc = 0x02,
+            AAssociateRj = 0x03,
+            AAbort = 0x07,
+        }
+
         public enum AbortSource : byte
         {
             ServiceUser = 0x00,

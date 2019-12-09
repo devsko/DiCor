@@ -4,8 +4,7 @@ using System.Threading.Tasks;
 
 using Bedrock.Framework;
 using DiCor.Buffers;
-using DiCor.Net.Protocol;
-
+using DiCor.Net.UpperLayer;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -35,9 +34,14 @@ namespace DiCor.ConsoleApp
             await using (ConnectionContext connection = await client.ConnectAsync(new DnsEndPoint("dicomserver.co.uk", 11112)))
             {
                 Console.WriteLine($"Connected {connection.LocalEndPoint} to {connection.RemoteEndPoint}");
-
-                new PduWriter(new BufferWriter(connection.Transport.Output)).WriteAAssociateRq(null!);
+                Write();
                 await connection.Transport.Output.FlushAsync();
+
+                void Write()
+                {
+                    using (var writer = new PduWriter(connection.Transport.Output, new ULMessage(Pdu.Type.AAssociateRq)))
+                        writer.WriteAAssociateRq(new Association(AssociationType.Find));
+                }
             }
 
         }

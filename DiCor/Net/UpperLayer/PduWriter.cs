@@ -3,7 +3,7 @@
 using DiCor.Buffers;
 using DiCor.Net.UpperLayer;
 
-namespace DiCor.Net.Protocol
+namespace DiCor.Net.UpperLayer
 {
     public ref struct PduWriter
     {
