@@ -58,14 +58,8 @@ namespace DiCor.Net.UpperLayer
 
         public void WriteMessage(ULMessage message, IBufferWriter<byte> output)
         {
-            BufferWriter buffer = new BufferWriter(output);
-
-            buffer.Write((byte)message.Type);
-            buffer.Reserved(1);
-
-            using (buffer.BeginLengthPrefix(sizeof(uint)))
+            using (var writer = new PduWriter(output, message))
             {
-                var writer = new PduWriter(buffer);
                 switch (message.Type)
                 {
                     case ULPduType.AAssociateRq:
@@ -80,8 +74,6 @@ namespace DiCor.Net.UpperLayer
                         break;
                 }
             }
-
-            buffer.Commit();
         }
     }
 }

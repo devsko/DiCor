@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DiCor.Buffers;
 using DiCor.Net.Protocol;
+using DiCor.Net.UpperLayer;
 using Xunit;
 
 namespace DiCor.Test.Net
@@ -35,12 +36,18 @@ namespace DiCor.Test.Net
         public async Task WriteAAssociateReq()
         {
             var pipe = new Pipe();
-            new PduWriter(new BufferWriter(pipe.Writer))
-                .WriteAAssociateRq(new Association(AssociationType.Find));
+            Write();
             pipe.Writer.Complete();
             ReadResult result = await pipe.Reader.ReadAsync();
+            byte[] actual = result.Buffer.ToArray();
 
-            Assert.True(((ReadOnlySpan<byte>)result.Buffer.ToArray()).SequenceEqual(s_AAssociateReq));
+            Assert.True(((ReadOnlySpan<byte>)actual).SequenceEqual(s_AAssociateReq));
+
+            void Write()
+            {
+                using (var writer = new PduWriter(pipe.Writer, new ULMessage(ULPduType.AAssociateRq)))
+                    writer.WriteAAssociateRq(new Association(AssociationType.Find));
+            }
         }
     }
 }

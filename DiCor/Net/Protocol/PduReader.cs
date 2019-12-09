@@ -23,12 +23,5 @@ namespace DiCor
         {
         }
 
-        public ReadOnlySequence<byte> Sequence => _input.Sequence;
-
-        public SequencePosition Position => _input.Position;
-
-        public long Consumed => _input.Consumed;
-
-        public bool End => _input.End;
     }
 }

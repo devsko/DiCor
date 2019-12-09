@@ -1,16 +1,29 @@
 ﻿using System.Buffers;
 
 using DiCor.Buffers;
+using DiCor.Net.UpperLayer;
 
 namespace DiCor.Net.Protocol
 {
     public ref struct PduWriter
     {
         private BufferWriter _buffer;
+        private BufferWriter.LengthPrefix _pduLengthPrefix;
 
-        public PduWriter(BufferWriter buffer)
+        public PduWriter(IBufferWriter<byte> output, ULMessage message)
         {
-            _buffer = buffer;
+            _buffer = new BufferWriter(output);
+
+            _buffer.Write((byte)message.Type);
+            _buffer.Reserved(1);
+
+            _pduLengthPrefix = _buffer.BeginLengthPrefix(sizeof(uint));
+        }
+
+        public void Dispose()
+        {
+            _pduLengthPrefix.Dispose();
+            _buffer.Commit();
         }
 
         public void WriteAAssociateRq(Association association)
