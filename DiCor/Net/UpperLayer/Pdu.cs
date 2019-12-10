@@ -26,8 +26,18 @@
             InvalidPduParameterValue = 0x06,
         }
 
+        public enum PresentationContextItemResult : byte
+        {
+            Acceptance = 0x00,
+            UserRejection = 0x01,
+            ProviderRejectionNoReason = 0x02,
+            ProviderRejectionAbstractSyntaxNotSupported = 0x03,
+            ProviderRejectionTransferSyntaxNotSupported = 0x04,
+        }
+
         public const byte ItemTypeApplicationContext = 0x10;
-        public const byte ItemTypePresentationContext = 0x20;
+        public const byte ItemTypePresentationContextRq = 0x20;
+        public const byte ItemTypePresentationContextAc = 0x21;
         public const byte ItemTypeAbstractSyntax = 0x30;
         public const byte ItemTypeTransferSyntax = 0x40;
         public const byte ItemTypeUserInformation = 0x50;

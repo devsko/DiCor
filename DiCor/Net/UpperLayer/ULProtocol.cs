@@ -35,6 +35,7 @@ namespace DiCor.Net.UpperLayer
             }
             else
             {
+                buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
                 var reader = new PduReader(in buffer);
                 switch (message.Type)
                 {
@@ -57,22 +58,21 @@ namespace DiCor.Net.UpperLayer
 
         public void WriteMessage(ULMessage message, IBufferWriter<byte> output)
         {
-            using (var writer = new PduWriter(output, message))
+            var writer = new PduWriter(output);
+            switch (message.Type)
             {
-                switch (message.Type)
-                {
-                    case Pdu.Type.AAssociateRq:
-                        writer.WriteAAssociateRq(_uLConnection.Association);
-                        break;
-                    case Pdu.Type.AAssociateAc:
-                        break;
-                    case Pdu.Type.AAbort:
-                        writer.WriteAAbort((Pdu.AbortSource)message.B1, (Pdu.AbortReason)message.B2);
-                        break;
-                    default:
-                        break;
-                }
+                case Pdu.Type.AAssociateRq:
+                    writer.WriteAAssociateRq(_uLConnection.Association);
+                    break;
+                case Pdu.Type.AAssociateAc:
+                    break;
+                case Pdu.Type.AAbort:
+                    writer.WriteAAbort((Pdu.AbortSource)message.B1, (Pdu.AbortReason)message.B2);
+                    break;
+                default:
+                    break;
             }
         }
+
     }
 }

@@ -87,7 +87,7 @@ namespace DiCor.Test.Buffers
             void Read()
             {
                 var reader = new SequenceReader<byte>(result.Buffer);
-                reader.TryReadAscii(out string? readValue);
+                reader.TryRead(out string? readValue);
 
                 if (string.IsNullOrEmpty(value))
                     Assert.True(string.IsNullOrEmpty(readValue));

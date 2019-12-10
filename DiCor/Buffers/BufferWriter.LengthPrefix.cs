@@ -52,8 +52,10 @@ namespace DiCor.Buffers
             }
 
             public void Dispose()
-                => Write();
-
+            {
+                if (_stateRef.Length > 0)
+                    Write();
+            }
         }
     }
 }

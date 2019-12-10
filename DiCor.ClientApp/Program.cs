@@ -39,8 +39,8 @@ namespace DiCor.ConsoleApp
 
                 void Write()
                 {
-                    using (var writer = new PduWriter(connection.Transport.Output, new ULMessage(Pdu.Type.AAssociateRq)))
-                        writer.WriteAAssociateRq(new Association(AssociationType.Find));
+                    new PduWriter(connection.Transport.Output)
+                        .WriteAAssociateRq(new Association(AssociationType.Find));
                 }
             }
 

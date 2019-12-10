@@ -44,8 +44,8 @@ namespace DiCor.Test.Net
 
             void Write()
             {
-                using (var writer = new PduWriter(pipe.Writer, new ULMessage(Pdu.Type.AAssociateRq)))
-                    writer.WriteAAssociateRq(new Association(AssociationType.Find));
+                new PduWriter(pipe.Writer)
+                    .WriteAAssociateRq(new Association(AssociationType.Find));
             }
         }
     }

@@ -61,6 +61,15 @@ namespace DiCor
             IsRetired = isRetired;
         }
 
+        private Uid(string value)
+        {
+            Value = value;
+            Name = string.Empty;
+            Type = default;
+            StorageCategory = default;
+            IsRetired = default;
+        }
+
         public static bool IsValid(string value)
         {
             if (value is null)
@@ -134,6 +143,9 @@ namespace DiCor
 
             return StorageCategory.Other;
         }
+
+        public static Uid Get(string value)
+            => s_uids.TryGetValue(new Uid(value), out Uid uid) ? uid : new Uid(value, string.Empty, UidType.Other);
 
         public static Uid NewUid(string name = "", UidType type = UidType.SOPInstance)
         {
