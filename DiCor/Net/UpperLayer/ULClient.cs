@@ -20,7 +20,7 @@ namespace DiCor.Net.UpperLayer
 
         public async Task<ULConnection> AssociateAsync(EndPoint endpoint, AssociationType type, CancellationToken cancellationToken = default)
         {
-            ULConnection ulConnection = new ULConnection(this, endpoint, new Association(type));
+            ULConnection ulConnection = new ULConnection(this, endpoint);
             await ulConnection.AssociateAsync(type, cancellationToken).ConfigureAwait(false);
             return ulConnection;
         }

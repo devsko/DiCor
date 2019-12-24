@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bedrock\Bedrock.csproj" />
+    <PackageReference Include="Bedrock.Framework" Version="0.1.5-alpha.g35982a4bd9" />
   </ItemGroup>
-
 </Project>

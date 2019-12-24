@@ -38,7 +38,7 @@ namespace DiCor.Test
                 .Build();
 
             ULClient ulClient = new ULClient(client);
-            await ulClient
+            ULConnection ulConnection = await ulClient
                 .AssociateAsync(new DnsEndPoint("dicomserver.co.uk", 11112), AssociationType.Find)
                 .ConfigureAwait(false);
         }

@@ -29,22 +29,23 @@ namespace DiCor.Net.UpperLayer
                 goto ReturnFalse;
 
             message = new ULMessage((Pdu.Type)type);
-            if (!_uLConnection.CanReceive(message))
-            {
-                buffer.Advance(length);
-            }
-            else
+            if (_uLConnection.CanReceive(message))
             {
                 buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
                 var reader = new PduReader(in buffer);
                 switch (message.Type)
                 {
                     case Pdu.Type.AAssociateAc:
-                        reader.ReadAAssociateAc(_uLConnection.Association);
+                        reader.ReadAAssociateAc(_uLConnection.Association!);
+                        break;
+
+                    case Pdu.Type.AAbort:
+                        reader.ReadAAbort(ref message);
                         break;
                 }
             }
 
+            buffer.Advance(length);
             consumed = buffer.Position;
             examined = consumed;
             return true;
@@ -62,7 +63,7 @@ namespace DiCor.Net.UpperLayer
             switch (message.Type)
             {
                 case Pdu.Type.AAssociateRq:
-                    writer.WriteAAssociateRq(_uLConnection.Association);
+                    writer.WriteAAssociateRq(_uLConnection.Association!);
                     break;
                 case Pdu.Type.AAssociateAc:
                     break;

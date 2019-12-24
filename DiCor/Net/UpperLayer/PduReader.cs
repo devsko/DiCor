@@ -136,5 +136,15 @@ namespace DiCor.Net.UpperLayer
 
         }
 
+        public void ReadAAbort(ref ULMessage message)
+        {
+            _input.Reserved(2);
+            _input.TryRead(out byte source); // Source
+            _input.TryRead(out byte reason); // Reason/Diag
+
+            message.B1 = source;
+            message.B2 = reason;
+        }
+
     }
 }

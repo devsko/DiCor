@@ -129,11 +129,13 @@ namespace DiCor.Net.UpperLayer
 
         public void WriteAAbort(Pdu.AbortSource source, Pdu.AbortReason reason)
         {
-            _buffer.Reserved(2);
-            // Source
-            _buffer.Write((byte)source);
-            // Reason/Diag
-            _buffer.Write((byte)reason);
+            using (BeginPdu(Pdu.Type.AAbort))
+            {
+                _buffer.Reserved(2);
+                _buffer.Write((byte)source); // Source
+                _buffer.Write((byte)reason); // Reason/Diag
+            }
+            _buffer.Commit();
         }
 
     }

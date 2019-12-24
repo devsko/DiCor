@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Bedrock.Framework;
@@ -31,19 +32,13 @@ namespace DiCor.ConsoleApp
                 .UseConnectionLogging()
                 .Build();
 
-            await using (ConnectionContext connection = await client.ConnectAsync(new DnsEndPoint("dicomserver.co.uk", 11112)))
-            {
-                Console.WriteLine($"Connected {connection.LocalEndPoint} to {connection.RemoteEndPoint}");
-                Write();
-                await connection.Transport.Output.FlushAsync();
+            ULClient ulClient = new ULClient(client);
 
-                void Write()
-                {
-                    new PduWriter(connection.Transport.Output)
-                        .WriteAAssociateRq(new Association(AssociationType.Find));
-                }
-            }
+            ULConnection ulConnection = await ulClient
+                .AssociateAsync(new DnsEndPoint("dicomserver.co.uk", 11112), AssociationType.Find, new CancellationTokenSource(600).Token)
+                .ConfigureAwait(false);
 
+            Console.WriteLine(ulConnection.State);
         }
 
     }
