@@ -3,12 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.161
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor", "DiCor\DiCor.csproj", "{4633C53E-BFF7-49EE-AD7C-31BD08BE5E2D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Test", "DiCor.Test\DiCor.Test.csproj", "{4C48CC1F-1E2A-4683-B58D-B16151199411}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.ClientApp", "DiCor.ClientApp\DiCor.ClientApp.csproj", "{679AD8E4-4A01-4F91-8468-07B25A6F5E78}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{45B7FE2F-D457-4125-A48C-7747D9307ED4}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -17,9 +11,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NuGet.config = NuGet.config
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.CodeGenerator", "DiCor.CodeGenerator\DiCor.CodeGenerator.csproj", "{B54BC3FE-5342-449C-8688-AB4A0A52471F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor", "DiCor\DiCor.csproj", "{4633C53E-BFF7-49EE-AD7C-31BD08BE5E2D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Test", "DiCor.Test\DiCor.Test.csproj", "{4C48CC1F-1E2A-4683-B58D-B16151199411}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.ClientApp", "DiCor.ClientApp\DiCor.ClientApp.csproj", "{679AD8E4-4A01-4F91-8468-07B25A6F5E78}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Performance", "DiCor.Performance\DiCor.Performance.csproj", "{D3F283CF-4D86-4518-ABF5-7A5336499E02}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Generator", "DiCor.Generator\DiCor.Generator.csproj", "{C5029F3E-E69E-48F1-8782-CBA7EE436F34}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,14 +39,14 @@ Global
 		{679AD8E4-4A01-4F91-8468-07B25A6F5E78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{679AD8E4-4A01-4F91-8468-07B25A6F5E78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{679AD8E4-4A01-4F91-8468-07B25A6F5E78}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B54BC3FE-5342-449C-8688-AB4A0A52471F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B54BC3FE-5342-449C-8688-AB4A0A52471F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B54BC3FE-5342-449C-8688-AB4A0A52471F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B54BC3FE-5342-449C-8688-AB4A0A52471F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D3F283CF-4D86-4518-ABF5-7A5336499E02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D3F283CF-4D86-4518-ABF5-7A5336499E02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3F283CF-4D86-4518-ABF5-7A5336499E02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3F283CF-4D86-4518-ABF5-7A5336499E02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5029F3E-E69E-48F1-8782-CBA7EE436F34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5029F3E-E69E-48F1-8782-CBA7EE436F34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5029F3E-E69E-48F1-8782-CBA7EE436F34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5029F3E-E69E-48F1-8782-CBA7EE436F34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

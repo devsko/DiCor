@@ -2,10 +2,23 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bedrock.Framework" Version="0.1.5-alpha.g35982a4bd9" />
+
+    <ProjectReference Include="..\..\BedrockFramework\src\Bedrock.Framework\Bedrock.Framework.csproj" />
+
+    <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+
+    <!--
+    <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.3.0-beta.0" PrivateAssets="all" />
+    <PackageReference Include="ErrorProne.NET.Structs" Version="0.3.0-beta.0" PrivateAssets="all" />
+    -->
+    
   </ItemGroup>
+
 </Project>

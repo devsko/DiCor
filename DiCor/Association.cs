@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using Microsoft.CodeAnalysis.FindSymbols;
 
 namespace DiCor
 {
@@ -17,6 +17,7 @@ namespace DiCor
         public Association(AssociationType type)
         {
             // TODO
+            Debug.Assert(type == AssociationType.Find);
 
             var presentationContext = new PresentationContext
             {
@@ -49,9 +50,13 @@ namespace DiCor
             return presentationContext.Id == id ? presentationContext : null;
         }
 
-        public PresentationContext? GetPresentationContext(Uid uid)
+        public PresentationContext? GetPresentationContext(in Uid uid)
         {
-            return PresentationContexts.FirstOrDefault(pc => pc.AbstractSyntax == uid);
+            foreach (PresentationContext pc in PresentationContexts)
+                if (pc.AbstractSyntax == uid)
+                    return pc;
+
+            return null;
         }
 
     }

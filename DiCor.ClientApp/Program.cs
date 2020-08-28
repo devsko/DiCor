@@ -35,7 +35,7 @@ namespace DiCor.ConsoleApp
             ULClient ulClient = new ULClient(client);
 
             ULConnection ulConnection = await ulClient
-                .AssociateAsync(new DnsEndPoint("dicomserver.co.uk", 11112), AssociationType.Find, new CancellationTokenSource(600).Token)
+                .AssociateAsync(new DnsEndPoint("dicomserver.co.uk", 11112), AssociationType.Find, new CancellationTokenSource(60000).Token)
                 .ConfigureAwait(false);
 
             Console.WriteLine(ulConnection.State);

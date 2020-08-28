@@ -5,7 +5,7 @@ using DiCor.Buffers;
 
 namespace DiCor.Net.UpperLayer
 {
-    public class ULProtocol : IProtocolReader<ULMessage>, IProtocolWriter<ULMessage>
+    public class ULProtocol : IMessageReader<ULMessage>, IMessageWriter<ULMessage>
     {
         private readonly ULConnection _uLConnection;
 
@@ -14,7 +14,7 @@ namespace DiCor.Net.UpperLayer
             _uLConnection = uLConnection;
         }
 
-        public bool TryParseMessage(in ReadOnlySequence<byte> input, out SequencePosition consumed, out SequencePosition examined, out ULMessage message)
+        public bool TryParseMessage(in ReadOnlySequence<byte> input, ref SequencePosition consumed, ref SequencePosition examined, out ULMessage message)
         {
             var buffer = new SequenceReader<byte>(input);
 

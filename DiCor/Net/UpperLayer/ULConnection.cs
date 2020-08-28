@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Connections;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Bedrock.Framework.Protocols;
 using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Hosting;
 
 namespace DiCor.Net.UpperLayer
 {
@@ -36,9 +36,10 @@ namespace DiCor.Net.UpperLayer
         private Association? _association;
 
         private ULConnectionState _state;
-        private ConnectionContext? _connection;
-        private ProtocolWriter<ULMessage>? _writer;
-        private ProtocolReader<ULMessage>? _reader;
+        private Connection? _connection;
+        private readonly ULProtocol _protocol;
+        private ProtocolWriter? _writer;
+        private ProtocolReader? _reader;
 
         private TaskCompletionSource<Association?>? _associationTcs;
 
@@ -47,6 +48,7 @@ namespace DiCor.Net.UpperLayer
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
             _state = ULConnectionState.Sta1_Idle;
+            _protocol = new ULProtocol(this);
         }
 
         public ULConnectionState State => _state;
@@ -64,18 +66,17 @@ namespace DiCor.Net.UpperLayer
             _associationTcs.AttachCancellation(cancellationToken, this);
 
             // AE-1
-            _connection = await _client.Client.ConnectAsync(_endpoint, cancellationToken).ConfigureAwait(false);
+            _connection = await _client.Client.ConnectAsync(_endpoint, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             _state = ULConnectionState._Sta4_AwaitingTransportConnectionOpen;
 
-            var protocol = new ULProtocol(this);
-            _reader = _connection.CreateReader<ULMessage>(protocol, (int)Association.DefaultMaxDataLength);
-            _writer = _connection.CreateWriter<ULMessage>(protocol);
+            _reader = _connection.CreateReader();
+            _writer = _connection.CreateWriter();
 
             _ = ReadLoop(cancellationToken);
 
             // AE-2
-            await _writer.WriteAsync(new ULMessage(Pdu.Type.AAssociateRq), cancellationToken).ConfigureAwait(false);
+            await _writer.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAssociateRq), cancellationToken).ConfigureAwait(false);
 
             _state = ULConnectionState.Sta5_AwaitingAssociateResponse;
 
@@ -90,11 +91,12 @@ namespace DiCor.Net.UpperLayer
 
             while (true)
             {
-                ULMessage message = await _reader.ReadAsync(cancellationToken);
-                if (message.Type == 0)
+                ProtocolReadResult<ULMessage> result = await _reader.ReadAsync(_protocol, (int)Association.DefaultMaxDataLength, cancellationToken);
+                if (result.IsCompleted)
                     break;
+                _reader.Advance();
 
-                await ProcessAsync(message).ConfigureAwait(false);
+                await ProcessAsync(result.Message).ConfigureAwait(false);
             }
         }
 
@@ -136,7 +138,7 @@ namespace DiCor.Net.UpperLayer
 
                 case ULConnectionState.Sta2_TransportConnectionOpen:
                     // AA-1
-                    await _writer.WriteAsync(new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceUser)).ConfigureAwait(false);
+                    await _writer.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceUser)).ConfigureAwait(false);
                     // TODO Start or restart ARTIM
                     _state = ULConnectionState.Sta13_AwaitingTransportConnectionClose;
                     break;
@@ -163,7 +165,7 @@ namespace DiCor.Net.UpperLayer
 
                 default:
                     // AA-8
-                    await _writer.WriteAsync(new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceProvider)).ConfigureAwait(false);
+                    await _writer.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceProvider)).ConfigureAwait(false);
                     // TODO Start ARTIM
                     _state = ULConnectionState.Sta13_AwaitingTransportConnectionClose;
                     break;
@@ -173,7 +175,7 @@ namespace DiCor.Net.UpperLayer
         private async ValueTask OnAAbortAsync(ULMessage message)
         {
 
-            ConnectionContext? connection = _connection;
+            Connection? connection = _connection;
             if (connection != null)
                 await connection.DisposeAsync().ConfigureAwait(false);
         }

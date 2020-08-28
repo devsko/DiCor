@@ -4,6 +4,9 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace DiCor
+#if GENERATOR
+.Internal
+#endif
 {
     public enum UidType
     {
@@ -61,7 +64,11 @@ namespace DiCor
             IsRetired = isRetired;
         }
 
+#pragma warning disable IDE0079 // Remove unnecessary suppression
+#pragma warning disable IDE0051 // Remove unused private members
         private Uid(string value)
+#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0079 // Remove unnecessary suppression
         {
             Value = value;
             Name = string.Empty;
@@ -73,27 +80,21 @@ namespace DiCor
         public static bool IsValid(string value)
         {
             if (value is null)
-            {
                 throw new ArgumentNullException(nameof(value));
-            }
 
             if (value.Length == 0 || value.Length > 64)
-            {
                 return false;
-            }
 
             foreach (char c in value)
             {
                 if (c != '.' && (c < '0' || c > '9'))
-                {
                     return false;
-                }
             }
 
             return true;
         }
 
-        public static StorageCategory GetStorageCategory(Uid uid)
+        public static StorageCategory GetStorageCategory(in Uid uid)
         {
             if (!uid.IsDicomDefined && uid.Type == UidType.SOPClass)
                 return StorageCategory.Private;
@@ -107,67 +108,41 @@ namespace DiCor
             if (uid.Name.Contains("Volume Storage"))
                 return StorageCategory.Volume;
 
-            if (uid == BlendingSoftcopyPresentationStateStorage
-                || uid == ColorSoftcopyPresentationStateStorage
-                || uid == GrayscaleSoftcopyPresentationStateStorage
-                || uid == PseudoColorSoftcopyPresentationStateStorage)
+            if (uid.Value == "1.2.840.10008.5.1.4.1.1.11.4" // BlendingSoftcopyPresentationStateStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.11.2" // ColorSoftcopyPresentationStateStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.11.1" // GrayscaleSoftcopyPresentationStateStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.11.3") // PseudoColorSoftcopyPresentationStateStorage
                 return StorageCategory.PresentationState;
 
-            else if (uid == AudioSRStorageTrial_RETIRED
-                || uid == BasicTextSRStorage
-                || uid == ChestCADSRStorage
-                || uid == ComprehensiveSRStorage
-                || uid == ComprehensiveSRStorageTrial_RETIRED
-                || uid == DetailSRStorageTrial_RETIRED
-                || uid == EnhancedSRStorage
-                || uid == MammographyCADSRStorage
-                || uid == TextSRStorageTrial_RETIRED
-                || uid == XRayRadiationDoseSRStorage)
+            else if (uid.Value == "1.2.840.10008.5.1.4.1.1.88.2" // AudioSRStorageTrial_RETIRED
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.11" // BasicTextSRStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.65" // ChestCADSRStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.59" // ComprehensiveSRStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.4" // ComprehensiveSRStorageTrial_RETIRED
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.3" // DetailSRStorageTrial_RETIRED
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.22" // EnhancedSRStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.50" // MammographyCADSRStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.1" // TextSRStorageTrial_RETIRED
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.67") // XRayRadiationDoseSRStorage)
                 return StorageCategory.StructuredReport;
 
-            else if (uid == AmbulatoryECGWaveformStorage
-                || uid == BasicVoiceAudioWaveformStorage
-                || uid == CardiacElectrophysiologyWaveformStorage
-                || uid == GeneralECGWaveformStorage
-                || uid == HemodynamicWaveformStorage
-                || uid == _12LeadECGWaveformStorage
-                || uid == WaveformStorageTrial_RETIRED)
+            else if (uid.Value == "1.2.840.10008.5.1.4.1.1.9.1.3" // AmbulatoryECGWaveformStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.4.1" // BasicVoiceAudioWaveformStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.3.1" // CardiacElectrophysiologyWaveformStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.1.2" // GeneralECGWaveformStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.2.1" // HemodynamicWaveformStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.1.1" // _12LeadECGWaveformStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.1") // WaveformStorageTrial_RETIRED
                 return StorageCategory.Waveform;
 
-            else if (uid == EncapsulatedCDAStorage
-                || uid == EncapsulatedPDFStorage)
+            else if (uid.Value == "1.2.840.10008.5.1.4.1.1.104.2" // EncapsulatedCDAStorage
+                || uid.Value == "1.2.840.10008.5.1.4.1.1.104.1") // EncapsulatedPDFStorage
                 return StorageCategory.Document;
 
-            else if (uid == RawDataStorage)
+            else if (uid.Value == "1.2.840.10008.5.1.4.1.1.66") // RawDataStorage
                 return StorageCategory.Raw;
 
             return StorageCategory.Other;
-        }
-
-        public static Uid Get(string value)
-            => s_uids.TryGetValue(new Uid(value), out Uid uid) ? uid : new Uid(value, string.Empty, UidType.Other);
-
-        public static Uid NewUid(string name = "", UidType type = UidType.SOPInstance)
-        {
-            unsafe
-            {
-                Span<byte> span = stackalloc byte[sizeof(Guid)];
-                Guid.NewGuid().TryWriteBytes(span);
-                Swap(ref span[7], ref span[6]);
-                Swap(ref span[5], ref span[4]);
-                Swap(ref span[3], ref span[0]);
-                Swap(ref span[1], ref span[2]);
-
-                return new Uid("2.25." + new BigInteger(span, isUnsigned: true, isBigEndian: true).ToString(), name, type);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Swap(ref byte b1, ref byte b2)
-        {
-            byte temp = b2;
-            b2 = b1;
-            b1 = temp;
         }
 
         public bool IsDicomDefined
@@ -177,12 +152,12 @@ namespace DiCor
             => $"{(IsRetired ? "*" : "")}{Type}: {Name} [{Value}]";
 
         public override int GetHashCode()
-            => Value?.GetHashCode() ?? 0;
+            => Value.GetHashCode();
 
         public override bool Equals(object? obj)
             => obj is Uid uid && Equals(uid);
 
-        public bool Equals([AllowNull] Uid other)
+        public bool Equals(Uid other)
             => Value == other.Value;
 
         public static bool operator ==(Uid left, Uid right)
@@ -190,6 +165,5 @@ namespace DiCor
 
         public static bool operator !=(Uid left, Uid right)
             => !(left == right);
-
     }
 }

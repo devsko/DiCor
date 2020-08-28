@@ -8,8 +8,6 @@ using Bedrock.Framework;
 using Bedrock.Framework.Protocols;
 using DiCor.Buffers;
 using DiCor.Net.UpperLayer;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;

@@ -23,7 +23,7 @@ namespace DiCor.Buffers
         private Span<byte> _span;
         private State _state;
 
-        public Span<byte> Span => _span;
+        public readonly Span<byte> Span => _span;
 
         public BufferWriter(IBufferWriter<byte> output)
         {

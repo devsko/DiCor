@@ -80,7 +80,7 @@ namespace System.Buffers
             return true;
         }
 
-        private static bool TryReadAsciiMultiSegment(ref SequenceReader<byte> reader, int length, [NotNullWhen(false)]out string? value)
+        private static bool TryReadAsciiMultiSegment(ref SequenceReader<byte> reader, int length, [NotNullWhen(true)]out string? value)
         {
             Span<byte> buffer = length > 1024 ? new byte[length] : stackalloc byte[length];
             if (!reader.TryCopyTo(buffer))
