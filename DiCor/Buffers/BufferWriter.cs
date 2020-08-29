@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
-using System.Security.Policy;
+using System.Runtime.InteropServices;
 
 namespace DiCor.Buffers
 {
@@ -13,9 +13,9 @@ namespace DiCor.Buffers
             public int _committed;
             public int _lengthPrefixCount;
 
-            public unsafe Span<State> AsSpan()
+            public Span<State> AsSpan()
             {
-                return new Span<State>(Unsafe.AsPointer(ref this), 1);
+                return MemoryMarshal.CreateSpan(ref this, 1);
             }
         }
 

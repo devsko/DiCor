@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.ClientApp", "DiCor.Cl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Performance", "DiCor.Performance\DiCor.Performance.csproj", "{D3F283CF-4D86-4518-ABF5-7A5336499E02}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Generator", "DiCor.Generator\DiCor.Generator.csproj", "{C5029F3E-E69E-48F1-8782-CBA7EE436F34}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiCor.Generator", "DiCor.Generator\DiCor.Generator.csproj", "{66CD12A9-0D59-4127-B46F-9CE01E8591F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,10 +43,10 @@ Global
 		{D3F283CF-4D86-4518-ABF5-7A5336499E02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3F283CF-4D86-4518-ABF5-7A5336499E02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3F283CF-4D86-4518-ABF5-7A5336499E02}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C5029F3E-E69E-48F1-8782-CBA7EE436F34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C5029F3E-E69E-48F1-8782-CBA7EE436F34}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C5029F3E-E69E-48F1-8782-CBA7EE436F34}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C5029F3E-E69E-48F1-8782-CBA7EE436F34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -14,6 +14,7 @@ namespace DiCor.Buffers
         public ref struct LengthPrefix
         {
             private Span<byte> _span;
+            // WORKAROUND: private readonly ref State _state;
             private readonly Span<State> _stateRef;
             private readonly int _position;
             private readonly int _currentPrefixCount;

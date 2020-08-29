@@ -1,8 +1,11 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,117 +13,107 @@ using DiCor.Internal;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.VisualStudio.Threading;
 
 namespace DiCor.Generator
 {
     [Generator]
     public class UidSourceGenerator : ISourceGenerator
     {
-        private const string DiagnosticCategory = "DiCor.Generator";
+        private static readonly HttpClient _httpClient = new HttpClient();
+        private static readonly JoinableTaskFactory _jtf = new JoinableTaskFactory(new JoinableTaskContext());
 
-        private static readonly DiagnosticDescriptor s_generatorStarted = new DiagnosticDescriptor(
-                        "GEN001",
-                        "Uid generator started",
-                        "Uid generator started",
-                        DiagnosticCategory,
-                        DiagnosticSeverity.Info,
-                        true);
-        private static readonly DiagnosticDescriptor s_generatorFinished = new DiagnosticDescriptor(
-                        "GEN901",
-                        "Uid generator finished",
-                        "Uid generator finished",
-                        DiagnosticCategory,
-                        DiagnosticSeverity.Info,
-                        true);
-        private static readonly DiagnosticDescriptor s_resourceOutdated = new DiagnosticDescriptor(
-                        "GEN002",
-                        "Resource outdated",
-                        "The new version '{0}' must be downladed from {1]",
-                        DiagnosticCategory,
-                        DiagnosticSeverity.Error,
-                        true);
-
-        private readonly HttpClient _httpClient = new HttpClient();
+        public static Assembly Assembly => typeof(UidSourceGenerator).Assembly;
+        public static string AssemblyName => Assembly.GetName().Name;
 
         public void Initialize(InitializationContext context)
         { }
 
         public void Execute(SourceGeneratorContext context)
         {
-            context.ReportDiagnostic(Diagnostic.Create(s_generatorStarted, default));
-            ExecuteAsync().Wait(context.CancellationToken);
-            context.ReportDiagnostic(Diagnostic.Create(s_generatorFinished, default));
+            context.ReportDiagnostic(Diagnostics.GeneratorStart());
+            _jtf.Run(() => ExecuteAsync(context));
+            context.ReportDiagnostic(Diagnostics.GeneratorFinish());
 
-            async Task ExecuteAsync()
+            static async Task ExecuteAsync(SourceGeneratorContext context)
             {
-                using (var part16 = new Part16(_httpClient, context.CancellationToken))
-                using (var part06 = new Part06(_httpClient, context.CancellationToken))
+                try
                 {
-                    bool generate = true;
-                    if (!await part16.IsUpToDateAsync().ConfigureAwait(false))
+                    string projectPath = Path.Combine(context.Compilation.Options.SourceReferenceResolver!.NormalizePath("..", null)!, AssemblyName);
+
+                    using (var part16 = new Part16(_httpClient, projectPath, context.CancellationToken))
+                    using (var part06 = new Part06(_httpClient, projectPath, context.CancellationToken))
                     {
-                        generate = false;
-                        context.ReportDiagnostic(Diagnostic.Create(s_resourceOutdated, default, Part16.ResourceKey, Part16.Uri));
-                    }
-                    if (!await part06.IsUpToDateAsync().ConfigureAwait(false))
-                    {
-                        generate = false;
-                        context.ReportDiagnostic(Diagnostic.Create(s_resourceOutdated, default, Part06.ResourceKey, Part06.Uri));
-                    }
-                    if (generate)
-                    {
-                        Dictionary<int, string> cidTable = await part16.GetSectionsByIdAsync().ConfigureAwait(false);
+                        Dictionary<int, string> cidTable = await part16.GetSectionsByIdAsync(context).ConfigureAwait(false);
                         if (cidTable.Count > 0)
                         {
-                            (Uid[]? tableA1, Uid[]? tableA3) = await part06.GetTablesAsync(cidTable).ConfigureAwait(false);
+                            (Uid[]? tableA1, Uid[]? tableA3) = await part06.GetTablesAsync(context, cidTable).ConfigureAwait(false);
                             if (tableA1 != null && tableA3 != null)
                             {
-                                var hashSet = new StringBuilder();
-                                hashSet.Append(
+                                string header =
+$"// Generated code\r\n" +
+$"// {part06.Title} ({Part06.Uri})\r\n" +
+$"// {part16.Title} ({Part16.Uri})\r\n\r\n";
+
+                                (string hashSet, string uids) = CreateCode(context, header, tableA1, tableA3);
+
+                                context.AddSource("Uid.HashSet.g.cs", SourceText.From(hashSet, Encoding.UTF8));
+                                context.AddSource("Uid.Uids.g.cs", SourceText.From(uids, Encoding.UTF8));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    context.ReportDiagnostic(Diagnostics.UnexpectedException(ex));
+                }
+            }
+        }
+
+        private static (string, string) CreateCode(SourceGeneratorContext context, string header, Uid[]? tableA1, Uid[]? tableA3)
+        {
+            var hashSet = new StringBuilder(header);
+            hashSet.Append(
 "using System.Collections.Generic;\r\n" +
 "namespace DiCor\r\n" +
 "{\r\n" +
 "    public partial struct Uid\r\n" +
 "    {\r\n" +
-"        private const string _part16Title = \"").Append(part16.Title).Append("\";\r\n" +
-"        private const string _part06Title = \"").Append(part06.Title).Append("\";\r\n" +
 "        private static readonly HashSet<Uid> s_uids = new HashSet<Uid>()\r\n" +
 "        {\r\n");
-                                var uids = new StringBuilder();
-                                uids.Append(
+
+            var uids = new StringBuilder(header);
+            uids.Append(
 "namespace DiCor\r\n" +
 "{\r\n" +
 "    public partial struct Uid\r\n" +
 "    {\r\n");
 
-                                foreach (Uid uid in tableA1.Concat(tableA3))
-                                {
-                                    StorageCategory storageCategory = Uid.GetStorageCategory(uid);
-                                    string category = storageCategory != StorageCategory.None ? $", storageCategory: StorageCategory.{storageCategory}" : "";
-                                    string isRetired = uid.IsRetired ? ", isRetired: true" : "";
-                                    string symbol = ToSymbol(uid);
+            foreach (Uid uid in tableA1.Concat(tableA3))
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
 
-                                    hashSet.Append(
+                StorageCategory storageCategory = Uid.GetStorageCategory(uid);
+                string category = storageCategory != StorageCategory.None ? $", storageCategory: StorageCategory.{storageCategory}" : "";
+                string isRetired = uid.IsRetired ? ", isRetired: true" : "";
+                string symbol = ToSymbol(uid);
+
+                hashSet.Append(
 "            Uid.").Append(symbol).Append(",\r\n");
 
-                                    uids.Append(
+                uids.Append(
 "        public static readonly Uid ").Append(symbol).Append(" = new Uid(\"").Append(uid.Value).Append("\", \"").Append(uid.Name).Append("\", UidType.").Append(uid.Type).Append(category).Append(isRetired).Append(");\r\n");
-                                }
+            }
 
-                                hashSet.Append(
+            hashSet.Append(
 "        };\r\n" +
 "    }\r\n" +
 "}\r\n");
-                                uids.Append(
+            uids.Append(
 "    }\r\n" +
 "}\r\n");
-                                context.AddSource("Uid.HashSet.g.cs", SourceText.From(hashSet.ToString(), Encoding.UTF8));
-                                context.AddSource("Uid.Uids.g.cs", SourceText.From(uids.ToString(), Encoding.UTF8));
-                            }
-                        }
-                    }
-                }
-            }
+
+            return (hashSet.ToString(), uids.ToString());
         }
 
         private static string ToSymbol(Uid uid, bool useValue = false)

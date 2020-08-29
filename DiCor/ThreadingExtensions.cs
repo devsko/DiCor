@@ -128,7 +128,9 @@ namespace DiCor
                     // asynchronously, but then in the common case it becomes less efficient.
                     // Instead, we will optimize for the common (no-race) case and detect if we were inlined, and if so, defer the work
                     // to avoid making our caller block for arbitrary code since CTR.Dispose blocks for in-progress cancellation notification to complete.
+#pragma warning disable VSTHRD110 // Observe result of async calls
                     taskCompletionSource.Task.ContinueWith(
+#pragma warning restore VSTHRD110 // Observe result of async calls
                         (_, s) =>
                         {
                             var t = (CancelableTaskCompletionSource<T>)s!;

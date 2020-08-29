@@ -73,7 +73,7 @@ namespace DiCor.Net.UpperLayer
             _reader = _connection.CreateReader();
             _writer = _connection.CreateWriter();
 
-            _ = ReadLoop(cancellationToken);
+            _ = ReadLoopAsync(cancellationToken);
 
             // AE-2
             await _writer.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAssociateRq), cancellationToken).ConfigureAwait(false);
@@ -85,7 +85,7 @@ namespace DiCor.Net.UpperLayer
 
 
 
-        private async Task ReadLoop(CancellationToken cancellationToken)
+        private async Task ReadLoopAsync(CancellationToken cancellationToken)
         {
             Debug.Assert(_reader != null);
 

@@ -774,3 +774,7 @@ dotnet_diagnostic.xUnit2013.severity = none
 # xUnit2017: Do not use Contains() to check if a value exists in a collection
 dotnet_diagnostic.xUnit2017.severity = none
 
+
+
+# VSTHRD104: Offer async option
+dotnet_diagnostic.VSTHRD104.severity = none

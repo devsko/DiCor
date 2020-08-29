@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,6 +12,8 @@ using System.Xml.Linq;
 
 using DiCor.Internal;
 
+using Microsoft.CodeAnalysis;
+
 namespace DiCor.Generator
 {
     public class Part06 : DicomXmlDoc
@@ -17,24 +21,26 @@ namespace DiCor.Generator
         public const string ResourceKey = "xml.part06.xml";
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part06/part06.xml";
 
-        public Part06(HttpClient httpClient, CancellationToken cancellationToken)
-            : base(httpClient, Uri, ResourceKey, cancellationToken)
+        public Part06(HttpClient httpClient, string projectPath, CancellationToken cancellationToken)
+            : base(httpClient, projectPath, Uri, ResourceKey, cancellationToken)
         { }
 
-        public async Task<(Uid[]? TableA1, Uid[]? TableA3)> GetTablesAsync(Dictionary<int, string> cidTable)
+        public async Task<(Uid[]? TableA1, Uid[]? TableA3)> GetTablesAsync(SourceGeneratorContext context, Dictionary<int, string> cidTable)
         {
-            Debug.Assert(Xml != null);
+            await InitializeAsync(context).ConfigureAwait(false);
+
+            Debug.Assert(Reader != null);
 
             int tablesFound = 0;
             Uid[]? tableA1 = null;
             Uid[]? tableA3 = null;
-            while (await Xml!.ReadAsync().ConfigureAwait(false))
+            while (await Reader!.ReadAsync().ConfigureAwait(false))
             {
                 _cancellationToken.ThrowIfCancellationRequested();
 
-                if (Xml.NodeType == XmlNodeType.Element && Xml.LocalName == "table")
+                if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == "table")
                 {
-                    string? id = Xml.GetAttribute("id", XNamespace.Xml.NamespaceName);
+                    string? id = Reader.GetAttribute("id", XNamespace.Xml.NamespaceName);
                     if (id == "table_A-1")
                     {
                         tableA1 = ReadTableA1();
@@ -55,7 +61,7 @@ namespace DiCor.Generator
         }
 
         private Uid[]? ReadTableA1()
-            => XElement.Load(Xml!.ReadSubtree())
+            => XElement.Load(Reader!.ReadSubtree())
                 .Element(DocbookNS + "tbody")?
                 .Elements(DocbookNS + "tr")
                 .Select(tr => tr.Elements(DocbookNS + "td"))
@@ -63,7 +69,7 @@ namespace DiCor.Generator
                 .ToArray();
 
         private Uid[]? ReadTableA3(Dictionary<int, string> cidTable)
-            => XElement.Load(Xml!.ReadSubtree())
+            => XElement.Load(Reader!.ReadSubtree())
                 .Element(DocbookNS + "tbody")?
                 .Elements(DocbookNS + "tr")
                 .Select(tr => tr.Elements(DocbookNS + "td"))

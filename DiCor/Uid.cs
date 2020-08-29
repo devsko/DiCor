@@ -1,7 +1,8 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using System.Runtime.CompilerServices;
+﻿#if GENERATOR
+#nullable enable
+#endif
+
+using System;
 
 namespace DiCor
 #if GENERATOR

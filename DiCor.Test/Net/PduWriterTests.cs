@@ -36,7 +36,7 @@ namespace DiCor.Test.Net
         {
             var pipe = new Pipe();
             Write();
-            pipe.Writer.Complete();
+            await pipe.Writer.CompleteAsync();
             ReadResult result = await pipe.Reader.ReadAsync();
             byte[] actual = result.Buffer.ToArray();
 
