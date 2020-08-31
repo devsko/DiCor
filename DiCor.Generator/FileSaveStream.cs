@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,10 +59,12 @@ namespace DiCor.Generator
             if (result > 0)
             {
                 if (_file != null)
+                {
                     _file.Write(buffer, offset, result);
+                }
                 else
                 {
-                    var awaiter = _asyncLock.WriteLockAsync().GetAwaiter();
+                    AsyncReaderWriterLock.Awaiter awaiter = _asyncLock.WriteLockAsync().GetAwaiter();
                     awaiter.UnsafeOnCompleted(
                         () =>
                         {

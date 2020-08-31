@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,20 +18,18 @@ namespace DiCor.Generator
     [Generator]
     public class UidSourceGenerator : ISourceGenerator
     {
-        private static readonly HttpClient _httpClient = new HttpClient();
-        private static readonly JoinableTaskFactory _jtf = new JoinableTaskFactory(new JoinableTaskContext());
+        private static readonly HttpClient s_httpClient = new HttpClient();
+        private static readonly JoinableTaskFactory s_jtf = new JoinableTaskFactory(new JoinableTaskContext());
 
         public static Assembly Assembly => typeof(UidSourceGenerator).Assembly;
-        public static string AssemblyName => Assembly.GetName().Name;
+        public static string AssemblyName => Assembly.GetName().Name ?? string.Empty;
 
         public void Initialize(InitializationContext context)
         { }
 
         public void Execute(SourceGeneratorContext context)
         {
-            context.ReportDiagnostic(Diagnostics.GeneratorStart());
-            _jtf.Run(() => ExecuteAsync(context));
-            context.ReportDiagnostic(Diagnostics.GeneratorFinish());
+            s_jtf.Run(() => ExecuteAsync(context));
 
             static async Task ExecuteAsync(SourceGeneratorContext context)
             {
@@ -41,8 +37,8 @@ namespace DiCor.Generator
                 {
                     string projectPath = Path.Combine(context.Compilation.Options.SourceReferenceResolver!.NormalizePath("..", null)!, AssemblyName);
 
-                    using (var part16 = new Part16(_httpClient, projectPath, context.CancellationToken))
-                    using (var part06 = new Part06(_httpClient, projectPath, context.CancellationToken))
+                    using (var part16 = new Part16(s_httpClient, projectPath, context.CancellationToken))
+                    using (var part06 = new Part06(s_httpClient, projectPath, context.CancellationToken))
                     {
                         Dictionary<int, string> cidTable = await part16.GetSectionsByIdAsync(context).ConfigureAwait(false);
                         if (cidTable.Count > 0)
@@ -70,7 +66,7 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
             }
         }
 
-        private static (string, string) CreateCode(SourceGeneratorContext context, string header, Uid[]? tableA1, Uid[]? tableA3)
+        private static (string, string) CreateCode(SourceGeneratorContext context, string header, Uid[] tableA1, Uid[] tableA3)
         {
             var hashSet = new StringBuilder(header);
             hashSet.Append(

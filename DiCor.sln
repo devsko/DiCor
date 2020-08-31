@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.ClientApp", "DiCor.Cl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Performance", "DiCor.Performance\DiCor.Performance.csproj", "{D3F283CF-4D86-4518-ABF5-7A5336499E02}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiCor.Generator", "DiCor.Generator\DiCor.Generator.csproj", "{66CD12A9-0D59-4127-B46F-9CE01E8591F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Generator", "DiCor.Generator\DiCor.Generator.csproj", "{66CD12A9-0D59-4127-B46F-9CE01E8591F6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bedrock.Framework", "..\BedrockFramework\src\Bedrock.Framework\Bedrock.Framework.csproj", "{C63AA515-C18E-4DBD-BB21-F69B8D83919E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,10 @@ Global
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C63AA515-C18E-4DBD-BB21-F69B8D83919E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C63AA515-C18E-4DBD-BB21-F69B8D83919E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C63AA515-C18E-4DBD-BB21-F69B8D83919E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C63AA515-C18E-4DBD-BB21-F69B8D83919E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

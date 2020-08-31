@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -36,7 +34,6 @@ namespace DiCor.Generator
 
         public XmlReader? Reader => _xml?.Xml;
 
-
         public DicomXmlDoc(HttpClient httpClient, string projectPath, string uri, string resourceKey, CancellationToken cancellationToken)
         {
             _httpClient = httpClient;
@@ -62,16 +59,25 @@ namespace DiCor.Generator
         protected async Task InitializeAsync(SourceGeneratorContext context)
         {
             bool download = false;
-
             XmlAndTitle? resourceXml = null;
-            try
+
+            Stream? resourceStream = LoadResource();
+            if (resourceStream is null)
             {
-                resourceXml = await LoadXmlAsync(LoadResource()).ConfigureAwait(false);
-            }
-            catch (XmlException ex)
-            {
-                context.ReportDiagnostic(Diagnostics.XmlException(_resourceKey, ex));
+                context.ReportDiagnostic(Diagnostics.InvalidXml(_resourceKey, "Resource not found."));
                 download = true;
+            }
+            else
+            {
+                try
+                {
+                    resourceXml = await LoadXmlAsync(resourceStream).ConfigureAwait(false);
+                }
+                catch (XmlException ex)
+                {
+                    context.ReportDiagnostic(Diagnostics.InvalidXml(_resourceKey, ex));
+                    download = true;
+                }
             }
 
             FileSaveStream saveStream = await StartDownloadAsync().ConfigureAwait(false);
@@ -93,7 +99,7 @@ namespace DiCor.Generator
             }
         }
 
-        private Stream LoadResource()
+        private Stream? LoadResource()
             => UidSourceGenerator.Assembly.GetManifestResourceStream($"{UidSourceGenerator.AssemblyName}.{_resourceKey}");
 
         private async Task<FileSaveStream> StartDownloadAsync()

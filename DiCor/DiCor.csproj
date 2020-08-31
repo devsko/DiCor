@@ -6,19 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-
+    <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\BedrockFramework\src\Bedrock.Framework\Bedrock.Framework.csproj" />
-
-    <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj">
-      <OutputItemType>Analyzer</OutputItemType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-
-    <!--
-    <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.3.0-beta.0" PrivateAssets="all" />
-    <PackageReference Include="ErrorProne.NET.Structs" Version="0.3.0-beta.0" PrivateAssets="all" />
-    -->
-    
   </ItemGroup>
 
 </Project>

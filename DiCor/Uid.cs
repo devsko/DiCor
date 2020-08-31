@@ -1,8 +1,4 @@
-﻿#if GENERATOR
-#nullable enable
-#endif
-
-using System;
+﻿using System;
 
 namespace DiCor
 #if GENERATOR
