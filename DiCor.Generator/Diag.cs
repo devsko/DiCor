@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    public static class Diagnostics
+    public static class Diag
     {
         private const string DiagnosticCategory = "DiCor.Generator";
 

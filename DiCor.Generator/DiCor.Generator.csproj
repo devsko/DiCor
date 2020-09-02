@@ -38,9 +38,12 @@
 
   <Target Name="GetDependencyTargetPaths">
     <ItemGroup>
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_VisualStudio_Threading)\lib\netstandard2.0\Microsoft.VisualStudio.Threading.dll" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_VisualStudio_Validation)\lib\netstandard2.0\Microsoft.VisualStudio.Validation.dll" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\Microsoft.Bcl.AsyncInterfaces.dll" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_VisualStudio_Threading)\lib\netstandard2.0\Microsoft.VisualStudio.Threading.dll"
+                                           IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_VisualStudio_Validation)\lib\netstandard2.0\Microsoft.VisualStudio.Validation.dll"
+                                           IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\Microsoft.Bcl.AsyncInterfaces.dll"
+                                           IncludeRuntimeDependency="false" />
     </ItemGroup>
   </Target>
 

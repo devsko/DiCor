@@ -10,8 +10,6 @@ using System.Xml.Linq;
 
 using DiCor.Internal;
 
-using Microsoft.CodeAnalysis;
-
 namespace DiCor.Generator
 {
     public class Part06 : DicomXmlDoc
@@ -23,9 +21,9 @@ namespace DiCor.Generator
             : base(httpClient, projectPath, Uri, ResourceKey, cancellationToken)
         { }
 
-        public async Task<(Uid[]? TableA1, Uid[]? TableA3)> GetTablesAsync(SourceGeneratorContext context, Dictionary<int, string> cidTable)
+        public async Task<(Uid[]? TableA1, Uid[]? TableA3)> GetTablesAsync(Dictionary<int, string> cidTable)
         {
-            await InitializeAsync(context).ConfigureAwait(false);
+            await InitializeAsync().ConfigureAwait(false);
 
             Debug.Assert(Reader != null);
 

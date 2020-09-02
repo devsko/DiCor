@@ -40,10 +40,10 @@ namespace DiCor.Generator
                     using (var part16 = new Part16(s_httpClient, projectPath, context.CancellationToken))
                     using (var part06 = new Part06(s_httpClient, projectPath, context.CancellationToken))
                     {
-                        Dictionary<int, string> cidTable = await part16.GetSectionsByIdAsync(context).ConfigureAwait(false);
+                        Dictionary<int, string> cidTable = await part16.GetSectionsByIdAsync().ConfigureAwait(false);
                         if (cidTable.Count > 0)
                         {
-                            (Uid[]? tableA1, Uid[]? tableA3) = await part06.GetTablesAsync(context, cidTable).ConfigureAwait(false);
+                            (Uid[]? tableA1, Uid[]? tableA3) = await part06.GetTablesAsync(cidTable).ConfigureAwait(false);
                             if (tableA1 != null && tableA3 != null)
                             {
                                 string header =
@@ -57,11 +57,15 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
                                 context.AddSource("Uid.Uids.g.cs", SourceText.From(uids, Encoding.UTF8));
                             }
                         }
+                        foreach (Diagnostic diag in part16.Diagnostics.Concat(part06.Diagnostics))
+                        {
+                            context.ReportDiagnostic(diag);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    context.ReportDiagnostic(Diagnostics.UnexpectedException(ex));
+                    context.ReportDiagnostic(Diag.UnexpectedException(ex));
                 }
             }
         }

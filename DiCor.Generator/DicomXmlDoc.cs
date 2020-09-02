@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -13,9 +14,7 @@ namespace DiCor.Generator
 {
     public class DicomXmlDoc : IDisposable
     {
-        private record XmlAndTitle(
-            XmlReader Xml,
-            string Title) : IDisposable
+        private record XmlAndTitle(XmlReader Xml, string Title) : IDisposable
         {
             public void Dispose() => Xml.Dispose();
         }
@@ -26,9 +25,12 @@ namespace DiCor.Generator
         private readonly string _resourcePath;
         private readonly string _uri;
         private readonly string _resourceKey;
+        private readonly List<Diagnostic> _diagnostics = new List<Diagnostic>();
         protected readonly CancellationToken _cancellationToken;
 
         private XmlAndTitle? _xml;
+
+        public List<Diagnostic> Diagnostics => _diagnostics;
 
         public string? Title => _xml?.Title;
 
@@ -56,7 +58,7 @@ namespace DiCor.Generator
             return path;
         }
 
-        protected async Task InitializeAsync(SourceGeneratorContext context)
+        protected async Task InitializeAsync()
         {
             bool download = false;
             XmlAndTitle? resourceXml = null;
@@ -64,7 +66,7 @@ namespace DiCor.Generator
             Stream? resourceStream = LoadResource();
             if (resourceStream is null)
             {
-                context.ReportDiagnostic(Diagnostics.InvalidXml(_resourceKey, "Resource not found."));
+                _diagnostics.Add(Diag.InvalidXml(_resourceKey, "Resource not found."));
                 download = true;
             }
             else
@@ -75,7 +77,7 @@ namespace DiCor.Generator
                 }
                 catch (XmlException ex)
                 {
-                    context.ReportDiagnostic(Diagnostics.InvalidXml(_resourceKey, ex));
+                    _diagnostics.Add(Diag.InvalidXml(_resourceKey, ex));
                     download = true;
                 }
             }
@@ -87,7 +89,7 @@ namespace DiCor.Generator
 
             if (download)
             {
-                context.ReportDiagnostic(Diagnostics.ResourceOutdated(_resourceKey, _uri));
+                _diagnostics.Add(Diag.ResourceOutdated(_resourceKey, _uri));
                 await saveStream.StopBufferingAsync().ConfigureAwait(false);
                 _xml = downloadXml;
                 resourceXml?.Dispose();

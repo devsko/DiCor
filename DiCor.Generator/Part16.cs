@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using Microsoft.CodeAnalysis;
-
 namespace DiCor.Generator
 {
     public class Part16 : DicomXmlDoc
@@ -20,9 +18,9 @@ namespace DiCor.Generator
             : base(httpClient, projectPath, Uri, ResourceKey, cancellationToken)
         { }
 
-        public async Task<Dictionary<int, string>> GetSectionsByIdAsync(SourceGeneratorContext context)
+        public async Task<Dictionary<int, string>> GetSectionsByIdAsync()
         {
-            await InitializeAsync(context).ConfigureAwait(false);
+            await InitializeAsync().ConfigureAwait(false);
 
             Debug.Assert(Reader != null);
 
