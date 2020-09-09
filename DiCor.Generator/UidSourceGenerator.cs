@@ -73,16 +73,17 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
         private static (string, string) CreateCode(GeneratorExecutionContext context, string header, Uid[] tableA1, Uid[] tableA3)
         {
             var hashSet = new StringBuilder(header);
+            var uids = new StringBuilder(header);
+
             hashSet.Append(
 "using System.Collections.Generic;\r\n" +
 "namespace DiCor\r\n" +
 "{\r\n" +
 "    public partial struct Uid\r\n" +
 "    {\r\n" +
-"        private static readonly HashSet<Uid> s_uids = new HashSet<Uid>()\r\n" +
+"        private static readonly HashSet<Uid> s_uids = new()\r\n" +
 "        {\r\n");
 
-            var uids = new StringBuilder(header);
             uids.Append(
 "namespace DiCor\r\n" +
 "{\r\n" +
@@ -102,7 +103,7 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
 "            Uid.").Append(symbol).Append(",\r\n");
 
                 uids.Append(
-"        public static readonly Uid ").Append(symbol).Append(" = new Uid(\"").Append(uid.Value).Append("\", \"").Append(uid.Name).Append("\", UidType.").Append(uid.Type).Append(category).Append(isRetired).Append(");\r\n");
+"        public static readonly Uid ").Append(symbol).Append(" = new(\"").Append(uid.Value).Append("\", \"").Append(uid.Name).Append("\", UidType.").Append(uid.Type).Append(category).Append(isRetired).Append(");\r\n");
             }
 
             hashSet.Append(
@@ -122,7 +123,10 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
             ReadOnlySpan<char> process = "(Process ".AsSpan();
 
             // Additional 9 chars for appending "_RETIRED" and prepending "_" if needed
-            Span<char> symbol = stackalloc char[(useValue ? uid.Value : uid.Name).Length + 8 + 1];
+            Span<char> buffer = stackalloc char[(useValue ? uid.Value : uid.Name).Length + 8 + 1];
+
+            Span<char> symbol = buffer.Slice(1);
+
             (useValue ? uid.Value : uid.Name).AsSpan().CopyTo(symbol);
 
             ReadOnlySpan<char> read = symbol;
@@ -166,8 +170,9 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
             }
             if (char.IsDigit(symbol[0]))
             {
-                symbol.Slice(0, writeAt++).CopyTo(symbol.Slice(1));
+                symbol = buffer;
                 symbol[0] = '_';
+                writeAt++;
             }
             if (uid.IsRetired)
             {

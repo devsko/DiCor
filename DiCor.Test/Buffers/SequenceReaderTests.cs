@@ -1,10 +1,10 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Text;
 using System.Threading.Tasks;
+
 using DiCor.Buffers;
+
 using Xunit;
 
 namespace DiCor.Test.Buffers

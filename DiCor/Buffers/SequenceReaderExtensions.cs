@@ -1,8 +1,4 @@
-﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Security.Policy;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace System.Buffers
@@ -31,7 +27,7 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryRead<T>(ref this SequenceReader<byte> reader, out T value) where T: Enum
+        public static bool TryRead<T>(ref this SequenceReader<byte> reader, out T value) where T : Enum
         {
             if (!reader.TryRead(out byte b))
             {
@@ -80,7 +76,7 @@ namespace System.Buffers
             return true;
         }
 
-        private static bool TryReadAsciiMultiSegment(ref SequenceReader<byte> reader, int length, [NotNullWhen(true)]out string? value)
+        private static bool TryReadAsciiMultiSegment(ref SequenceReader<byte> reader, int length, [NotNullWhen(true)] out string? value)
         {
             Span<byte> buffer = length > 1024 ? new byte[length] : stackalloc byte[length];
             if (!reader.TryCopyTo(buffer))

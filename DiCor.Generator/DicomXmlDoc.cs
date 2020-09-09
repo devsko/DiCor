@@ -135,17 +135,17 @@ namespace DiCor.Generator
                 if (xml.NodeType == XmlNodeType.Element && xml.LocalName == "subtitle")
                 {
                     string title = await xml.ReadElementContentAsStringAsync().ConfigureAwait(false);
-                    return new (xml, title);
+                    return new(xml, title);
                 }
             }
 
-            return new (xml, string.Empty);
+            return new(xml, string.Empty);
         }
 
         public void Dispose()
         {
             _xml?.Dispose();
-            _xml= null;
+            _xml = null;
         }
     }
 }
