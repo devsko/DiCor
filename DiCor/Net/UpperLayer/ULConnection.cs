@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
-using System.Net.Connections;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Bedrock.Framework.Protocols;
+
 using Microsoft.AspNetCore.Connections;
 
 namespace DiCor.Net.UpperLayer
@@ -36,7 +35,7 @@ namespace DiCor.Net.UpperLayer
         private Association? _association;
 
         private ULConnectionState _state;
-        private Connection? _connection;
+        private ConnectionContext? _connection;
         private readonly ULProtocol _protocol;
         private ProtocolWriter? _writer;
         private ProtocolReader? _reader;
@@ -174,8 +173,7 @@ namespace DiCor.Net.UpperLayer
 
         private async ValueTask OnAAbortAsync(ULMessage message)
         {
-
-            Connection? connection = _connection;
+            ConnectionContext? connection = _connection;
             if (connection != null)
                 await connection.DisposeAsync().ConfigureAwait(false);
         }

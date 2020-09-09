@@ -46,10 +46,14 @@ namespace DiCor
         public string Name { get; }
         public UidType Type { get; }
         public bool IsRetired { get; }
-
         public StorageCategory StorageCategory { get; }
 
-        public Uid(string value, string name, UidType type, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
+#if GENERATOR
+        public
+#else
+        private
+#endif
+        Uid(string value, string name, UidType type, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
         {
             if (!IsValid(value))
                 throw new ArgumentException($"{value} is not a valid uid.");
@@ -155,10 +159,10 @@ namespace DiCor
             => obj is Uid uid && Equals(uid);
 
         public bool Equals(Uid other)
-            => Value == other.Value;
+            => this == other;
 
         public static bool operator ==(Uid left, Uid right)
-            => left.Equals(right);
+            => left.Value == right.Value;
 
         public static bool operator !=(Uid left, Uid right)
             => !(left == right);

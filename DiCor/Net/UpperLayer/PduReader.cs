@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 
 namespace DiCor.Net.UpperLayer
 {

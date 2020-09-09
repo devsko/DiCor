@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Xunit;
+﻿using Xunit;
 
 namespace DiCor.Test
 {
@@ -11,7 +8,7 @@ namespace DiCor.Test
         public void Generate()
         {
             var uid = Uid.NewUid("test", UidType.SOPInstance);
-            uid.ToString();
+            var str = uid.ToString();
         }
     }
 }

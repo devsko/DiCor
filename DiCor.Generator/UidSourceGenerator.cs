@@ -24,14 +24,14 @@ namespace DiCor.Generator
         public static Assembly Assembly => typeof(UidSourceGenerator).Assembly;
         public static string AssemblyName => Assembly.GetName().Name ?? string.Empty;
 
-        public void Initialize(InitializationContext context)
+        public void Initialize(GeneratorInitializationContext context)
         { }
 
-        public void Execute(SourceGeneratorContext context)
+        public void Execute(GeneratorExecutionContext context)
         {
             s_jtf.Run(() => ExecuteAsync(context));
 
-            static async Task ExecuteAsync(SourceGeneratorContext context)
+            static async Task ExecuteAsync(GeneratorExecutionContext context)
             {
                 try
                 {
@@ -70,7 +70,7 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
             }
         }
 
-        private static (string, string) CreateCode(SourceGeneratorContext context, string header, Uid[] tableA1, Uid[] tableA3)
+        private static (string, string) CreateCode(GeneratorExecutionContext context, string header, Uid[] tableA1, Uid[] tableA3)
         {
             var hashSet = new StringBuilder(header);
             hashSet.Append(

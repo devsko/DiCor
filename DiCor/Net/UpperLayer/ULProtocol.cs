@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers;
+
 using Bedrock.Framework.Protocols;
-using DiCor.Buffers;
 
 namespace DiCor.Net.UpperLayer
 {

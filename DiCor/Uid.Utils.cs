@@ -20,7 +20,17 @@ namespace DiCor
             Swap(ref span[3], ref span[0]);
             Swap(ref span[1], ref span[2]);
 
-            return new Uid("2.25." + new BigInteger(span, isUnsigned: true, isBigEndian: true).ToString(), name, type);
+            var intValue = new BigInteger(span, isUnsigned: true, isBigEndian: true);
+
+            Span<char> value = stackalloc char[5 + 16 * 3];
+            value[4] = '.';
+            value[3] = '5';
+            value[2] = '2';
+            value[1] = '.';
+            value[0] = '2';
+            intValue.TryFormat(value.Slice(5), out int charsWritten);
+
+            return new Uid(value.Slice(0, charsWritten + 5).ToString(), name, type);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

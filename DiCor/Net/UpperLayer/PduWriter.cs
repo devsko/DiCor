@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 
 using DiCor.Buffers;
-using DiCor.Net.UpperLayer;
 
 namespace DiCor.Net.UpperLayer
 {
