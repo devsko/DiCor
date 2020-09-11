@@ -11,23 +11,33 @@ namespace DiCor.Net.UpperLayer
 {
     class ResponseAwaiter : TaskCompletionSource
     {
+        private CancellationTokenSource? _cts;
+
         public ResponseAwaiter(CancellationToken cancellationToken = default, int timeout = Timeout.Infinite)
             : base(TaskCreationOptions.RunContinuationsAsynchronously)
         {
             if (timeout != Timeout.Infinite)
             {
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(
+                _cts = CancellationTokenSource.CreateLinkedTokenSource(
                     cancellationToken,
                     new CancellationTokenSource(timeout).Token);
-                cancellationToken = cts.Token;
+                cancellationToken = _cts.Token;
 
                 _ = Task.ContinueWith(
-                    (_, s) => ((CancellationTokenSource?)s)?.Dispose(),
-                    cts,
+                    (_, s) => ((CancellationTokenSource)s!).Dispose(),
+                    _cts,
                     TaskScheduler.Default);
             }
 
             this.AttachCancellation(cancellationToken);
+        }
+
+        public void ResetTimeout(int timeout)
+        {
+            if (_cts == null)
+                throw new InvalidOperationException();
+
+            _cts.CancelAfter(timeout);
         }
     }
 }

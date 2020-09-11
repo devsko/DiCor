@@ -10,6 +10,34 @@
             AAbort = 0x07,
         }
 
+        public enum RejectResult : byte
+        {
+            Permanent = 0x01,
+            Transient = 0x02,
+        }
+        public enum RejectSource : byte
+        {
+            ServiceUser = 0x01,
+            ServiceProviderAcse = 0x02,
+            ServiceProviderPresentation = 0x03,
+        }
+
+        public enum RejectReason : byte
+        {
+            NoReasonGiven = 0x01,
+            ApplicationContextNameNotSupported = 0x02,
+            CallingAETitleNotRecognized = 0x03,
+            CalledAETitleNotRecognized = 0x07,
+
+            AcseDiff = 0x20,
+            AcseNoReasonGiven = 0x21,
+            AcseProtocolVersionNotSupported = 0x22,
+
+            PresentationDiff = 0x40,
+            PresentationTemporaryCongestio = 0x41,
+            PresentationLocalLimitExceeded = 0x42,
+        }
+
         public enum AbortSource : byte
         {
             ServiceUser = 0x00,

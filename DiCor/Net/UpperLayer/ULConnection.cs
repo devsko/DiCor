@@ -31,6 +31,8 @@ namespace DiCor.Net.UpperLayer
 
     public partial class ULConnection
     {
+        private const int SendAAbortTimeout = 500;
+
         public static async Task<ULConnection> AssociateAsync(Client client, EndPoint endpoint, AssociationType type, CancellationToken cancellationToken = default)
         {
             ULConnection connection = new(client, endpoint, type);
@@ -43,11 +45,13 @@ namespace DiCor.Net.UpperLayer
         private readonly EndPoint _endpoint;
         private readonly Association _association;
         private readonly Protocol _protocol;
+        private readonly object _stateLock = new();
 
         private ConnectionContext? _connection;
         private ULConnectionState _state;
         private ProtocolReader? _reader;
         private ProtocolWriter? _writer;
+        private ResponseAwaiter? _responseAwaiter;
 
         private ULConnection(Client client, EndPoint endpoint, AssociationType type)
         {
@@ -69,7 +73,7 @@ namespace DiCor.Net.UpperLayer
 
             _state = ULConnectionState.Sta4_AwaitingTransportConnectionOpen;
 
-            // AE-1
+            // AE-1: Issue TRANSPORT CONNECT request primitive to local transport service
             _connection = await _client.ConnectAsync(_endpoint, cancellationToken).ConfigureAwait(false);
 
             _reader = _connection.CreateReader();
@@ -77,12 +81,42 @@ namespace DiCor.Net.UpperLayer
 
             _ = ReadLoopAsync(cancellationToken);
 
-            // AE-2
-            await _writer.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAssociateRq), cancellationToken).ConfigureAwait(false);
+            await AE2_SendAAssociateRq(cancellationToken).ConfigureAwait(false);
+        }
 
-            _state = ULConnectionState.Sta5_AwaitingAssociateResponse;
+#pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
+        private async Task AE2_SendAAssociateRq(CancellationToken cancellationToken)
+        {
+            await _writer!.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAssociateRq), cancellationToken).ConfigureAwait(false);
+            await SetStateAsync(
+                ULConnectionState.Sta5_AwaitingAssociateResponse,
+                new ResponseAwaiter(cancellationToken, /* !!!! */ 100000)).ConfigureAwait(false);
+        }
 
-            new ResponseAwaiter(cancellationToken);
+        private Task AE3_IssueAAssociateConfirmationPrimitive()
+        {
+            return SetStateAsync(ULConnectionState.Sta6_Ready, null);
+        }
+
+        private async Task AA1_SendAAbort(CancellationToken cancellationToken)
+        {
+            await _writer!.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceUser)).ConfigureAwait(false);
+            await SetStateAsync(ULConnectionState.Sta13_AwaitingTransportConnectionClose,
+                new ResponseAwaiter(cancellationToken, timeout: SendAAbortTimeout)).ConfigureAwait(false);
+        }
+#pragma warning restore VSTHRD200 // Use "Async" suffix for async methods
+
+        private Task SetStateAsync(ULConnectionState state, ResponseAwaiter? responseAwaiter)
+        {
+            lock (_stateLock)
+            {
+                ResponseAwaiter? oldAwaiter = _responseAwaiter;
+                _state = state;
+                _responseAwaiter = responseAwaiter;
+                oldAwaiter?.TrySetResult();
+
+                return responseAwaiter?.Task ?? Task.CompletedTask;
+            }
         }
 
         private async Task ReadLoopAsync(CancellationToken cancellationToken)
@@ -100,26 +134,15 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public bool CanReceive(Pdu.Type pduType)
-        {
-            if (_state == ULConnectionState.Sta1_Idle ||
-                _state == ULConnectionState.Sta4_AwaitingTransportConnectionOpen)
-                return false;
-
-            return pduType switch
-            {
-                Pdu.Type.AAssociateAc or Pdu.Type.AAssociateRj => _state == ULConnectionState.Sta5_AwaitingAssociateResponse,
-                Pdu.Type.AAbort => true,
-                _ => throw new ArgumentException(nameof(pduType)),
-            };
-        }
-
         private ValueTask ProcessAsync(ULMessage message)
             => message.Type switch
             {
-                Pdu.Type.AAssociateAc => OnAAssociateResponseAsync(message),
-                Pdu.Type.AAssociateRj => OnAAssociateResponseAsync(message),
-                Pdu.Type.AAbort => OnAAbortAsync(message),
+                Pdu.Type.AAssociateAc or
+                Pdu.Type.AAssociateRj
+                    => OnAAssociateResponseAsync(message),
+                Pdu.Type.AAbort
+                    => OnAAbortAsync(message),
+
                 _ => throw new ArgumentException(nameof(message)),
             };
 
@@ -132,22 +155,16 @@ namespace DiCor.Net.UpperLayer
             {
                 case ULConnectionState.Sta1_Idle:
                 case ULConnectionState.Sta4_AwaitingTransportConnectionOpen:
-                    // CANNOT RECEIVE WITHOUT CONNECTION
+                    // Cannot receive anything without connection.
                     throw new InvalidOperationException("How did we receive a message without connection?");
 
                 case ULConnectionState.Sta2_TransportConnectionOpen:
-                    // AA-1
-                    await _writer.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceUser)).ConfigureAwait(false);
-                    // TODO Start or restart ARTIM
-                    _state = ULConnectionState.Sta13_AwaitingTransportConnectionClose;
+                    await AA1_SendAAbort(default).ConfigureAwait(false);
                     break;
 
                 case ULConnectionState.Sta5_AwaitingAssociateResponse:
                     if (message.Type == Pdu.Type.AAssociateAc)
-                    {
-                        // AE-3
-                        _state = ULConnectionState.Sta6_Ready;
-                    }
+                        await AE3_IssueAAssociateConfirmationPrimitive().ConfigureAwait(false);
                     else
                     {
                         // AE-4

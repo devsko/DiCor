@@ -131,7 +131,18 @@ namespace DiCor.Net.UpperLayer
                     // TODO InvalidPduException
                     throw new InvalidOperationException();
             }
+        }
 
+        public void ReadAAssociateRj(ref ULMessage message)
+        {
+            _input.Reserved(1);
+            _input.TryRead(out byte result); // Result
+            _input.TryRead(out byte source); // Source
+            _input.TryRead(out byte reason); // Reason/Diag.
+
+            message.B1 = result;
+            message.B2 = source;
+            message.B3 = reason;
         }
 
         public void ReadAAbort(ref ULMessage message)

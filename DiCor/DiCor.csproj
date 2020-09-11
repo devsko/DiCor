@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
+    <PackageReference Include="System.IO.Pipelines" Version="$(NetCoreVersion)" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="16.7.56" />
   </ItemGroup>
 

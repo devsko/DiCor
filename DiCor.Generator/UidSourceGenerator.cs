@@ -51,10 +51,10 @@ $"// Generated code\r\n" +
 $"// {part06.Title} ({Part06.Uri})\r\n" +
 $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
 
-                                (string hashSet, string uids) = CreateCode(context, header, tableA1, tableA3);
+                                (string uids, string hashSet) = CreateCode(context, header, tableA1, tableA3);
 
-                                context.AddSource("Uid.HashSet.g.cs", SourceText.From(hashSet, Encoding.UTF8));
                                 context.AddSource("Uid.Uids.g.cs", SourceText.From(uids, Encoding.UTF8));
+                                context.AddSource("Uid.HashSet.g.cs", SourceText.From(hashSet, Encoding.UTF8));
                             }
                         }
                         foreach (Diagnostic diag in part16.Diagnostics.Concat(part06.Diagnostics))
@@ -114,7 +114,7 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
 "    }\r\n" +
 "}\r\n");
 
-            return (hashSet.ToString(), uids.ToString());
+            return (uids.ToString(), hashSet.ToString());
         }
 
         private static string ToSymbol(Uid uid, bool useValue = false)

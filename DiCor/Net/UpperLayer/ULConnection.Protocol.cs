@@ -31,20 +31,29 @@ namespace DiCor.Net.UpperLayer
                     goto ReturnFalse;
 
                 message = new ULMessage((Pdu.Type)type);
-                if (_uLConnection.CanReceive(message.Type))
-                {
-                    buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
-                    var reader = new PduReader(in buffer);
-                    switch (message.Type)
-                    {
-                        case Pdu.Type.AAssociateAc:
-                            reader.ReadAAssociateAc(_uLConnection.Association);
-                            break;
+                buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
+                var reader = new PduReader(in buffer);
 
-                        case Pdu.Type.AAbort:
-                            reader.ReadAAbort(ref message);
-                            break;
-                    }
+                switch (message.Type)
+                {
+                    case Pdu.Type.AAssociateAc:
+                        // TODO copy association and undo when _state is not
+                        if (_uLConnection._state == ULConnectionState.Sta5_AwaitingAssociateResponse)
+                            reader.ReadAAssociateAc(_uLConnection.Association);
+                        break;
+
+                    case Pdu.Type.AAssociateRj:
+                        reader.ReadAAssociateRj(ref message);
+                        break;
+
+                    case Pdu.Type.AAbort:
+                        reader.ReadAAbort(ref message);
+                        break;
+
+                    default:
+                        // PS3.8 - 9.3 DICOM Upper Layer Protocol for TCP/IP Data Units Structure
+                        // ... Items of unrecognized types shall be ignored and skipped. ...
+                        break;
                 }
 
                 buffer.Advance(length);
@@ -67,13 +76,19 @@ namespace DiCor.Net.UpperLayer
                     case Pdu.Type.AAssociateRq:
                         writer.WriteAAssociateRq(_uLConnection.Association);
                         break;
+
                     case Pdu.Type.AAssociateAc:
                         break;
+
+                    case Pdu.Type.AAssociateRj:
+                        break;
+
                     case Pdu.Type.AAbort:
                         writer.WriteAAbort((Pdu.AbortSource)message.B1, (Pdu.AbortReason)message.B2);
                         break;
+
                     default:
-                        break;
+                        throw new NotSupportedException($"Unknown Upper Layer PDU Type {message.Type}.");
                 }
             }
 
