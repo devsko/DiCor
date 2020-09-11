@@ -12,12 +12,12 @@
     <NetCoreVersion>5.0.0-rc.2.20458.14</NetCoreVersion>
     <AspNetCoreVersion>5.0.0-rc.2.20458.16</AspNetCoreVersion>
     <ToolsetVersion>3.8.0-4.20458.5</ToolsetVersion>
-    <AnalyzerVersion>3.3.1-beta1.20458.6</AnalyzerVersion>
+    <AnalyzerVersion>5.0.0-rc2.20458.2</AnalyzerVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="$(ToolsetVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="$(Analyzerversion)"
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="$(Analyzerversion)"
                       PrivateAssets="all" />
   </ItemGroup>
 

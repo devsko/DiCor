@@ -29,7 +29,7 @@ namespace DiCor.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-            s_jtf.Run(() => ExecuteAsync(context));
+            s_jtf.Run(() => ExecuteAsync(context), JoinableTaskCreationOptions.LongRunning);
 
             static async Task ExecuteAsync(GeneratorExecutionContext context)
             {

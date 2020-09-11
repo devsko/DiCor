@@ -1,7 +1,6 @@
 ﻿namespace DiCor.Net.UpperLayer
 {
-
-    public unsafe struct ULMessage
+    public struct ULMessage
     {
         public Pdu.Type Type { get; }
         public byte B1 { get; set; }

@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Bedrock.Framework;
 using Bedrock.Framework.Protocols;
 
 using Microsoft.AspNetCore.Connections;
@@ -15,7 +16,7 @@ namespace DiCor.Net.UpperLayer
         Sta1_Idle,
         Sta2_TransportConnectionOpen,
         Sta3_AwaitingLocalAssociateResponse,
-        _Sta4_AwaitingTransportConnectionOpen,
+        Sta4_AwaitingTransportConnectionOpen,
         Sta5_AwaitingAssociateResponse,
         Sta6_Ready,
         Sta7_AwaitingReleaseResponse,
@@ -28,46 +29,48 @@ namespace DiCor.Net.UpperLayer
 
     }
 
-    public class ULConnection : ICancellationNotification
+    public partial class ULConnection
     {
-        private readonly ULClient _client;
+        public static async Task<ULConnection> AssociateAsync(Client client, EndPoint endpoint, AssociationType type, CancellationToken cancellationToken = default)
+        {
+            ULConnection connection = new(client, endpoint, type);
+            await connection.AssociateAsync(cancellationToken).ConfigureAwait(false);
+
+            return connection;
+        }
+
+        private readonly Client _client;
         private readonly EndPoint _endpoint;
-        private Association? _association;
+        private readonly Association _association;
+        private readonly Protocol _protocol;
 
-        private ULConnectionState _state;
         private ConnectionContext? _connection;
-        private readonly ULProtocol _protocol;
-        private ProtocolWriter? _writer;
+        private ULConnectionState _state;
         private ProtocolReader? _reader;
+        private ProtocolWriter? _writer;
 
-        private TaskCompletionSource<Association?>? _associationTcs;
-
-        public ULConnection(ULClient client, EndPoint endpoint)
+        private ULConnection(Client client, EndPoint endpoint, AssociationType type)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
-            _state = ULConnectionState.Sta1_Idle;
-            _protocol = new ULProtocol(this);
+            _association = new Association(type);
+            _protocol = new Protocol(this);
         }
 
         public ULConnectionState State => _state;
 
-        public Association? Association => _association;
+        public Association Association => _association;
 
-        public async Task<Association?> AssociateAsync(AssociationType type, CancellationToken cancellationToken = default)
+        private async Task AssociateAsync(CancellationToken cancellationToken = default)
         {
             if (_state != ULConnectionState.Sta1_Idle)
                 // TODO ProtocolException
                 throw new InvalidOperationException();
 
-            _association = new Association(type);
-            _associationTcs = new TaskCompletionSource<Association?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _associationTcs.AttachCancellation(cancellationToken, this);
+            _state = ULConnectionState.Sta4_AwaitingTransportConnectionOpen;
 
             // AE-1
-            _connection = await _client.Client.ConnectAsync(_endpoint, cancellationToken: cancellationToken).ConfigureAwait(false);
-
-            _state = ULConnectionState._Sta4_AwaitingTransportConnectionOpen;
+            _connection = await _client.ConnectAsync(_endpoint, cancellationToken).ConfigureAwait(false);
 
             _reader = _connection.CreateReader();
             _writer = _connection.CreateWriter();
@@ -79,10 +82,8 @@ namespace DiCor.Net.UpperLayer
 
             _state = ULConnectionState.Sta5_AwaitingAssociateResponse;
 
-            return await _associationTcs.Task.ConfigureAwait(false);
+            new ResponseAwaiter(cancellationToken);
         }
-
-
 
         private async Task ReadLoopAsync(CancellationToken cancellationToken)
         {
@@ -99,18 +100,17 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public bool CanReceive(ULMessage message)
+        public bool CanReceive(Pdu.Type pduType)
         {
             if (_state == ULConnectionState.Sta1_Idle ||
-                _state == ULConnectionState._Sta4_AwaitingTransportConnectionOpen)
+                _state == ULConnectionState.Sta4_AwaitingTransportConnectionOpen)
                 return false;
 
-            return message.Type switch
+            return pduType switch
             {
-                Pdu.Type.AAssociateAc => _state == ULConnectionState.Sta5_AwaitingAssociateResponse,
-                Pdu.Type.AAssociateRj => _state == ULConnectionState.Sta5_AwaitingAssociateResponse,
+                Pdu.Type.AAssociateAc or Pdu.Type.AAssociateRj => _state == ULConnectionState.Sta5_AwaitingAssociateResponse,
                 Pdu.Type.AAbort => true,
-                _ => throw new ArgumentException(nameof(message)),
+                _ => throw new ArgumentException(nameof(pduType)),
             };
         }
 
@@ -131,7 +131,7 @@ namespace DiCor.Net.UpperLayer
             switch (_state)
             {
                 case ULConnectionState.Sta1_Idle:
-                case ULConnectionState._Sta4_AwaitingTransportConnectionOpen:
+                case ULConnectionState.Sta4_AwaitingTransportConnectionOpen:
                     // CANNOT RECEIVE WITHOUT CONNECTION
                     throw new InvalidOperationException("How did we receive a message without connection?");
 
@@ -144,18 +144,18 @@ namespace DiCor.Net.UpperLayer
 
                 case ULConnectionState.Sta5_AwaitingAssociateResponse:
                     if (message.Type == Pdu.Type.AAssociateAc)
+                    {
                         // AE-3
                         _state = ULConnectionState.Sta6_Ready;
+                    }
                     else
                     {
                         // AE-4
                         await _connection.DisposeAsync().ConfigureAwait(false);
                         _connection = null;
-                        _association = null;
                         _state = ULConnectionState.Sta1_Idle;
                     }
-                    _associationTcs!.TrySetResult(_association);
-                    _associationTcs = null;
+                    // TODO Quit waiting for association response
                     break;
 
                 case ULConnectionState.Sta13_AwaitingTransportConnectionClose:
@@ -178,9 +178,5 @@ namespace DiCor.Net.UpperLayer
                 await connection.DisposeAsync().ConfigureAwait(false);
         }
 
-        public void OnCanceled()
-        {
-            //if (_connection != null)
-        }
     }
 }

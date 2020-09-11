@@ -15,6 +15,6 @@ namespace DiCor
 
     partial struct Uid
     {
-        public static readonly Uid ImplementationClass = new($"{ThisOrgRoot}.1.{Implementation.Version}", "Implementation Class UID", UidType.Other);
+        public static readonly Uid ImplementationClass = new($"{DiCorOrgRoot}1.{Implementation.Version}", "Implementation Class UID", UidType.Other);
     }
 }

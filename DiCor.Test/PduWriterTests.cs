@@ -33,10 +33,11 @@ namespace DiCor.Test
                 .UseConnectionLogging()
                 .Build();
 
-            ULClient ulClient = new ULClient(client);
-            ULConnection ulConnection = await ulClient
-                .AssociateAsync(new DnsEndPoint("dicomserver.co.uk", 11112), AssociationType.Find)
-                .ConfigureAwait(false);
+
+            ULConnection ulConnection = await ULConnection.AssociateAsync(
+                client,
+                new DnsEndPoint("dicomserver.co.uk", 11112),
+                AssociationType.Find).ConfigureAwait(false);
         }
     }
 }

@@ -6,8 +6,9 @@ namespace DiCor.Generator
 {
     public static class Diag
     {
-        private const string DiagnosticCategory = "DiCor.Generator";
+        private const string DiagnosticCategory = "Usage";
 
+#pragma warning disable RS2008 // Enable analyzer release tracking
         private static readonly DiagnosticDescriptor s_resourceOutdated = new DiagnosticDescriptor(
             "GEN002",
             "Resource outdated",
@@ -31,6 +32,7 @@ namespace DiCor.Generator
             DiagnosticCategory,
             DiagnosticSeverity.Error,
             true);
+#pragma warning restore RS2008 // Enable analyzer release tracking
 
         public static Diagnostic ResourceOutdated(string resourceKey, string downloadUri)
             => Diagnostic.Create(s_resourceOutdated, default, resourceKey, downloadUri);
