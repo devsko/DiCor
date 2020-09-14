@@ -5,7 +5,7 @@ using Bedrock.Framework.Protocols;
 
 namespace DiCor.Net.UpperLayer
 {
-    public partial class ULConnection
+    partial class ULConnection
     {
         public class Protocol : IMessageReader<ULMessage>, IMessageWriter<ULMessage>
         {
@@ -36,10 +36,14 @@ namespace DiCor.Net.UpperLayer
 
                 switch (message.Type)
                 {
+                    case Pdu.Type.AAssociateRq:
+                        message.Object = new Association();
+                        reader.ReadAAssociateRq(ref message);
+                        break;
+
                     case Pdu.Type.AAssociateAc:
-                        // TODO copy association and undo when _state is not
-                        if (_uLConnection._state == ULConnectionState.Sta5_AwaitingAssociateResponse)
-                            reader.ReadAAssociateAc(_uLConnection.Association);
+                        message.Object = _uLConnection.Association! with { };
+                        reader.ReadAAssociateAc(ref message);
                         break;
 
                     case Pdu.Type.AAssociateRj:
@@ -74,7 +78,7 @@ namespace DiCor.Net.UpperLayer
                 switch (message.Type)
                 {
                     case Pdu.Type.AAssociateRq:
-                        writer.WriteAAssociateRq(_uLConnection.Association);
+                        writer.WriteAAssociateRq((Association)message.Object!);
                         break;
 
                     case Pdu.Type.AAssociateAc:

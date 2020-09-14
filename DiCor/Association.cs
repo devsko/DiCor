@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace DiCor
 {
@@ -8,9 +9,12 @@ namespace DiCor
         Find,
     }
 
-    public class Association
+    public sealed record Association
     {
         public const uint DefaultMaxDataLength = 256 * 1024;
+
+        public Association()
+        { }
 
         public Association(AssociationType type)
         {
@@ -26,6 +30,19 @@ namespace DiCor
             CallingAE = "A";
             CalledAE = "B";
             PresentationContexts.Add(presentationContext);
+        }
+
+        private Association(Association original)
+        {
+            CalledAE = original.CalledAE;
+            CallingAE = original.CallingAE;
+            MaxResponseDataLength = original.MaxResponseDataLength;
+            MaxRequestDataLength = original.MaxRequestDataLength;
+            MaxOperationsInvoked = original.MaxOperationsInvoked;
+            MaxOperationsPerformed = original.MaxOperationsPerformed;
+            RemoteImplementationClass = original.RemoteImplementationClass;
+            RemoteImplementationVersion = original.RemoteImplementationVersion;
+            PresentationContexts = new List<PresentationContext>(original.PresentationContexts.Select(pc => pc with { }));
         }
 
         public string? CalledAE { get; set; }

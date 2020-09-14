@@ -4,7 +4,7 @@ using DiCor.Net.UpperLayer;
 
 namespace DiCor
 {
-    public class PresentationContext
+    public sealed record PresentationContext
     {
         public Uid AbstractSyntax { get; set; }
         public IList<Uid> TransferSyntaxes { get; } = new List<Uid>();

@@ -12,7 +12,7 @@ namespace DiCor.Net.UpperLayer
             : base(message)
         { }
 
-        public ULProtocolException(ULConnectionState expected, ULConnectionState actual)
+        public ULProtocolException(ULConnection.State expected, ULConnection.State actual)
             : this($"Expected connection state: '{expected}', actual connection state: '{actual}'.")
         { }
     }
