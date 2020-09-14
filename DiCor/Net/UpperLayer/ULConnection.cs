@@ -8,124 +8,170 @@ using Bedrock.Framework;
 using Bedrock.Framework.Protocols;
 
 using Microsoft.AspNetCore.Connections;
+using Microsoft.VisualStudio.Threading;
 
 namespace DiCor.Net.UpperLayer
 {
-    public enum ULConnectionState
-    {
-        Sta1_Idle,
-        Sta2_TransportConnectionOpen,
-        Sta3_AwaitingLocalAssociateResponse,
-        Sta4_AwaitingTransportConnectionOpen,
-        Sta5_AwaitingAssociateResponse,
-        Sta6_Ready,
-        Sta7_AwaitingReleaseResponse,
-        Sta8_AwaitingLocalReleaseResponse,
-        Sta9_AwaitingLocalReleaseResponseCollisionRequestor,
-        Sta10_AwaitingReleaseResponseCollisionAcceptor,
-        Sta11_AwaitingReleaseResponseCollisionRequestor,
-        Sta12_AwaitingLocalReleaseResponseCollisionAcceptor,
-        Sta13_AwaitingTransportConnectionClose,
-
-    }
-
     public partial class ULConnection
     {
-        private const int SendAAbortTimeout = 500;
+        private const int AbortTimeout = 500;
+        private const int RequestTimeout = 500;
 
         public static async Task<ULConnection> AssociateAsync(Client client, EndPoint endpoint, AssociationType type, CancellationToken cancellationToken = default)
         {
-            ULConnection connection = new(client, endpoint, type);
-            await connection.AssociateAsync(cancellationToken).ConfigureAwait(false);
+            if (client is null)
+                throw new ArgumentNullException(nameof(client));
+            if (endpoint is null)
+                throw new ArgumentNullException(nameof(endpoint));
 
-            return connection;
+            ULConnection ulConnection = new(type);
+            await ulConnection.AssociateAsync(client, endpoint, cancellationToken).ConfigureAwait(false);
+
+            return ulConnection;
         }
 
-        private readonly Client _client;
-        private readonly EndPoint _endpoint;
-        private readonly Association _association;
+        public static async Task<ULConnection> StartServiceAsync(ConnectionContext connection, CancellationToken cancellationToken = default)
+        {
+            if (connection is null)
+                throw new ArgumentNullException(nameof(connection));
+
+            ULConnection ulConnection = new(connection);
+            await ulConnection.StartServiceAsync(cancellationToken).ConfigureAwait(false);
+
+            return ulConnection;
+        }
+
         private readonly Protocol _protocol;
-        private readonly object _stateLock = new();
+        private readonly AsyncSemaphore _semaphore = new(initialCount: 1);
+        private readonly CancellationTokenSource _cts = new();
 
         private ConnectionContext? _connection;
+        private Association? _association;
         private ULConnectionState _state;
         private ProtocolReader? _reader;
         private ProtocolWriter? _writer;
         private ResponseAwaiter? _responseAwaiter;
 
-        private ULConnection(Client client, EndPoint endpoint, AssociationType type)
+        private ULConnection(AssociationType type)
         {
-            _client = client ?? throw new ArgumentNullException(nameof(client));
-            _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
             _association = new Association(type);
-            _protocol = new Protocol(this);
+            _protocol = new(this);
+        }
+
+        private ULConnection(ConnectionContext connection)
+        {
+            _connection = connection;
+            _protocol = new(this);
         }
 
         public ULConnectionState State => _state;
 
-        public Association Association => _association;
+        public Association? Association => _association;
 
-        private async Task AssociateAsync(CancellationToken cancellationToken = default)
+        private async Task AssociateAsync(Client client, EndPoint endpoint, CancellationToken cancellationToken = default)
         {
-            if (_state != ULConnectionState.Sta1_Idle)
-                // TODO ProtocolException
-                throw new InvalidOperationException();
+            using (await _semaphore.EnterAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (_state != ULConnectionState.Sta1_Idle)
+                    throw new ULProtocolException(ULConnectionState.Sta1_Idle, _state);
 
-            _state = ULConnectionState.Sta4_AwaitingTransportConnectionOpen;
+                await AE1_IssueTransportConnect(client, endpoint, cancellationToken).ConfigureAwait(false);
+                _ = ReadLoopAsync();
+                await AE2_SendAAssociateRq(cancellationToken).ConfigureAwait(false);
+            }
+        }
 
-            // AE-1: Issue TRANSPORT CONNECT request primitive to local transport service
-            _connection = await _client.ConnectAsync(_endpoint, cancellationToken).ConfigureAwait(false);
+        private async Task StartServiceAsync(CancellationToken cancellationToken)
+        {
+            using (await _semaphore.EnterAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (_state != ULConnectionState.Sta1_Idle)
+                    throw new ULProtocolException(ULConnectionState.Sta1_Idle, _state);
 
-            _reader = _connection.CreateReader();
-            _writer = _connection.CreateWriter();
+                _ = ReadLoopAsync();
+                await AE5_IssueTransportResponse(cancellationToken).ConfigureAwait(false);
+            }
+        }
 
-            _ = ReadLoopAsync(cancellationToken);
+        public async Task ReleaseAsync()
+        {
 
-            await AE2_SendAAssociateRq(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task AbortAsync()
+        {
+
         }
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
-        private async Task AE2_SendAAssociateRq(CancellationToken cancellationToken)
+
+        private async Task AE1_IssueTransportConnect(Client client, EndPoint endpoint, CancellationToken cancellationToken)
         {
-            await _writer!.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAssociateRq), cancellationToken).ConfigureAwait(false);
-            await SetStateAsync(
-                ULConnectionState.Sta5_AwaitingAssociateResponse,
-                new ResponseAwaiter(cancellationToken, /* !!!! */ 100000)).ConfigureAwait(false);
+            Debug.Assert(_state == ULConnectionState.Sta1_Idle);
+
+            _connection = await client.ConnectAsync(endpoint, cancellationToken).ConfigureAwait(false);
+            await SetStateAsync(ULConnectionState.Sta4_AwaitingTransportConnectionOpen, null);
         }
 
-        private Task AE3_IssueAAssociateConfirmationPrimitive()
+        private async Task AE2_SendAAssociateRq(CancellationToken cancellationToken)
         {
-            return SetStateAsync(ULConnectionState.Sta6_Ready, null);
+            Debug.Assert(_state == ULConnectionState.Sta4_AwaitingTransportConnectionOpen);
+
+            await _writer!.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAssociateRq), cancellationToken).ConfigureAwait(false);
+            await SetStateAsync(ULConnectionState.Sta5_AwaitingAssociateResponse,
+                new ResponseAwaiter(cancellationToken)).ConfigureAwait(false);
+        }
+
+        private async Task AE3_IssueAAssociateAccept()
+        {
+            Debug.Assert(_state == ULConnectionState.Sta5_AwaitingAssociateResponse);
+
+            await SetStateAsync(ULConnectionState.Sta6_Ready, null).ConfigureAwait(false);
+        }
+
+        private async Task AE4_IssueAAssociateReject()
+        {
+            Debug.Assert(_state == ULConnectionState.Sta5_AwaitingAssociateResponse);
+            Debug.Assert(_connection != null);
+
+            await _connection.DisposeAsync().ConfigureAwait(false);
+            _connection = null;
+            await SetStateAsync(ULConnectionState.Sta1_Idle, null).ConfigureAwait(false);
+        }
+
+        private async Task AE5_IssueTransportResponse(CancellationToken cancellationToken)
+        {
+            await SetStateAsync(ULConnectionState.Sta2_TransportConnectionOpen,
+                new ResponseAwaiter(cancellationToken, RequestTimeout)).ConfigureAwait(false);
         }
 
         private async Task AA1_SendAAbort(CancellationToken cancellationToken)
         {
             await _writer!.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceUser)).ConfigureAwait(false);
             await SetStateAsync(ULConnectionState.Sta13_AwaitingTransportConnectionClose,
-                new ResponseAwaiter(cancellationToken, timeout: SendAAbortTimeout)).ConfigureAwait(false);
+                new ResponseAwaiter(cancellationToken, timeout: AbortTimeout)).ConfigureAwait(false);
         }
+
 #pragma warning restore VSTHRD200 // Use "Async" suffix for async methods
 
         private Task SetStateAsync(ULConnectionState state, ResponseAwaiter? responseAwaiter)
         {
-            lock (_stateLock)
-            {
-                ResponseAwaiter? oldAwaiter = _responseAwaiter;
-                _state = state;
-                _responseAwaiter = responseAwaiter;
-                oldAwaiter?.TrySetResult();
+            ResponseAwaiter? oldAwaiter = _responseAwaiter;
+            _state = state;
+            _responseAwaiter = responseAwaiter;
+            oldAwaiter?.TrySetResult();
 
-                return responseAwaiter?.Task ?? Task.CompletedTask;
-            }
+            return responseAwaiter?.Task ?? Task.CompletedTask;
         }
 
-        private async Task ReadLoopAsync(CancellationToken cancellationToken)
+        private async Task ReadLoopAsync()
         {
-            Debug.Assert(_reader != null);
+            _reader = _connection.CreateReader();
+            _writer = _connection.CreateWriter();
 
             while (true)
             {
-                ProtocolReadResult<ULMessage> result = await _reader.ReadAsync(_protocol, (int)Association.DefaultMaxDataLength, cancellationToken);
+                ProtocolReadResult<ULMessage> result = await _reader.ReadAsync(_protocol, (int)Association.DefaultMaxDataLength, _cts.Token);
                 if (result.IsCompleted)
                     break;
                 _reader.Advance();
@@ -151,40 +197,39 @@ namespace DiCor.Net.UpperLayer
             Debug.Assert(_connection != null);
             Debug.Assert(_writer != null);
 
-            switch (_state)
+            using (await _semaphore.EnterAsync().ConfigureAwait(false))
             {
-                case ULConnectionState.Sta1_Idle:
-                case ULConnectionState.Sta4_AwaitingTransportConnectionOpen:
-                    // Cannot receive anything without connection.
-                    throw new InvalidOperationException("How did we receive a message without connection?");
+                switch (_state)
+                {
+                    case ULConnectionState.Sta1_Idle:
+                    case ULConnectionState.Sta4_AwaitingTransportConnectionOpen:
+                        // Cannot receive anything without connection.
+                        throw new ULProtocolException("How did we receive a message without connection?");
 
-                case ULConnectionState.Sta2_TransportConnectionOpen:
-                    await AA1_SendAAbort(default).ConfigureAwait(false);
-                    break;
+                    case ULConnectionState.Sta2_TransportConnectionOpen:
+                        await AA1_SendAAbort(default).ConfigureAwait(false);
+                        break;
 
-                case ULConnectionState.Sta5_AwaitingAssociateResponse:
-                    if (message.Type == Pdu.Type.AAssociateAc)
-                        await AE3_IssueAAssociateConfirmationPrimitive().ConfigureAwait(false);
-                    else
-                    {
-                        // AE-4
-                        await _connection.DisposeAsync().ConfigureAwait(false);
-                        _connection = null;
-                        _state = ULConnectionState.Sta1_Idle;
-                    }
-                    // TODO Quit waiting for association response
-                    break;
+                    case ULConnectionState.Sta5_AwaitingAssociateResponse:
+                        await (message.Type switch
+                        {
+                            Pdu.Type.AAssociateAc => AE3_IssueAAssociateAccept(),
+                            Pdu.Type.AAssociateRj => AE4_IssueAAssociateReject(),
+                            _ => Task.CompletedTask,
+                        }).ConfigureAwait(false);
+                        break;
 
-                case ULConnectionState.Sta13_AwaitingTransportConnectionClose:
-                    // AA-6 IGNORE
-                    break;
+                    case ULConnectionState.Sta13_AwaitingTransportConnectionClose:
+                        // AA-6 IGNORE
+                        break;
 
-                default:
-                    // AA-8
-                    await _writer.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceProvider)).ConfigureAwait(false);
-                    // TODO Start ARTIM
-                    _state = ULConnectionState.Sta13_AwaitingTransportConnectionClose;
-                    break;
+                    default:
+                        // AA-8
+                        await _writer.WriteAsync(_protocol, new ULMessage(Pdu.Type.AAbort, (byte)Pdu.AbortSource.ServiceProvider)).ConfigureAwait(false);
+                        // TODO Start ARTIM
+                        _state = ULConnectionState.Sta13_AwaitingTransportConnectionClose;
+                        break;
+                }
             }
         }
 

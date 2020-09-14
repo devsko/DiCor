@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NetCoreVersion>5.0.0-rc.2.20458.14</NetCoreVersion>
-    <AspNetCoreVersion>5.0.0-rc.2.20458.16</AspNetCoreVersion>
-    <ToolsetVersion>3.8.0-4.20458.5</ToolsetVersion>
-    <AnalyzerVersion>5.0.0-rc2.20458.2</AnalyzerVersion>
+    <NetCoreVersion>5.0.0-rc.2.20462.5</NetCoreVersion>
+    <AspNetCoreVersion>5.0.0-rc.2.20460.25</AspNetCoreVersion>
+    <ToolsetVersion>3.8.0-4.20462.1</ToolsetVersion>
+    <AnalyzerVersion>5.0.0-rc2.20460.4</AnalyzerVersion>
   </PropertyGroup>
 
   <ItemGroup>
