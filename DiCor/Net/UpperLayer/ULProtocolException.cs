@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DiCor.Net.UpperLayer
 {
     public class ULProtocolException : Exception
     {
+        public ULProtocolException()
+            : base()
+        { }
+
         public ULProtocolException(string message)
             : base(message)
         { }

@@ -142,10 +142,19 @@ namespace DiCor.Generator
             return new(xml, string.Empty);
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _xml?.Dispose();
+                _xml = null;
+            }
+        }
+
         public void Dispose()
         {
-            _xml?.Dispose();
-            _xml = null;
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

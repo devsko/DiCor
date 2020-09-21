@@ -12,9 +12,10 @@ namespace DiCor.Net.UpperLayer
             _input = input;
         }
 
-        public void ReadAAssociateRq(ref ULMessage message)
+        public void ReadAAssociateRq(ref ULMessage<AAssociateRqData> message)
         {
-            var association = (Association)message.Object!;
+            var association = new Association();
+            message.Data.Association = association;
             _input.TryReadBigEndian(out ushort _); // Protocol-version
             _input.Reserved(2);
             _input.TryRead(16, out string? calledAE);
@@ -43,7 +44,7 @@ namespace DiCor.Net.UpperLayer
 
 
 
-                        _input.TryRead(out Pdu.PresentationContextItemResult result); // Result/Reason
+                        _input.TryReadEnumFromByte(out Pdu.PresentationContextItemResult result); // Result/Reason
                         _input.Reserved(1);
 
                         PresentationContext? presentationContext = association.GetPresentationContext(0);
@@ -132,9 +133,9 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public void ReadAAssociateAc(ref ULMessage message)
+        public void ReadAAssociateAc(ref ULMessage<AAssociateAcData> message)
         {
-            var association = (Association)message.Object!;
+            var association = message.Data.Association;
             association.MaxOperationsInvoked = 1;
             association.MaxOperationsPerformed = 1;
 
@@ -160,7 +161,7 @@ namespace DiCor.Net.UpperLayer
                     case Pdu.ItemTypePresentationContextAc:
                         _input.TryRead(out byte id);  // Presentation-context-ID
                         _input.Reserved(1);
-                        _input.TryRead(out Pdu.PresentationContextItemResult result); // Result/Reason
+                        _input.TryReadEnumFromByte(out Pdu.PresentationContextItemResult result); // Result/Reason
                         _input.Reserved(1);
 
                         PresentationContext? presentationContext = association.GetPresentationContext(id);
@@ -249,26 +250,19 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public void ReadAAssociateRj(ref ULMessage message)
+        public void ReadAAssociateRj(ref ULMessage<AAssociateRjData> message)
         {
             _input.Reserved(1);
-            _input.TryRead(out byte result); // Result
-            _input.TryRead(out byte source); // Source
-            _input.TryRead(out byte reason); // Reason/Diag.
-
-            message.B1 = result;
-            message.B2 = source;
-            message.B3 = reason;
+            _input.TryReadEnumFromByte(out message.Data.Result);
+            _input.TryReadEnumFromByte(out message.Data.Source);
+            _input.TryReadEnumFromByte(out message.Data.Reason);
         }
 
-        public void ReadAAbort(ref ULMessage message)
+        public void ReadAAbort(ref ULMessage<AAbortData> message)
         {
             _input.Reserved(2);
-            _input.TryRead(out byte source); // Source
-            _input.TryRead(out byte reason); // Reason/Diag
-
-            message.B1 = source;
-            message.B2 = reason;
+            _input.TryReadEnumFromByte(out message.Data.Source);
+            _input.TryReadEnumFromByte(out message.Data.Reason);
         }
 
     }

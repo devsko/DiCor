@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
+
+using DiCor.Net.UpperLayer;
 
 namespace System.Buffers
 {
@@ -27,18 +30,15 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryRead<T>(ref this SequenceReader<byte> reader, out T value) where T : Enum
+        public static bool TryReadEnumFromByte<TEnum>(ref this SequenceReader<byte> reader, out TEnum value) where TEnum : struct, Enum
         {
             if (!reader.TryRead(out byte b))
             {
                 value = default!;
                 return false;
             }
-            if (!Enum.IsDefined(typeof(T), b))
-                // TODO InvalidPduException
-                throw new InvalidOperationException();
 
-            value = (T)Enum.ToObject(typeof(T), b);
+            value = Unsafe.As<byte, TEnum>(ref b);
             return true;
         }
 

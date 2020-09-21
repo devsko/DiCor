@@ -4,21 +4,19 @@
     <LangVersion>preview</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup>
-    <NetCoreVersion>5.0.0-rc.2.20462.5</NetCoreVersion>
-    <AspNetCoreVersion>5.0.0-rc.2.20460.25</AspNetCoreVersion>
-    <ToolsetVersion>3.8.0-4.20462.1</ToolsetVersion>
-    <AnalyzerVersion>5.0.0-rc2.20460.4</AnalyzerVersion>
+    <NetCoreVersion>5.0.0-rc.2.20468.4</NetCoreVersion>
+    <AspNetCoreVersion>5.0.0-rc-2-20469-5</AspNetCoreVersion>
+    <ToolsetVersion>3.8.0-4.20469.1</ToolsetVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="$(ToolsetVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="$(Analyzerversion)"
-                      PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

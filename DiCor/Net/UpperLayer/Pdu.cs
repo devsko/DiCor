@@ -1,5 +1,6 @@
 ﻿namespace DiCor.Net.UpperLayer
 {
+    // Protocol Data Unit
     public static class Pdu
     {
         public enum Type : byte

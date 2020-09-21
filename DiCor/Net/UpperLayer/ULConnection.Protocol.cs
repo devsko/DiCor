@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 using Bedrock.Framework.Protocols;
 
@@ -9,11 +10,11 @@ namespace DiCor.Net.UpperLayer
     {
         public class Protocol : IMessageReader<ULMessage>, IMessageWriter<ULMessage>
         {
-            private readonly ULConnection _uLConnection;
+            private readonly ULConnection _ulConnection;
 
-            public Protocol(ULConnection uLConnection)
+            public Protocol(ULConnection ulConnection)
             {
-                _uLConnection = uLConnection;
+                _ulConnection = ulConnection;
             }
 
             public bool TryParseMessage(in ReadOnlySequence<byte> input, ref SequencePosition consumed, ref SequencePosition examined, out ULMessage message)
@@ -23,35 +24,36 @@ namespace DiCor.Net.UpperLayer
                 if (buffer.Remaining < 6)
                     goto ReturnFalse;
 
-                buffer.TryRead(out byte type);
+                message = default;
+                buffer.TryReadEnumFromByte(out message.Type);
                 buffer.Advance(1);
                 buffer.TryReadBigEndian(out uint length);
+                message.Length = length;
 
                 if (buffer.Remaining < length)
                     goto ReturnFalse;
 
-                message = new ULMessage((Pdu.Type)type);
                 buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
                 var reader = new PduReader(in buffer);
 
                 switch (message.Type)
                 {
                     case Pdu.Type.AAssociateRq:
-                        message.Object = new Association();
-                        reader.ReadAAssociateRq(ref message);
+                        reader.ReadAAssociateRq(ref message.To<AAssociateRqData>());
                         break;
 
                     case Pdu.Type.AAssociateAc:
-                        message.Object = _uLConnection.Association! with { };
-                        reader.ReadAAssociateAc(ref message);
+                        ref var associationMessage = ref message.To<AAssociateAcData>();
+                        associationMessage.Data.Association = _ulConnection.Association! with { };
+                        reader.ReadAAssociateAc(ref associationMessage);
                         break;
 
                     case Pdu.Type.AAssociateRj:
-                        reader.ReadAAssociateRj(ref message);
+                        reader.ReadAAssociateRj(ref message.To<AAssociateRjData>());
                         break;
 
                     case Pdu.Type.AAbort:
-                        reader.ReadAAbort(ref message);
+                        reader.ReadAAbort(ref message.To<AAbortData>());
                         break;
 
                     default:
@@ -78,7 +80,7 @@ namespace DiCor.Net.UpperLayer
                 switch (message.Type)
                 {
                     case Pdu.Type.AAssociateRq:
-                        writer.WriteAAssociateRq((Association)message.Object!);
+                        writer.WriteAAssociateRq(ref message.To<AAssociateRqData>());
                         break;
 
                     case Pdu.Type.AAssociateAc:
@@ -88,7 +90,7 @@ namespace DiCor.Net.UpperLayer
                         break;
 
                     case Pdu.Type.AAbort:
-                        writer.WriteAAbort((Pdu.AbortSource)message.B1, (Pdu.AbortReason)message.B2);
+                        writer.WriteAAbort(ref message.To<AAbortData>());
                         break;
 
                     default:

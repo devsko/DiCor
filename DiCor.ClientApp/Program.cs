@@ -15,9 +15,16 @@ namespace DiCor.ConsoleApp
 {
     public class DiCorConnectionHandler : ConnectionHandler
     {
-        public override Task OnConnectedAsync(ConnectionContext connection)
+        public override async Task OnConnectedAsync(ConnectionContext connection)
         {
-            return ULConnection.StartServiceAsync(connection);
+            try
+            {
+                await ULConnection.StartServiceAsync(connection).Unwrap().ConfigureAwait(false);
+            }
+            catch
+            {
+
+            }
         }
     }
 
@@ -25,22 +32,19 @@ namespace DiCor.ConsoleApp
     {
         public static async Task Main(string[] args)
         {
-            var services = new ServiceCollection();
-            services.AddLogging(builder =>
-            {
-                builder.SetMinimumLevel(LogLevel.Debug);
-                builder.AddConsole();
-            });
-
-            ServiceProvider serviceProvider = services.BuildServiceProvider();
-
-            ILogger logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
+            ServiceProvider serviceProvider = new ServiceCollection()
+                .AddLogging(builder => builder
+                    .SetMinimumLevel(LogLevel.Debug)
+                    .AddConsole()
+                )
+                .BuildServiceProvider();
 
             Server server = new ServerBuilder(serviceProvider)
-                .UseSockets(builder
-                    => builder.ListenLocalhost(11112, b
-                        => b.UseConnectionLogging()
-                            .UseConnectionHandler<DiCorConnectionHandler>()))
+                .UseSockets(builder => builder
+                    .ListenLocalhost(11112, connection => connection
+                        .UseConnectionLogging("Server")
+                        .UseConnectionHandler<DiCorConnectionHandler>()
+                ))
                 .Build();
 
             await server.StartAsync().ConfigureAwait(false);

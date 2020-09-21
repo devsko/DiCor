@@ -21,8 +21,9 @@ namespace DiCor.Net.UpperLayer
             return _buffer.BeginLengthPrefix(sizeof(uint));
         }
 
-        public void WriteAAssociateRq(Association association)
+        public void WriteAAssociateRq(ref ULMessage<AAssociateRqData> message)
         {
+            Association association = message.Data.Association;
             using (BeginPdu(Pdu.Type.AAssociateRq))
             {
                 _buffer.Write((ushort)0x0001); // Protocol-version
@@ -126,13 +127,13 @@ namespace DiCor.Net.UpperLayer
             _buffer.Commit();
         }
 
-        public void WriteAAbort(Pdu.AbortSource source, Pdu.AbortReason reason)
+        public void WriteAAbort(ref ULMessage<AAbortData> message)
         {
             using (BeginPdu(Pdu.Type.AAbort))
             {
                 _buffer.Reserved(2);
-                _buffer.Write((byte)source); // Source
-                _buffer.Write((byte)reason); // Reason/Diag
+                _buffer.Write((byte)message.Data.Source);
+                _buffer.Write((byte)message.Data.Reason);
             }
             _buffer.Commit();
         }
