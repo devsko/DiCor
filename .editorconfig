@@ -196,5 +196,8 @@ dotnet_diagnostic.xUnit2017.severity = none
 
 
 
+# VSTHRD003: Avoid awaiting foreign Tasks
+dotnet_diagnostic.VSTHRD003.severity = none
+
 # VSTHRD104: Offer async option
 dotnet_diagnostic.VSTHRD104.severity = none

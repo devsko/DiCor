@@ -39,12 +39,14 @@ namespace DiCor.Test.Net
             ReadResult result = await pipe.Reader.ReadAsync();
             byte[] actual = result.Buffer.ToArray();
 
-            Assert.True(((ReadOnlySpan<byte>)actual).SequenceEqual(s_AAssociateReq));
+            int i = 0;
+            Assert.All(actual, b => Assert.Equal(s_AAssociateReq[i++], b));
 
             void Write()
             {
+                var message = new ULMessage<AAssociateRqData>(new() { Association = new Association(AssociationType.Find) });
                 new PduWriter(pipe.Writer)
-                    .WriteAAssociateRq(new Association(AssociationType.Find));
+                    .WriteAAssociateRq(ref message);
             }
         }
     }

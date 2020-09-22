@@ -25,8 +25,9 @@ namespace DiCor.Performance
         [Benchmark]
         public void Write()
         {
+            var message = new ULMessage<AAssociateRqData>(new() { Association = _association });
             new PduWriter(_pipe.Writer)
-                .WriteAAssociateRq(_association);
+                .WriteAAssociateRq(ref message);
             _pipe.Writer.Complete();
             _pipe.Reader.Complete();
             _pipe.Reset();

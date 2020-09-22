@@ -21,53 +21,47 @@ namespace DiCor.Net.UpperLayer
             {
                 var buffer = new SequenceReader<byte>(input);
 
-                if (buffer.Remaining < 6)
-                    goto ReturnFalse;
-
-                message = default;
-                buffer.TryReadEnumFromByte(out message.Type);
-                buffer.Advance(1);
-                buffer.TryReadBigEndian(out uint length);
-                message.Length = length;
-
-                if (buffer.Remaining < length)
-                    goto ReturnFalse;
-
-                buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
-                var reader = new PduReader(in buffer);
-
-                switch (message.Type)
+                if (buffer.Remaining >= 6)
                 {
-                    case Pdu.Type.AAssociateRq:
-                        reader.ReadAAssociateRq(ref message.To<AAssociateRqData>());
-                        break;
+                    message = default;
+                    buffer.TryReadEnumFromByte(out message.Type);
+                    buffer.Advance(1);
+                    buffer.TryReadBigEndian(out uint length);
+                    message.Length = length;
 
-                    case Pdu.Type.AAssociateAc:
-                        ref var associationMessage = ref message.To<AAssociateAcData>();
-                        associationMessage.Data.Association = _ulConnection.Association! with { };
-                        reader.ReadAAssociateAc(ref associationMessage);
-                        break;
+                    if (buffer.Remaining >= length)
+                    {
+                        buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
+                        var reader = new PduReader(in buffer);
 
-                    case Pdu.Type.AAssociateRj:
-                        reader.ReadAAssociateRj(ref message.To<AAssociateRjData>());
-                        break;
+                        switch (message.Type)
+                        {
+                            case Pdu.Type.AAssociateRq:
+                                reader.ReadAAssociateRq(ref message.To<AAssociateRqData>());
+                                break;
 
-                    case Pdu.Type.AAbort:
-                        reader.ReadAAbort(ref message.To<AAbortData>());
-                        break;
+                            case Pdu.Type.AAssociateAc:
+                                ref var associationMessage = ref message.To<AAssociateAcData>();
+                                associationMessage.Data.Association = _ulConnection.Association! with { };
+                                reader.ReadAAssociateAc(ref associationMessage);
+                                break;
 
-                    default:
-                        // PS3.8 - 9.3 DICOM Upper Layer Protocol for TCP/IP Data Units Structure
-                        // ... Items of unrecognized types shall be ignored and skipped. ...
-                        break;
+                            case Pdu.Type.AAssociateRj:
+                                reader.ReadAAssociateRj(ref message.To<AAssociateRjData>());
+                                break;
+
+                            case Pdu.Type.AAbort:
+                                reader.ReadAAbort(ref message.To<AAbortData>());
+                                break;
+                        }
+
+                        buffer.Advance(length);
+                        consumed = buffer.Position;
+                        examined = consumed;
+                        return true;
+                    }
                 }
 
-                buffer.Advance(length);
-                consumed = buffer.Position;
-                examined = consumed;
-                return true;
-
-            ReturnFalse:
                 consumed = input.Start;
                 examined = input.End;
                 message = default;
