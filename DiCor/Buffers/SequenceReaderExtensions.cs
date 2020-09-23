@@ -2,8 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 
-using DiCor.Net.UpperLayer;
-
 namespace System.Buffers
 {
     public static class SequenceReaderExtensions
@@ -39,6 +37,10 @@ namespace System.Buffers
             }
 
             value = Unsafe.As<byte, TEnum>(ref b);
+            if (!Enum.IsDefined(value))
+                // TODO InvalidPduException
+                throw new InvalidOperationException();
+
             return true;
         }
 
@@ -84,8 +86,8 @@ namespace System.Buffers
                 value = null;
                 return false;
             }
-            reader.Advance(length);
             value = Encoding.ASCII.GetString(buffer);
+            reader.Advance(length);
             return true;
         }
 

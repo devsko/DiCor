@@ -28,7 +28,7 @@ namespace DiCor.Net.UpperLayer
             _connection = await connect.ConfigureAwait(false);
         }
 
-        private async Task AE2_SendAAssociateRq(CancellationToken cancellationToken)
+        private ValueTask AE2_SendAAssociateRq(CancellationToken cancellationToken)
         {
             ValueTask write;
             lock (_lock)
@@ -39,8 +39,7 @@ namespace DiCor.Net.UpperLayer
                 write = _writer!.WriteAsync(_protocol, message.ToMessage(), cancellationToken);
                 SetState(State.Sta5_AwaitingAssociateResponse);
             }
-            await write.ConfigureAwait(false);
-            await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken).ConfigureAwait(false);
+            return write;
         }
 
         private Task AE3_ConfirmAAssociateAc(ULMessage<AAssociateAcData> message)
@@ -78,11 +77,8 @@ namespace DiCor.Net.UpperLayer
 
                 SetState(State.Sta2_TransportConnectionOpen);
             }
-            try
-            {
-                await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, RequestTimeout).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (_responseAwaiter!.IsTimedOut)
+
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, RequestTimeout).ConfigureAwait(false))
             {
                 await AA2_CloseConnection().ConfigureAwait(false);
             }
@@ -139,11 +135,8 @@ namespace DiCor.Net.UpperLayer
                 SetState(State.Sta13_AwaitingTransportConnectionClose);
             }
             await write.ConfigureAwait(false);
-            try
-            {
-                await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, RejectTimeout).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (_responseAwaiter!.IsTimedOut)
+
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, RejectTimeout).ConfigureAwait(false))
             {
                 await AA2_CloseConnection().ConfigureAwait(false);
             }
@@ -170,11 +163,8 @@ namespace DiCor.Net.UpperLayer
                 SetState(State.Sta13_AwaitingTransportConnectionClose);
             }
             await write.ConfigureAwait(false);
-            try
-            {
-                await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, AbortTimeout).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (_responseAwaiter!.IsTimedOut)
+
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, AbortTimeout).ConfigureAwait(false))
             {
                 await AA2_CloseConnection().ConfigureAwait(false);
             }
@@ -196,7 +186,7 @@ namespace DiCor.Net.UpperLayer
         {
             await AA2_CloseConnection().ConfigureAwait(false);
 
-            if (_isServiceProvider)
+            if (_isServiceProvider!.Value)
             {
                 AAbort?.Invoke(this, new AAbortArgs());
             }
@@ -250,11 +240,7 @@ namespace DiCor.Net.UpperLayer
 
             APAbort?.Invoke(this, new APAbortArgs());
 
-            try
-            {
-                await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, AbortTimeout).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (_responseAwaiter!.IsTimedOut)
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, AbortTimeout).ConfigureAwait(false))
             {
                 await AA2_CloseConnection().ConfigureAwait(false);
             }

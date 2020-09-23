@@ -19,7 +19,7 @@ namespace DiCor.ConsoleApp
         {
             try
             {
-                await ULConnection.StartServiceAsync(connection).Unwrap().ConfigureAwait(false);
+                await new ULConnection().StartServiceAsync(connection).Unwrap().ConfigureAwait(false);
             }
             catch
             {
@@ -54,13 +54,14 @@ namespace DiCor.ConsoleApp
                 .UseConnectionLogging()
                 .Build();
 
-            await using (var connection = await ULConnection.AssociateAsync(
-                client,
-                new IPEndPoint(IPAddress.Loopback, 11112),
-                //new DnsEndPoint("dicomserver.co.uk", 11112),
-                AssociationType.Find,
-                new CancellationTokenSource(60000).Token).ConfigureAwait(false))
+            await using (var connection = new ULConnection())
             {
+                await connection.AssociateAsync(
+                    client,
+                    new IPEndPoint(IPAddress.Loopback, 11112),
+                    //new DnsEndPoint("dicomserver.co.uk", 11112),
+                    AssociationType.Find,
+                    new CancellationTokenSource(60000).Token).ConfigureAwait(false);
                 Console.WriteLine(connection.CurrentState);
             }
 

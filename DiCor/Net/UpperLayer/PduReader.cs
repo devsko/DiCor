@@ -135,7 +135,7 @@ namespace DiCor.Net.UpperLayer
 
         public void ReadAAssociateAc(ref ULMessage<AAssociateAcData> message)
         {
-            var association = message.Data.Association;
+            Association? association = message.Data.Association;
             association.MaxOperationsInvoked = 1;
             association.MaxOperationsPerformed = 1;
 

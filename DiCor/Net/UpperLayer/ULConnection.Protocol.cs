@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Buffers;
-using System.Runtime.CompilerServices;
 
 using Bedrock.Framework.Protocols;
+
+using Microsoft.Extensions.Logging;
 
 namespace DiCor.Net.UpperLayer
 {
@@ -28,6 +29,8 @@ namespace DiCor.Net.UpperLayer
                     buffer.Advance(1);
                     buffer.TryReadBigEndian(out uint length);
                     message.Length = length;
+
+                    _ulConnection._logger.LogDebug($"<<< {message.Type} ({message.Length} bytes)");
 
                     if (buffer.Remaining >= length)
                     {
@@ -70,6 +73,8 @@ namespace DiCor.Net.UpperLayer
 
             public void WriteMessage(ULMessage message, IBufferWriter<byte> output)
             {
+                _ulConnection._logger.LogDebug($">>> {message.Type}");
+
                 var writer = new PduWriter(output);
                 switch (message.Type)
                 {
