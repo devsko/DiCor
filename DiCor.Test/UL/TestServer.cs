@@ -1,14 +1,11 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
-
 using Bedrock.Framework;
 using Bedrock.Framework.Transports.Memory;
-
 using DiCor.Net.UpperLayer;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.Threading;
 
 namespace DiCor.UL.Test
 {
@@ -57,10 +54,10 @@ namespace DiCor.UL.Test
             return new TestServer(server, client, serviceProvider, endPoint);
         }
 
-        private Server _server;
-        private Client _client;
-        private ServiceProvider _serviceProvider;
-        private EndPoint _endPoint;
+        private readonly Server _server;
+        private readonly Client _client;
+        private readonly ServiceProvider _serviceProvider;
+        private readonly EndPoint _endPoint;
 
         private TestServer(Server server, Client client, ServiceProvider serviceProvider, EndPoint endPoint)
         {
@@ -78,7 +75,7 @@ namespace DiCor.UL.Test
             return connection;
         }
 
-        public async Task DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
             await _server.StopAsync();
         }

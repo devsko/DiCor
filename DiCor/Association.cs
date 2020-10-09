@@ -47,6 +47,7 @@ namespace DiCor
 
         public string? CalledAE { get; set; }
         public string? CallingAE { get; set; }
+        public Uid ApplicationContext { get; set; } = Uid.DICOMApplicationContextName;
         public IList<PresentationContext> PresentationContexts { get; } = new List<PresentationContext>();
         public uint MaxResponseDataLength { get; set; } = DefaultMaxDataLength;
         public uint MaxRequestDataLength { get; set; }
@@ -73,6 +74,5 @@ namespace DiCor
 
             return null;
         }
-
     }
 }

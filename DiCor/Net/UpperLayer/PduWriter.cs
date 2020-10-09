@@ -36,7 +36,7 @@ namespace DiCor.Net.UpperLayer
 
                 _buffer.Write(Pdu.ItemTypeApplicationContext); // Item-type
                 _buffer.Reserved(1);
-                _buffer.WriteAscii(Uid.DICOMApplicationContextName.Value); // Application-context-name
+                _buffer.WriteAscii(association.ApplicationContext.Value); // Application-context-name
 
                 bool needsScpScuRoleNegotiation = false;
                 byte presentationContextId = 1;

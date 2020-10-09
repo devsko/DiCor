@@ -22,7 +22,6 @@
 
     <!-- Resolving conflicts (DiCor.Generator) -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(ToolsetVersion)" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(NetCoreVersion)" />
   </ItemGroup>
 
 </Project>

@@ -18,9 +18,9 @@ namespace DiCor.Net.UpperLayer
             message.Data.Association = association;
             _input.TryReadBigEndian(out ushort _); // Protocol-version
             _input.Reserved(2);
-            _input.TryRead(16, out string? calledAE);
+            _input.TryReadAscii(16, out string? calledAE);
             association.CalledAE = calledAE;
-            _input.TryRead(16, out string? callingAE);
+            _input.TryReadAscii(16, out string? callingAE);
             association.CallingAE = callingAE;
             _input.Reserved(32);
 
@@ -34,97 +34,94 @@ namespace DiCor.Net.UpperLayer
                 switch (type)
                 {
                     case Pdu.ItemTypeApplicationContext:
-                        if (_input.TryRead(length, out string? applicationContext)) // Item-length, Application-context-name
-                            Uid.Get(applicationContext);
+                        if (_input.TryReadAscii(length, out string? applicationContext)) // Item-length, Application-context-name
+                            association.ApplicationContext = Uid.Get(applicationContext);
                         break;
 
                     case Pdu.ItemTypePresentationContextRq:
-                        _input.Reserved(1);
-
-
-
-
-                        _input.TryReadEnumFromByte(out Pdu.PresentationContextItemResult result); // Result/Reason
-                        _input.Reserved(1);
-
-                        PresentationContext? presentationContext = association.GetPresentationContext(0);
-                        if (presentationContext == null)
-                            // TODO InvalidPduException
-                            throw new InvalidOperationException();
-
-                        presentationContext.Result = result;
-
-                        if (result == Pdu.PresentationContextItemResult.Acceptance)
                         {
-                            // Transfer-Syntax Sub-Item
-
-                            _input.TryRead(out byte itemType); // Item-type
-                            if (itemType != Pdu.ItemTypeTransferSyntax)
-                                // TODO InvalidPduException
-                                throw new InvalidOperationException();
                             _input.Reserved(1);
-                            _input.TryRead(out string? transferSyntax); // Transfer-syntax-name
+                            _input.TryReadLength(out ushort itemLength);
 
-                            presentationContext.AcceptedTransferSyntax = Uid.Get(transferSyntax!);
-                        }
-                        else
+                            _input.TryRead(out byte presentationContextid);
+                            _input.Reserved(3);
+
+
+
+                            //if (result == Pdu.PresentationContextItemResult.Acceptance)
+                            //{
+                            //    // Transfer-Syntax Sub-Item
+
+                            //    _input.TryRead(out byte itemType); // Item-type
+                            //    if (itemType != Pdu.ItemTypeTransferSyntax)
+                            //        // TODO InvalidPduException
+                            //        throw new InvalidOperationException();
+                            //    _input.Reserved(1);
+                            //    _input.TryReadAscii(out string? transferSyntax); // Transfer-syntax-name
+
+                            //    presentationContext.AcceptedTransferSyntax = Uid.Get(transferSyntax!);
+                            //}
+                            //else
                             _input.Reserved((int)(_input.Remaining - end));
+                        }
                         break;
 
                     case Pdu.ItemTypeUserInformation:
-                        var userInformation = new SequenceReader<byte>(_input.Sequence.Slice(_input.Position, length));
-                        while (userInformation.Remaining > 0)
                         {
-                            userInformation.TryRead(out byte itemType); // Item-type
-                            userInformation.Reserved(1);
-                            userInformation.TryReadLength(out ushort itemLength); // Item-length
-                            long itemEnd = userInformation.Remaining - itemLength;
-
-                            switch (itemType)
+                            var userInformation = new SequenceReader<byte>(_input.Sequence.Slice(_input.Position, length));
+                            while (userInformation.Remaining > 0)
                             {
-                                case Pdu.ItemTypeMaximumLength:
-                                    userInformation.TryReadBigEndian(out uint maxLength); // Maximum-length-received
-                                    association.MaxRequestDataLength = maxLength;
-                                    break;
+                                userInformation.TryRead(out byte itemType); // Item-type
+                                userInformation.Reserved(1);
+                                userInformation.TryReadLength(out ushort itemLength); // Item-length
+                                long itemEnd = userInformation.Remaining - itemLength;
 
-                                case Pdu.ItemTypeImplementationClassUid:
-                                    userInformation.TryRead(itemLength, out string? implementationClass); // Implementation-class-uid
-                                    association.RemoteImplementationClass = Uid.Get(implementationClass!);
-                                    break;
+                                switch (itemType)
+                                {
+                                    case Pdu.ItemTypeMaximumLength:
+                                        userInformation.TryReadBigEndian(out uint maxLength); // Maximum-length-received
+                                        association.MaxRequestDataLength = maxLength;
+                                        break;
 
-                                case Pdu.ItemTypeAsynchronousOperations:
-                                    userInformation.TryReadBigEndian(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
-                                    userInformation.TryReadBigEndian(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
-                                    association.MaxOperationsInvoked = maxOperationsInvoked;
-                                    association.MaxOperationsPerformed = maxOperationsPerformed;
-                                    break;
+                                    case Pdu.ItemTypeImplementationClassUid:
+                                        userInformation.TryReadAscii(itemLength, out string? implementationClass); // Implementation-class-uid
+                                        association.RemoteImplementationClass = Uid.Get(implementationClass!);
+                                        break;
 
-                                case Pdu.ItemTypeScpScuRoleSelection:
-                                    userInformation.TryRead(out string? syntax); // UID-length / SOP-class-uid
-                                    userInformation.TryRead(out byte scuRole); // SCU-role
-                                    userInformation.TryRead(out byte scpRole); // SCP-role
-                                    PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!));
-                                    if (presentationContext1 == null)
-                                        // TODO InvalidPduException
-                                        throw new InvalidOperationException();
-                                    presentationContext1.SupportsScuRole = scuRole == 0x01;
-                                    presentationContext1.SupportsScpRole = scpRole == 0x01;
-                                    break;
+                                    case Pdu.ItemTypeAsynchronousOperations:
+                                        userInformation.TryReadBigEndian(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
+                                        userInformation.TryReadBigEndian(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
+                                        association.MaxOperationsInvoked = maxOperationsInvoked;
+                                        association.MaxOperationsPerformed = maxOperationsPerformed;
+                                        break;
 
-                                case Pdu.ItemTypeImplementationVersionName:
-                                    userInformation.TryRead(itemLength, out string? implementationVersion); // Implementation-version-name
-                                    association.RemoteImplementationVersion = implementationVersion!;
-                                    break;
+                                    case Pdu.ItemTypeScpScuRoleSelection:
+                                        userInformation.TryReadAscii(out string? syntax); // UID-length / SOP-class-uid
+                                        userInformation.TryRead(out byte scuRole); // SCU-role
+                                        userInformation.TryRead(out byte scpRole); // SCP-role
+                                        PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!));
+                                        if (presentationContext1 == null)
+                                            // TODO InvalidPduException
+                                            throw new InvalidOperationException();
+                                        presentationContext1.SupportsScuRole = scuRole == 0x01;
+                                        presentationContext1.SupportsScpRole = scpRole == 0x01;
+                                        break;
 
-                                    // TODO SOP Class Extended Negotiation Sub-Item 0x56
-                                    // TODO User Identity Negotiation Sub-Item 0x59
+                                    case Pdu.ItemTypeImplementationVersionName:
+                                        userInformation.TryReadAscii(itemLength, out string? implementationVersion); // Implementation-version-name
+                                        association.RemoteImplementationVersion = implementationVersion!;
+                                        break;
 
+                                        // TODO SOP Class Extended Negotiation Sub-Item 0x56
+                                        // TODO User Identity Negotiation Sub-Item 0x59
+
+                                }
+                                if (userInformation.Remaining != itemEnd)
+                                    // TODO InvalidPduException
+                                    throw new InvalidOperationException();
                             }
-                            if (userInformation.Remaining != itemEnd)
-                                // TODO InvalidPduException
-                                throw new InvalidOperationException();
+                            _input.Advance(length);
                         }
-                        _input.Advance(length);
                         break;
                 }
                 if (_input.Remaining != end)
@@ -155,7 +152,7 @@ namespace DiCor.Net.UpperLayer
                 switch (type)
                 {
                     case Pdu.ItemTypeApplicationContext:
-                        _input.TryRead(length, out string _); // Item-length, Application-context-name
+                        _input.TryReadAscii(length, out string _); // Item-length, Application-context-name
                         break;
 
                     case Pdu.ItemTypePresentationContextAc:
@@ -180,7 +177,7 @@ namespace DiCor.Net.UpperLayer
                                 // TODO InvalidPduException
                                 throw new InvalidOperationException();
                             _input.Reserved(1);
-                            _input.TryRead(out string? transferSyntax); // Transfer-syntax-name
+                            _input.TryReadAscii(out string? transferSyntax); // Transfer-syntax-name
 
                             presentationContext.AcceptedTransferSyntax = Uid.Get(transferSyntax!);
                         }
@@ -205,7 +202,7 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.ItemTypeImplementationClassUid:
-                                    userInformation.TryRead(itemLength, out string? implementationClass); // Implementation-class-uid
+                                    userInformation.TryReadAscii(itemLength, out string? implementationClass); // Implementation-class-uid
                                     association.RemoteImplementationClass = Uid.Get(implementationClass!);
                                     break;
 
@@ -217,7 +214,7 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.ItemTypeScpScuRoleSelection:
-                                    userInformation.TryRead(out string? syntax); // UID-length / SOP-class-uid
+                                    userInformation.TryReadAscii(out string? syntax); // UID-length / SOP-class-uid
                                     userInformation.TryRead(out byte scuRole); // SCU-role
                                     userInformation.TryRead(out byte scpRole); // SCP-role
                                     PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!));
@@ -229,7 +226,7 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.ItemTypeImplementationVersionName:
-                                    userInformation.TryRead(itemLength, out string? implementationVersion); // Implementation-version-name
+                                    userInformation.TryReadAscii(itemLength, out string? implementationVersion); // Implementation-version-name
                                     association.RemoteImplementationVersion = implementationVersion!;
                                     break;
 

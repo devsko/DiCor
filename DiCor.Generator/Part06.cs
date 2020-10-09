@@ -9,16 +9,16 @@ using System.Xml;
 using System.Xml.Linq;
 
 using DiCor.Internal;
+using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    public class Part06 : DicomXmlDoc
+    public class Part06 : DocBook
     {
-        public const string ResourceKey = "xml.part06.xml";
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part06/part06.xml";
 
-        public Part06(HttpClient httpClient, string projectPath, CancellationToken cancellationToken)
-            : base(httpClient, projectPath, Uri, ResourceKey, cancellationToken)
+        public Part06(HttpClient httpClient, GeneratorExecutionContext context, CancellationToken cancellationToken)
+            : base(httpClient, context, Uri, cancellationToken)
         { }
 
         public async Task<(Uid[]? TableA1, Uid[]? TableA3)> GetTablesAsync(Dictionary<int, string> cidTable)
@@ -58,17 +58,17 @@ namespace DiCor.Generator
 
         private Uid[]? ReadTableA1()
             => XElement.Load(Reader!.ReadSubtree())
-                .Element(DocbookNS + "tbody")?
-                .Elements(DocbookNS + "tr")
-                .Select(tr => tr.Elements(DocbookNS + "td"))
+                .Element(Ns + "tbody")?
+                .Elements(Ns + "tr")
+                .Select(tr => tr.Elements(Ns + "td"))
                 .Select(row => A1ToUid(row))
                 .ToArray();
 
         private Uid[]? ReadTableA3(Dictionary<int, string> cidTable)
             => XElement.Load(Reader!.ReadSubtree())
-                .Element(DocbookNS + "tbody")?
-                .Elements(DocbookNS + "tr")
-                .Select(tr => tr.Elements(DocbookNS + "td"))
+                .Element(Ns + "tbody")?
+                .Elements(Ns + "tr")
+                .Select(tr => tr.Elements(Ns + "td"))
                 .Select(row => A3ToUid(row, cidTable))
                 .ToArray();
 
@@ -108,7 +108,7 @@ namespace DiCor.Generator
             string uid = row.ElementAt(0).Value.Trim().Replace("\u200b", "");
             string? cid = row
                 .ElementAt(1)
-                .Descendants(DocbookNS + "olink")?
+                .Descendants(Ns + "olink")?
                 .FirstOrDefault()?
                 .Attribute("targetptr")?
                 .Value;

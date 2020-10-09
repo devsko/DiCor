@@ -37,6 +37,5 @@ namespace DiCor.Buffers
             }
             Advance(length);
         }
-
     }
 }

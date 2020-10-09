@@ -9,13 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\DiCor\Uid.cs"
-             Link="Uid.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="xml\part06.xml" />
-    <EmbeddedResource Include="xml\part16.xml" />
+    <Compile Include="..\DiCor\Uid.cs" Link="Uid.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,7 +22,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Validation" Version="15.5.31"
                       GeneratePathProperty="true"
                       PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(NetCoreVersion)"
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1"
                       GeneratePathProperty="true"
                       PrivateAssets="all" />
   </ItemGroup>

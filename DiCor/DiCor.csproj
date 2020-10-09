@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +12,11 @@
                       ReferenceOutputAssembly="false" />
     <PackageReference Include="System.IO.Pipelines" Version="$(NetCoreVersion)" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="16.7.56" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="docbook\part06.xml" />
+    <AdditionalFiles Include="docbook\part16.xml" />
   </ItemGroup>
 
 </Project>

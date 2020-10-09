@@ -88,8 +88,18 @@ namespace DiCor.Generator
 
         protected override void Dispose(bool disposing)
         {
-            _stream.Dispose();
-            _file?.Dispose();
+            if (disposing)
+            {
+                if (_file != null)
+                {
+                    byte[] buffer = new byte[8 * 1024];
+                    while (Read(buffer, 0, buffer.Length) > 0)
+                        ;
+                    _file.Dispose();
+                    _file = null;
+                }
+                _stream.Dispose();
+            }
             base.Dispose(disposing);
         }
     }

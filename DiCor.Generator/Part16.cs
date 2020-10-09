@@ -6,16 +6,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    public class Part16 : DicomXmlDoc
+    public class Part16 : DocBook
     {
-        public const string ResourceKey = "xml.part16.xml";
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part16/part16.xml";
 
-        public Part16(HttpClient httpClient, string projectPath, CancellationToken cancellationToken)
-            : base(httpClient, projectPath, Uri, ResourceKey, cancellationToken)
+        public Part16(HttpClient httpClient, GeneratorExecutionContext context, CancellationToken cancellationToken)
+            : base(httpClient, context, Uri, cancellationToken)
         { }
 
         public async Task<Dictionary<int, string>> GetSectionsByIdAsync()
@@ -35,7 +35,7 @@ namespace DiCor.Generator
                     if (id != null
                         && id.StartsWith("sect_CID_", StringComparison.Ordinal)
                         && int.TryParse(id.Substring(9), out int i)
-                        && Reader.ReadToDescendant("title", DocbookNS.NamespaceName))
+                        && Reader.ReadToDescendant("title", Ns.NamespaceName))
                     {
                         sections.Add(i, await Reader.ReadInnerXmlAsync());
                     }

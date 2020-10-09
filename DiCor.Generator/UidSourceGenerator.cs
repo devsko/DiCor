@@ -33,12 +33,12 @@ namespace DiCor.Generator
 
             static async Task ExecuteAsync(GeneratorExecutionContext context)
             {
+                System.Diagnostics.Debugger.Launch();
+
                 try
                 {
-                    string projectPath = Path.Combine(context.Compilation.Options.SourceReferenceResolver!.NormalizePath("..", null)!, AssemblyName);
-
-                    using (var part16 = new Part16(s_httpClient, projectPath, context.CancellationToken))
-                    using (var part06 = new Part06(s_httpClient, projectPath, context.CancellationToken))
+                    using (var part16 = new Part16(s_httpClient, context, context.CancellationToken))
+                    using (var part06 = new Part06(s_httpClient, context, context.CancellationToken))
                     {
                         Dictionary<int, string> cidTable = await part16.GetSectionsByIdAsync().ConfigureAwait(false);
                         if (cidTable.Count > 0)
@@ -56,10 +56,6 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
                                 context.AddSource("Uid.Uids.g.cs", SourceText.From(uids, Encoding.UTF8));
                                 context.AddSource("Uid.HashSet.g.cs", SourceText.From(hashSet, Encoding.UTF8));
                             }
-                        }
-                        foreach (Diagnostic diag in part16.Diagnostics.Concat(part06.Diagnostics))
-                        {
-                            context.ReportDiagnostic(diag);
                         }
                     }
                 }
