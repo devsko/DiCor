@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-
 using DiCor.Internal;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.Threading;
@@ -33,8 +30,6 @@ namespace DiCor.Generator
 
             static async Task ExecuteAsync(GeneratorExecutionContext context)
             {
-                System.Diagnostics.Debugger.Launch();
-
                 try
                 {
                     using (var part16 = new Part16(s_httpClient, context, context.CancellationToken))

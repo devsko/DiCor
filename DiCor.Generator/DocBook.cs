@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -38,7 +37,8 @@ namespace DiCor.Generator
         {
             _httpClient = httpClient;
             _context = context;
-            _path = context.AdditionalFiles.Single(text => Path.GetFileName(text.Path).Equals($"{GetType().Name}.xml", StringComparison.OrdinalIgnoreCase)).Path;
+            AdditionalText text = context.AdditionalFiles.First(text => Path.GetFileName(text.Path).Equals($"{GetType().Name}.xml", StringComparison.OrdinalIgnoreCase));
+            _path = text.Path;
             _uri = uri;
             _cancellationToken = cancellationToken;
         }
