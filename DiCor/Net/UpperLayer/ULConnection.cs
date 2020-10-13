@@ -51,14 +51,12 @@ namespace DiCor.Net.UpperLayer
 
         public async Task<Task> StartServiceAsync(ConnectionContext connection, CancellationToken cancellationToken = default)
         {
-            if (connection == null)
-                throw new ArgumentNullException(nameof(connection));
             if (_isServiceProvider != null)
                 throw new InvalidOperationException();
 
             _isServiceProvider = true;
             _logger = _loggerFactory.CreateLogger("ULConnection (Server)");
-            _connection = connection;
+            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
 
             _logger.LogDebug($"Creating server connection {connection.ConnectionId}");
 

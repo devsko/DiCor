@@ -92,13 +92,23 @@ namespace DiCor.Generator
             {
                 if (_file != null)
                 {
-                    byte[] buffer = new byte[8 * 1024];
-                    while (Read(buffer, 0, buffer.Length) > 0)
-                        ;
-                    _file.Dispose();
-                    _file = null;
+                    AsyncReaderWriterLock.Awaiter awaiter = _asyncLock.WriteLockAsync().GetAwaiter();
+                    awaiter.UnsafeOnCompleted(
+                        () =>
+                        {
+                            _stream.CopyTo(_file);
+
+                            _file.Dispose();
+                            _file = null;
+                            _stream.Dispose();
+
+                            awaiter.GetResult().Dispose();
+                        });
                 }
-                _stream.Dispose();
+                else
+                {
+                    _stream.Dispose();
+                }
             }
             base.Dispose(disposing);
         }

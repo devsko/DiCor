@@ -44,7 +44,7 @@ namespace DiCor.Net.UpperLayer
                                 break;
 
                             case Pdu.Type.AAssociateAc:
-                                ref var associationMessage = ref message.To<AAssociateAcData>();
+                                ref ULMessage<AAssociateAcData> associationMessage = ref message.To<AAssociateAcData>();
                                 associationMessage.Data.Association = _ulConnection.Association! with { };
                                 reader.ReadAAssociateAc(ref associationMessage);
                                 break;

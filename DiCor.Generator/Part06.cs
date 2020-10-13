@@ -17,8 +17,8 @@ namespace DiCor.Generator
     {
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part06/part06.xml";
 
-        public Part06(HttpClient httpClient, GeneratorExecutionContext context, CancellationToken cancellationToken)
-            : base(httpClient, context, Uri, cancellationToken)
+        public Part06(HttpClient httpClient, GeneratorExecutionContext context)
+            : base(httpClient, context, Uri)
         { }
 
         public async Task<(Uid[]? TableA1, Uid[]? TableA3)> GetTablesAsync(Dictionary<int, string> cidTable)
@@ -32,7 +32,7 @@ namespace DiCor.Generator
             Uid[]? tableA3 = null;
             while (await Reader!.ReadAsync().ConfigureAwait(false))
             {
-                _cancellationToken.ThrowIfCancellationRequested();
+                _context.CancellationToken.ThrowIfCancellationRequested();
 
                 if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == "table")
                 {

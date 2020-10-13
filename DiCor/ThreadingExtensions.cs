@@ -17,9 +17,7 @@ namespace DiCor
 
             static async Task IgnoreExceptionsAsync(ValueTask<int> task)
             {
-#pragma warning disable ERP022 // Unobserved exception in generic exception handler
                 try { await task.ConfigureAwait(false); } catch { }
-#pragma warning restore ERP022 // Unobserved exception in generic exception handler
             }
         }
 
@@ -30,9 +28,7 @@ namespace DiCor
 
             static async Task IgnoreExceptionsAsync(Task task)
             {
-#pragma warning disable ERP022 // Unobserved exception in generic exception handler
                 try { await task.ConfigureAwait(false); } catch { }
-#pragma warning restore ERP022 // Unobserved exception in generic exception handler
             }
         }
 

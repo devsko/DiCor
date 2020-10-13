@@ -14,8 +14,8 @@ namespace DiCor.Generator
     {
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part16/part16.xml";
 
-        public Part16(HttpClient httpClient, GeneratorExecutionContext context, CancellationToken cancellationToken)
-            : base(httpClient, context, Uri, cancellationToken)
+        public Part16(HttpClient httpClient, GeneratorExecutionContext context)
+            : base(httpClient, context, Uri)
         { }
 
         public async Task<Dictionary<int, string>> GetSectionsByIdAsync()
@@ -27,7 +27,7 @@ namespace DiCor.Generator
             var sections = new Dictionary<int, string>();
             while (await Reader!.ReadAsync().ConfigureAwait(false))
             {
-                _cancellationToken.ThrowIfCancellationRequested();
+                _context.CancellationToken.ThrowIfCancellationRequested();
 
                 if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == "section")
                 {

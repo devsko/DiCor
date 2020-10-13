@@ -30,7 +30,7 @@ namespace DiCor.Net.UpperLayer
                     return false;
                 }
 
-                var awaiter = new ResponseAwaiter(connection, cancellationToken, timeout);
+                var awaiter = new ResponseAwaiter(connection, timeout, cancellationToken);
 
                 using (cancellationToken.UnsafeRegister(s => ((ResponseAwaiter)s!).OnCancelled(), awaiter))
                 using (awaiter._cts.Token.UnsafeRegister(s => ((ResponseAwaiter)s!).OnTimedOut(), awaiter))
@@ -50,7 +50,7 @@ namespace DiCor.Net.UpperLayer
             private readonly CancellationToken _cancellationToken;
             private readonly CancellationTokenSource _cts;
 
-            private ResponseAwaiter(ULConnection connection, CancellationToken cancellationToken, int timeout)
+            private ResponseAwaiter(ULConnection connection, int timeout, CancellationToken cancellationToken)
             {
                 _tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
                 _cancellationToken = cancellationToken;

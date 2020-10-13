@@ -32,8 +32,8 @@ namespace DiCor.Generator
             {
                 try
                 {
-                    using (var part16 = new Part16(s_httpClient, context, context.CancellationToken))
-                    using (var part06 = new Part06(s_httpClient, context, context.CancellationToken))
+                    using (var part16 = new Part16(s_httpClient, context))
+                    using (var part06 = new Part06(s_httpClient, context))
                     {
                         Dictionary<int, string> cidTable = await part16.GetSectionsByIdAsync().ConfigureAwait(false);
                         if (cidTable.Count > 0)

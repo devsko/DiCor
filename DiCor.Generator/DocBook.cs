@@ -22,10 +22,9 @@ namespace DiCor.Generator
         protected static readonly XNamespace Ns = XNamespace.Get("http://docbook.org/ns/docbook");
 
         private readonly HttpClient _httpClient;
-        private readonly GeneratorExecutionContext _context;
+        protected readonly GeneratorExecutionContext _context;
         private readonly string _path;
         private readonly string _uri;
-        protected readonly CancellationToken _cancellationToken;
 
         private XmlAndTitle? _xml;
 
@@ -33,14 +32,13 @@ namespace DiCor.Generator
 
         public XmlReader? Reader => _xml?.Xml;
 
-        public DocBook(HttpClient httpClient, GeneratorExecutionContext context, string uri, CancellationToken cancellationToken)
+        public DocBook(HttpClient httpClient, GeneratorExecutionContext context, string uri)
         {
             _httpClient = httpClient;
             _context = context;
             AdditionalText text = context.AdditionalFiles.First(text => Path.GetFileName(text.Path).Equals($"{GetType().Name}.xml", StringComparison.OrdinalIgnoreCase));
             _path = text.Path;
             _uri = uri;
-            _cancellationToken = cancellationToken;
         }
 
         protected async Task InitializeAsync()
@@ -91,7 +89,7 @@ namespace DiCor.Generator
         {
             var request = new HttpRequestMessage(HttpMethod.Get, _uri);
             HttpResponseMessage response = await _httpClient
-                    .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _cancellationToken)
+                    .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _context.CancellationToken)
                     .ConfigureAwait(false);
 
             response.EnsureSuccessStatusCode();
@@ -113,7 +111,7 @@ namespace DiCor.Generator
 
             while (await xml.ReadAsync().ConfigureAwait(false))
             {
-                _cancellationToken.ThrowIfCancellationRequested();
+                _context.CancellationToken.ThrowIfCancellationRequested();
 
                 if (xml.NodeType == XmlNodeType.Element && xml.LocalName == "subtitle")
                 {
