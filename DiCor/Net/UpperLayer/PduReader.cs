@@ -12,10 +12,10 @@ namespace DiCor.Net.UpperLayer
             _input = input;
         }
 
-        public void ReadAAssociateRq(ref ULMessage<AAssociateRqData> message)
+        public void ReadAAssociateRq(ref AAssociateRqData data)
         {
             var association = new Association();
-            message.Data.Association = association;
+            data.Association = association;
             _input.TryReadBigEndian(out ushort _); // Protocol-version
             _input.Reserved(2);
             _input.TryReadAscii(16, out string? calledAE);
@@ -130,9 +130,9 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public void ReadAAssociateAc(ref ULMessage<AAssociateAcData> message)
+        public void ReadAAssociateAc(ref AAssociateAcData data)
         {
-            Association? association = message.Data.Association;
+            Association? association = data.Association;
             association.MaxOperationsInvoked = 1;
             association.MaxOperationsPerformed = 1;
 
@@ -247,19 +247,19 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public void ReadAAssociateRj(ref ULMessage<AAssociateRjData> message)
+        public void ReadAAssociateRj(ref AAssociateRjData data)
         {
             _input.Reserved(1);
-            _input.TryReadEnumFromByte(out message.Data.Result);
-            _input.TryReadEnumFromByte(out message.Data.Source);
-            _input.TryReadEnumFromByte(out message.Data.Reason);
+            _input.TryReadEnumFromByte(out data.Result);
+            _input.TryReadEnumFromByte(out data.Source);
+            _input.TryReadEnumFromByte(out data.Reason);
         }
 
-        public void ReadAAbort(ref ULMessage<AAbortData> message)
+        public void ReadAAbort(ref AAbortData data)
         {
             _input.Reserved(2);
-            _input.TryReadEnumFromByte(out message.Data.Source);
-            _input.TryReadEnumFromByte(out message.Data.Reason);
+            _input.TryReadEnumFromByte(out data.Source);
+            _input.TryReadEnumFromByte(out data.Reason);
         }
 
     }

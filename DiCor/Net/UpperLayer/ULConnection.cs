@@ -66,12 +66,12 @@ namespace DiCor.Net.UpperLayer
             return _readLoopTask;
         }
 
-        public ValueTask AcceptAssociationAsync(ULMessage<AAssociateAcData> message, CancellationToken cancellationToken)
+        public ValueTask AcceptAssociationAsync(ULMessage message, CancellationToken cancellationToken)
         {
             return AE7_SendAAssociateAc(message, cancellationToken);
         }
 
-        public Task RejectAssociationAsync(ULMessage<AAssociateRjData> message, CancellationToken cancellationToken)
+        public Task RejectAssociationAsync(ULMessage message, CancellationToken cancellationToken)
         {
             return AE8_SendAAssociateRj(message, cancellationToken);
         }
@@ -175,13 +175,13 @@ namespace DiCor.Net.UpperLayer
                     await (message.Type switch
                     {
                         Pdu.Type.AAssociateRq
-                            => OnAAssociateRqAsync(message.To<AAssociateRqData>(), cancellationToken),
+                            => OnAAssociateRqAsync(message, cancellationToken),
                         Pdu.Type.AAssociateAc
-                            => OnAAssociateAcAsync(message.To<AAssociateAcData>(), cancellationToken),
+                            => OnAAssociateAcAsync(message, cancellationToken),
                         Pdu.Type.AAssociateRj
-                            => OnAAssociateRjAsync(message.To<AAssociateRjData>(), cancellationToken),
+                            => OnAAssociateRjAsync(message, cancellationToken),
                         Pdu.Type.AAbort
-                            => OnAAbortAsync(message.To<AAbortData>(), cancellationToken).AsTask(),
+                            => OnAAbortAsync(message, cancellationToken).AsTask(),
 
                         _ => OnUnrecognizedPduAsync(message, cancellationToken),
                     }).ConfigureAwait(false);
@@ -234,7 +234,7 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private Task OnAAssociateRqAsync(ULMessage<AAssociateRqData> message, CancellationToken cancellationToken)
+        private Task OnAAssociateRqAsync(ULMessage message, CancellationToken cancellationToken)
         {
             lock (_lock)
             {
@@ -250,7 +250,7 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private Task OnAAssociateAcAsync(ULMessage<AAssociateAcData> message, CancellationToken cancellationToken)
+        private Task OnAAssociateAcAsync(ULMessage message, CancellationToken cancellationToken)
         {
             lock (_lock)
             {
@@ -268,7 +268,7 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private Task OnAAssociateRjAsync(ULMessage<AAssociateRjData> message, CancellationToken cancellationToken)
+        private Task OnAAssociateRjAsync(ULMessage message, CancellationToken cancellationToken)
         {
             lock (_lock)
             {
@@ -286,7 +286,7 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private ValueTask OnAAbortAsync(ULMessage<AAbortData> message, CancellationToken cancellationToken)
+        private ValueTask OnAAbortAsync(ULMessage message, CancellationToken cancellationToken)
         {
             lock (_lock)
             {

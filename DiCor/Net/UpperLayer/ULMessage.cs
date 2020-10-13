@@ -1,52 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace DiCor.Net.UpperLayer
 {
-    [StructLayout(LayoutKind.Sequential)]
     public struct ULMessage
     {
         public uint Length;
         public Pdu.Type Type;
-        private IntPtr _;
-    }
+        public long Data;
 
-    public static class ULMessageExtensions
-    {
-        public static ref ULMessage<TData> To<TData>(ref this ULMessage message) where TData : struct
-            => ref Unsafe.As<ULMessage, ULMessage<TData>>(ref message);
-
-        public static ref ULMessage ToMessage<TData>(ref this ULMessage<TData> message) where TData : struct
-            => ref Unsafe.As<ULMessage<TData>, ULMessage>(ref message);
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct ULMessage<TData> where TData : struct
-    {
-        public Pdu.Type Type;
-        public uint Length;
-        public TData Data;
-
-        public ULMessage(TData data)
+        public static ULMessage FromData<TData>(TData data) where TData : struct
+            => new()
         {
-            Type = GetType(typeof(TData));
-            Length = 0;
-            Data = data;
-        }
-
-        private static readonly Dictionary<System.Type, Pdu.Type> s_typeMap = new Dictionary<System.Type, Pdu.Type>
-        {
-            { typeof(AAssociateRqData), Pdu.Type.AAssociateRq },
-            { typeof(AAssociateAcData), Pdu.Type.AAssociateAc },
-            { typeof(AAssociateRjData), Pdu.Type.AAssociateRj },
-            { typeof(AAbortData), Pdu.Type.AAbort },
+            Length = 0,
+            Type = GetType(ref data),
+            Data = Unsafe.As<TData, long>(ref data),
         };
 
-        private static Pdu.Type GetType(System.Type dataType)
-            => s_typeMap[dataType];
+        private static Pdu.Type GetType<TData>(ref TData data) where TData : struct
+            => data switch
+            {
+                AAssociateRqData => Pdu.Type.AAssociateRq,
+                AAssociateAcData => Pdu.Type.AAssociateAc,
+                AAssociateRjData => Pdu.Type.AAssociateRj,
+                AAbortData => Pdu.Type.AAbort,
+                _ => throw new InvalidOperationException(),
+            };
 
+        public TData GetData<TData>() where TData : struct
+        {
+            Debug.Assert(Unsafe.SizeOf<TData>() <= sizeof(long));
+
+            return Unsafe.As<long, TData>(ref Data);
+        }
     }
 
     public struct AAssociateRqData

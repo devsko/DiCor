@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,18 +36,18 @@ namespace DiCor.Net.UpperLayer
             {
                 Debug.Assert(_state == State.Sta4_AwaitingTransportConnectionOpen);
 
-                var message = new ULMessage<AAssociateRqData>(new() { Association = Association! });
-                write = _writer!.WriteAsync(_protocol, message.ToMessage(), cancellationToken);
+                var message = ULMessage.FromData<AAssociateRqData>(new() { Association = Association! });
+                write = _writer!.WriteAsync(_protocol, message, cancellationToken);
                 SetState(State.Sta5_AwaitingAssociateResponse);
             }
             return write;
         }
 
-        private Task AE3_ConfirmAAssociateAc(ULMessage<AAssociateAcData> message)
+        private Task AE3_ConfirmAAssociateAc(ULMessage message)
         {
             lock (_lock)
             {
-                _association = message.Data.Association!;
+                _association = Unsafe.As<long, AAssociateAcData>(ref message.Data).Association!;
                 SetState(State.Sta6_Ready);
             }
 
@@ -55,7 +56,7 @@ namespace DiCor.Net.UpperLayer
             return Task.CompletedTask;
         }
 
-        private async ValueTask AE4_ConfirmAAssociateRj(ULMessage<AAssociateRjData> message)
+        private async ValueTask AE4_ConfirmAAssociateRj(ULMessage message)
         {
             ValueTask dispose;
             lock (_lock)
@@ -84,10 +85,10 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private bool IsValidAAssociateRq(ULMessage<AAssociateRqData> message)
+        private bool IsValidAAssociateRq(ULMessage message)
             => true;
 
-        private Task AE6_IndicateAssociate(ULMessage<AAssociateRqData> message, CancellationToken cancellationToken)
+        private Task AE6_IndicateAssociate(ULMessage message, CancellationToken cancellationToken)
         {
             if (IsValidAAssociateRq(message))
             {
@@ -102,7 +103,7 @@ namespace DiCor.Net.UpperLayer
             }
             else
             {
-                var rjMessage = new ULMessage<AAssociateRjData>(new()
+                ULMessage rjMessage = ULMessage.FromData<AAssociateRjData>(new()
                 {
                     // TODO
                     Result = Pdu.RejectResult.Permanent,
@@ -114,24 +115,24 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private ValueTask AE7_SendAAssociateAc(ULMessage<AAssociateAcData> message, CancellationToken cancellationToken)
+        private ValueTask AE7_SendAAssociateAc(ULMessage message, CancellationToken cancellationToken)
         {
             ValueTask write;
             lock (_lock)
             {
-                write = _writer!.WriteAsync(_protocol, message.ToMessage(), cancellationToken);
+                write = _writer!.WriteAsync(_protocol, message, cancellationToken);
                 SetState(State.Sta6_Ready);
             }
 
             return write;
         }
 
-        private async Task AE8_SendAAssociateRj(ULMessage<AAssociateRjData> message, CancellationToken cancellationToken)
+        private async Task AE8_SendAAssociateRj(ULMessage message, CancellationToken cancellationToken)
         {
             ValueTask write;
             lock (_lock)
             {
-                write = _writer!.WriteAsync(_protocol, message.ToMessage(), cancellationToken);
+                write = _writer!.WriteAsync(_protocol, message, cancellationToken);
                 SetState(State.Sta13_AwaitingTransportConnectionClose);
             }
             await write.ConfigureAwait(false);
@@ -158,8 +159,8 @@ namespace DiCor.Net.UpperLayer
             lock (_lock)
             {
                 // TODO Reason
-                var message = new ULMessage<AAbortData>(new() { Source = Pdu.AbortSource.ServiceUser, Reason = Pdu.AbortReason.ReasonNotSpecified });
-                write = _writer!.WriteAsync(_protocol, message.ToMessage(), cancellationToken);
+                var message = ULMessage.FromData<AAbortData>(new() { Source = Pdu.AbortSource.ServiceUser, Reason = Pdu.AbortReason.ReasonNotSpecified });
+                write = _writer!.WriteAsync(_protocol, message, cancellationToken);
                 SetState(State.Sta13_AwaitingTransportConnectionClose);
             }
             await write.ConfigureAwait(false);
@@ -226,8 +227,8 @@ namespace DiCor.Net.UpperLayer
                 if (_state != State.Sta3_AwaitingLocalAssociateResponse)
                     throw new ULProtocolException(State.Sta3_AwaitingLocalAssociateResponse, _state);
 
-                var message = new ULMessage<AAbortData>(new() { Source = Pdu.AbortSource.ServiceProvider, Reason = Pdu.AbortReason.UnexpectedPdu });
-                write = _writer!.WriteAsync(_protocol, message.ToMessage(), cancellationToken);
+                var message = ULMessage.FromData<AAbortData>(new() { Source = Pdu.AbortSource.ServiceProvider, Reason = Pdu.AbortReason.UnexpectedPdu });
+                write = _writer!.WriteAsync(_protocol, message, cancellationToken);
                 SetState(State.Sta13_AwaitingTransportConnectionClose);
             }
 

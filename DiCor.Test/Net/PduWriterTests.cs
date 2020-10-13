@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using DiCor.Net.UpperLayer;
@@ -44,9 +45,9 @@ namespace DiCor.Test.Net
 
             void Write()
             {
-                var message = new ULMessage<AAssociateRqData>(new() { Association = new Association(AssociationType.Find) });
+                var message = ULMessage.FromData<AAssociateRqData>(new() { Association = new Association(AssociationType.Find) });
                 new PduWriter(pipe.Writer)
-                    .WriteAAssociateRq(ref message);
+                    .WriteAAssociateRq(ref Unsafe.As<long, AAssociateRqData>(ref message.Data));
             }
         }
     }

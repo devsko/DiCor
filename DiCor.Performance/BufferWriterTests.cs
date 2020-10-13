@@ -1,5 +1,5 @@
 ﻿using System.IO.Pipelines;
-
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
 
@@ -25,9 +25,9 @@ namespace DiCor.Performance
         [Benchmark]
         public void Write()
         {
-            var message = new ULMessage<AAssociateRqData>(new() { Association = _association });
+            var message = ULMessage.FromData<AAssociateRqData>(new() { Association = _association });
             new PduWriter(_pipe.Writer)
-                .WriteAAssociateRq(ref message);
+                .WriteAAssociateRq(ref Unsafe.As<long, AAssociateRqData>(ref message.Data));
             _pipe.Writer.Complete();
             _pipe.Reader.Complete();
             _pipe.Reset();
