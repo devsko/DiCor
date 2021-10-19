@@ -14,14 +14,12 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(NetCoreVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="$(NetCoreVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(NetCoreVersion)" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(NetCoreVersion)" />
 
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0-release-20200902-05" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" PrivateAssets="all" />
     <PackageReference Include="coverlet.collector" Version="1.3.0" PrivateAssets="all" />
-
-    <!-- Resolving conflicts (DiCor.Generator) -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(ToolsetVersion)" />
   </ItemGroup>
 
 </Project>

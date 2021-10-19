@@ -17,12 +17,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="$(ToolsetVersion)" />
 
-    <!--
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="$(ToolsetVersion)" 
                       PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.0-rtm.20502.2" 
                       PrivateAssets="all" />
-    -->
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using DiCor.Internal;
 using Microsoft.CodeAnalysis;
@@ -26,14 +28,27 @@ namespace DiCor.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-            s_jtf.Run(() => ExecuteAsync(context), JoinableTaskCreationOptions.LongRunning);
+            AdditionalText? settingsText = context.AdditionalFiles
+                .FirstOrDefault(text => Path.GetFileName(text.Path).Equals("settings.json", StringComparison.OrdinalIgnoreCase));
+            string? settingsJson = settingsText?.GetText()?.ToString();
+            Settings settings = (settingsJson is null ? null : JsonSerializer.Deserialize<Settings>(settingsJson)) ?? new Settings();
 
-            static async Task ExecuteAsync(GeneratorExecutionContext context)
+            settings.CheckForUpdate = settings.LastUpdateCheck.AddHours(1) < DateTime.UtcNow;
+
+            s_jtf.Run(() => ExecuteAsync(context, settings), JoinableTaskCreationOptions.LongRunning);
+
+            if (settings.CheckForUpdate)
+                settings.LastUpdateCheck = DateTime.UtcNow;
+
+            if (settingsText is not null)
+                File.WriteAllText(settingsText.Path, JsonSerializer.Serialize(settings));
+
+            static async Task ExecuteAsync(GeneratorExecutionContext context, Settings settings)
             {
                 try
                 {
-                    using (var part16 = new Part16(s_httpClient, context))
-                    using (var part06 = new Part06(s_httpClient, context))
+                    using (var part16 = new Part16(s_httpClient, context, settings))
+                    using (var part06 = new Part06(s_httpClient, context, settings))
                     {
                         Dictionary<int, string> cidTable = await part16.GetSectionsByIdAsync().ConfigureAwait(false);
                         if (cidTable.Count > 0)
@@ -68,6 +83,7 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
 
             hashSet.Append(
 "using System.Collections.Generic;\r\n" +
+"\r\n" +
 "namespace DiCor\r\n" +
 "{\r\n" +
 "    public partial struct Uid\r\n" +

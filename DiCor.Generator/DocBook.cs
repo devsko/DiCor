@@ -23,6 +23,7 @@ namespace DiCor.Generator
 
         private readonly HttpClient _httpClient;
         protected readonly GeneratorExecutionContext _context;
+        private readonly Settings _settings;
         private readonly string _path;
         private readonly string _uri;
 
@@ -32,10 +33,11 @@ namespace DiCor.Generator
 
         public XmlReader? Reader => _xml?.Xml;
 
-        public DocBook(HttpClient httpClient, GeneratorExecutionContext context, string uri)
+        public DocBook(HttpClient httpClient, string uri, GeneratorExecutionContext context, Settings settings)
         {
             _httpClient = httpClient;
             _context = context;
+            _settings = settings;
             AdditionalText text = context.AdditionalFiles.First(text => Path.GetFileName(text.Path).Equals($"{GetType().Name}.xml", StringComparison.OrdinalIgnoreCase));
             _path = text.Path;
             _uri = uri;
@@ -66,23 +68,24 @@ namespace DiCor.Generator
                 }
             }
 
-            FileSaveStream saveStream = await StartDownloadAsync().ConfigureAwait(false);
-            XmlAndTitle downloadXml = await LoadXmlAsync(saveStream).ConfigureAwait(false);
-
-            download |= fileXml?.Title != downloadXml.Title;
-
-            if (download)
+            if (download || _settings.CheckForUpdate)
             {
-                _context.ReportDiagnostic(Diag.ResourceOutdated(_path, _uri));
-                await saveStream.StopBufferingAsync().ConfigureAwait(false);
-                _xml = downloadXml;
-                fileXml?.Dispose();
-            }
-            else
-            {
-                _xml = fileXml;
+                FileSaveStream saveStream = await StartDownloadAsync().ConfigureAwait(false);
+                XmlAndTitle downloadXml = await LoadXmlAsync(saveStream).ConfigureAwait(false);
+
+                if (download || fileXml?.Title != downloadXml.Title)
+                {
+                    _context.ReportDiagnostic(Diag.ResourceOutdated(_path, _uri));
+                    await saveStream.StopBufferingAsync().ConfigureAwait(false);
+                    _xml = downloadXml;
+                    fileXml?.Dispose();
+
+                    return;
+                }
                 downloadXml.Dispose();
             }
+
+            _xml = fileXml;
         }
 
         private async Task<FileSaveStream> StartDownloadAsync()

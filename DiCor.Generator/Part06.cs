@@ -17,8 +17,8 @@ namespace DiCor.Generator
     {
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part06/part06.xml";
 
-        public Part06(HttpClient httpClient, GeneratorExecutionContext context)
-            : base(httpClient, context, Uri)
+        public Part06(HttpClient httpClient, GeneratorExecutionContext context, Settings settings)
+            : base(httpClient, Uri, context, settings)
         { }
 
         public async Task<(Uid[]? TableA1, Uid[]? TableA3)> GetTablesAsync(Dictionary<int, string> cidTable)
