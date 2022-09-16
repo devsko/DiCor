@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace DiCor
 {
@@ -13,28 +14,21 @@ namespace DiCor
         {
             // PS3.5 - B.2 UUID Derived UID
 
-            Span<byte> span = stackalloc byte[16];
-            Guid.NewGuid().TryWriteBytes(span);
-            Swap(ref span[7], ref span[6]);
-            Swap(ref span[5], ref span[4]);
-            Swap(ref span[3], ref span[0]);
-            Swap(ref span[1], ref span[2]);
+            var guid = Guid.NewGuid();
+            Span<byte> s = stackalloc byte[16];
+            guid.TryWriteBytes(s);
 
-            var intValue = new BigInteger(span, isUnsigned: true, isBigEndian: true);
+            (s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]) = (s[6], s[7], s[4], s[5], s[0], s[1], s[2], s[3]);
+            s.Slice(8).Reverse();
+            MemoryMarshal.Cast<byte, ulong>(s).Reverse();
+
+            UInt128 intValue = Unsafe.As<byte, UInt128>(ref s[0]);
 
             Span<char> value = stackalloc char[39 + UUidRoot.Length];
-            UUidRoot.AsSpan().CopyTo(value);
+            UUidRoot.CopyTo(value);
             intValue.TryFormat(value.Slice(UUidRoot.Length), out int charsWritten);
 
             return new Uid(value.Slice(0, charsWritten + UUidRoot.Length).ToString(), name, type);
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            static void Swap(ref byte b1, ref byte b2)
-            {
-                byte temp = b2;
-                b2 = b1;
-                b1 = temp;
-            }
         }
 
     }

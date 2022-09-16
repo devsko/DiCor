@@ -1,14 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\BedrockFramework\src\Bedrock.Framework\Bedrock.Framework.csproj" />
     <ProjectReference Include="..\Dicor.Generated\DiCor.Generated.csproj" />
-    <PackageReference Include="System.IO.Pipelines" Version="$(NetCoreVersion)" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="16.7.56" />
+    <PackageReference Include="Bedrock.Framework" Version="0.1.63-alpha.gf69fa1b135" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.3.44" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <RestoreAdditionalProjectSources>https://f.feedz.io/davidfowl/bedrockframework/nuget/index.json ;$(RestoreAdditionalProjectSources)</RestoreAdditionalProjectSources>
+  </PropertyGroup>
 
 </Project>

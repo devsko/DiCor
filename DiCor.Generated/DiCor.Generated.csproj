@@ -1,14 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(NetCoreVersion)" />
+    <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0-rc.1.22426.10" />
   </ItemGroup>
 
   <ItemGroup>

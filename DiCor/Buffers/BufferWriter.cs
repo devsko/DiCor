@@ -12,11 +12,6 @@ namespace DiCor.Buffers
             public int _buffered;
             public int _committed;
             public int _lengthPrefixCount;
-
-            public Span<State> AsSpan()
-            {
-                return MemoryMarshal.CreateSpan(ref this, 1);
-            }
         }
 
         private readonly IBufferWriter<byte> _output;
@@ -29,7 +24,6 @@ namespace DiCor.Buffers
         {
             _output = output;
             _span = output.GetSpan();
-            _state = default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

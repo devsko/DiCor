@@ -16,7 +16,7 @@ namespace DiCor.Test.Buffers
             Assert.Produces(new byte[] { (byte)'A', (byte)'B', (byte)'C', 0x00, 0x07, (byte)'7', (byte)' ', (byte)'B', (byte)'y', (byte)'t', (byte)'e', (byte)'s', (byte)'X', (byte)'Y', (byte)'Z' },
                 writer =>
                 {
-                    var buffer = new BufferWriter(writer);
+                    scoped var buffer = new BufferWriter(writer);
                     buffer.WriteAsciiFixed("ABC", 3);
                     using (buffer.BeginLengthPrefix())
                     {
@@ -44,7 +44,7 @@ namespace DiCor.Test.Buffers
                     .Concat(new byte[] { (byte)'X', (byte)'Y', (byte)'Z' }),
                 writer =>
                 {
-                    var buffer = new BufferWriter(writer);
+                    scoped var buffer = new BufferWriter(writer);
                     buffer.WriteAsciiFixed((ReadOnlySpan<char>)"ABC", 3);
                     using (buffer.BeginLengthPrefix(4))
                     {
@@ -69,7 +69,7 @@ namespace DiCor.Test.Buffers
                     .Concat(new byte[] { (byte)'G', (byte)'H', (byte)'I', (byte)'_', (byte)'4', (byte)'5', (byte)'6' }),
                 writer =>
                 {
-                    var buffer = new BufferWriter(writer);
+                    scoped var buffer = new BufferWriter(writer);
                     buffer.WriteAsciiFixed((ReadOnlySpan<char>)"ABC", 3);
                     using (buffer.BeginLengthPrefix())
                     {

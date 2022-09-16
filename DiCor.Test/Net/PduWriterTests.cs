@@ -35,7 +35,9 @@ namespace DiCor.Test.Net
         public async Task WriteAAssociateReq()
         {
             var pipe = new Pipe();
+
             Write();
+
             await pipe.Writer.CompleteAsync();
             ReadResult result = await pipe.Reader.ReadAsync();
             byte[] actual = result.Buffer.ToArray();
@@ -46,8 +48,8 @@ namespace DiCor.Test.Net
             void Write()
             {
                 var message = ULMessage.FromData<AAssociateRqData>(new() { Association = new Association(AssociationType.Find) });
-                new PduWriter(pipe.Writer)
-                    .WriteAAssociateRq(ref Unsafe.As<long, AAssociateRqData>(ref message.Data));
+                scoped var writer = new PduWriter(pipe.Writer);
+                writer.WriteAAssociateRq(ref Unsafe.As<long, AAssociateRqData>(ref message.Data));
             }
         }
     }

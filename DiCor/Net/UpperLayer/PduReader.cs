@@ -12,7 +12,7 @@ namespace DiCor.Net.UpperLayer
             _input = input;
         }
 
-        public void ReadAAssociateRq(ref AAssociateRqData data)
+        public void ReadAAssociateRq(scoped ref AAssociateRqData data)
         {
             var association = new Association();
             data.Association = association;
@@ -130,7 +130,7 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public void ReadAAssociateAc(ref AAssociateAcData data)
+        public void ReadAAssociateAc(scoped ref AAssociateAcData data)
         {
             Association? association = data.Association;
             association.MaxOperationsInvoked = 1;
@@ -247,7 +247,7 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public void ReadAAssociateRj(ref AAssociateRjData data)
+        public void ReadAAssociateRj(scoped ref AAssociateRjData data)
         {
             _input.Reserved(1);
             _input.TryReadEnumFromByte(out data.Result);
@@ -255,7 +255,7 @@ namespace DiCor.Net.UpperLayer
             _input.TryReadEnumFromByte(out data.Reason);
         }
 
-        public void ReadAAbort(ref AAbortData data)
+        public void ReadAAbort(scoped ref AAbortData data)
         {
             _input.Reserved(2);
             _input.TryReadEnumFromByte(out data.Source);

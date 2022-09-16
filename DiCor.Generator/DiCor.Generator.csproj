@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -9,28 +11,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\DiCor.Generated\Uid.cs"
-             Link="Uid.cs" />
+    <Compile Include="..\DiCor.Generated\Uid.cs" Link="Uid.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(ToolsetVersion)" />
-
-    <PackageReference Include="System.Text.Json" Version="$(NetCoreVersion)"
-                      GeneratePathProperty="true"
-                      PrivateAssets="all" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="16.7.56"
-                      GeneratePathProperty="true"
-                      PrivateAssets="all" />
-    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="15.5.31"
-                      GeneratePathProperty="true"
-                      PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(NetCoreVersion)"
-                      GeneratePathProperty="true"
-                      PrivateAssets="all" />
-    <PackageReference Include="System.Text.Encodings.Web" Version="$(NetCoreVersion)"
-                      GeneratePathProperty="true"
-                      PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.4.0-1.final" />
+    <PackageReference Include="System.Text.Json" Version="7.0.0-rc.1.22426.10" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.3.44" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.64" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" GeneratePathProperty="true" PrivateAssets="all" Version="7.0.0-rc.1.22426.10" />
+    <PackageReference Include="System.Memory" Version="4.5.5" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Text.Encodings.Web" GeneratePathProperty="true" PrivateAssets="all" Version="7.0.0-rc.1.22426.10" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -39,16 +30,12 @@
 
   <Target Name="GetDependencyTargetPaths">
     <ItemGroup>
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Json)\lib\netstandard2.0\System.Text.Json.dll"
-                                           IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_VisualStudio_Threading)\lib\netstandard2.0\Microsoft.VisualStudio.Threading.dll"
-                                           IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_VisualStudio_Validation)\lib\netstandard2.0\Microsoft.VisualStudio.Validation.dll"
-                                           IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\Microsoft.Bcl.AsyncInterfaces.dll"
-                                           IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Encodings_Web)\lib\netstandard2.0\System.Text.Encodings.Web.dll"
-                                           IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Json)\lib\netstandard2.0\System.Text.Json.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_VisualStudio_Threading)\lib\netstandard2.0\Microsoft.VisualStudio.Threading.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_VisualStudio_Validation)\lib\netstandard2.0\Microsoft.VisualStudio.Validation.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\Microsoft.Bcl.AsyncInterfaces.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Memory)\lib\netstandard2.0\System.Memory.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Encodings_Web)\lib\netstandard2.0\System.Text.Encodings.Web.dll" IncludeRuntimeDependency="false" />
     </ItemGroup>
   </Target>
 

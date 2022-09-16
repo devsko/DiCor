@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29519.161
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.32912.340
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{45B7FE2F-D457-4125-A48C-7747D9307ED4}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		Directory.Build.props = Directory.Build.props
-		global.json = global.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor", "DiCor\DiCor.csproj", "{4633C53E-BFF7-49EE-AD7C-31BD08BE5E2D}"
@@ -20,9 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Performance", "DiCor.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Generator", "DiCor.Generator\DiCor.Generator.csproj", "{66CD12A9-0D59-4127-B46F-9CE01E8591F6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bedrock.Framework", "..\BedrockFramework\src\Bedrock.Framework\Bedrock.Framework.csproj", "{C63AA515-C18E-4DBD-BB21-F69B8D83919E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiCor.Generated", "DiCor.Generated\DiCor.Generated.csproj", "{8136F649-A290-475F-B74A-1A9DE38E20AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Generated", "DiCor.Generated\DiCor.Generated.csproj", "{8136F649-A290-475F-B74A-1A9DE38E20AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,10 +46,6 @@ Global
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C63AA515-C18E-4DBD-BB21-F69B8D83919E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C63AA515-C18E-4DBD-BB21-F69B8D83919E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C63AA515-C18E-4DBD-BB21-F69B8D83919E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C63AA515-C18E-4DBD-BB21-F69B8D83919E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8136F649-A290-475F-B74A-1A9DE38E20AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8136F649-A290-475F-B74A-1A9DE38E20AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8136F649-A290-475F-B74A-1A9DE38E20AB}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -74,7 +74,7 @@ namespace DiCor.Net.UpperLayer
             {
                 _ulConnection._logger.LogDebug($">>> {message.Type}");
 
-                var writer = new PduWriter(output);
+                scoped var writer = new PduWriter(output);
                 switch (message.Type)
                 {
                     case Pdu.Type.AAssociateRq:
