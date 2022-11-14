@@ -9,15 +9,8 @@ namespace DiCor.Test.Buffers
     {
         public static void Produces(IEnumerable<byte> expected, Action<PipeWriter> producer)
         {
-            if (expected is null)
-            {
-                throw new ArgumentNullException(nameof(expected));
-            }
-
-            if (producer is null)
-            {
-                throw new ArgumentNullException(nameof(producer));
-            }
+            ArgumentNullException.ThrowIfNull(expected);
+            ArgumentNullException.ThrowIfNull(producer);
 
             var pipe = new Pipe();
 

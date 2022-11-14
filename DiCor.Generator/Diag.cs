@@ -28,7 +28,7 @@ namespace DiCor.Generator
         private static readonly DiagnosticDescriptor s_exception = new DiagnosticDescriptor(
             "GEN004",
             "UnexpectedException",
-            "Unexpected error: '{0}'",
+            "Unexpected error '{0}'",
             DiagnosticCategory,
             DiagnosticSeverity.Error,
             true);
@@ -51,7 +51,7 @@ namespace DiCor.Generator
                     ex = aex;
             }
 
-            return Diagnostic.Create(s_exception, default, ex);
+            return Diagnostic.Create(s_exception, default, ex.Message);
         }
     }
 }

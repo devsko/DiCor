@@ -75,10 +75,10 @@ namespace DiCor.Generator
 
                 if (download || fileXml?.Title != downloadXml.Title)
                 {
+                    fileXml?.Dispose();
                     _context.ReportDiagnostic(Diag.ResourceOutdated(_path, _uri));
                     await saveStream.StopBufferingAsync().ConfigureAwait(false);
                     _xml = downloadXml;
-                    fileXml?.Dispose();
 
                     return;
                 }

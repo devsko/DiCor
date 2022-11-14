@@ -79,7 +79,7 @@ namespace DiCor.Net.UpperLayer
                 SetState(State.Sta2_TransportConnectionOpen);
             }
 
-            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, RequestTimeout).ConfigureAwait(false))
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, RequestTimeout, cancellationToken).ConfigureAwait(false))
             {
                 await AA2_CloseConnection().ConfigureAwait(false);
             }
@@ -137,7 +137,7 @@ namespace DiCor.Net.UpperLayer
             }
             await write.ConfigureAwait(false);
 
-            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, RejectTimeout).ConfigureAwait(false))
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, RejectTimeout, cancellationToken).ConfigureAwait(false))
             {
                 await AA2_CloseConnection().ConfigureAwait(false);
             }
@@ -165,7 +165,7 @@ namespace DiCor.Net.UpperLayer
             }
             await write.ConfigureAwait(false);
 
-            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, AbortTimeout).ConfigureAwait(false))
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, AbortTimeout, cancellationToken).ConfigureAwait(false))
             {
                 await AA2_CloseConnection().ConfigureAwait(false);
             }
@@ -241,7 +241,7 @@ namespace DiCor.Net.UpperLayer
 
             APAbort?.Invoke(this, new APAbortArgs());
 
-            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken, AbortTimeout).ConfigureAwait(false))
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, AbortTimeout, cancellationToken).ConfigureAwait(false))
             {
                 await AA2_CloseConnection().ConfigureAwait(false);
             }

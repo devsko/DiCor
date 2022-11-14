@@ -20,7 +20,7 @@ namespace DiCor.Buffers
             private readonly int _position;
             private readonly int _currentPrefixCount;
 
-            public LengthPrefix([UnscopedRef] ref BufferWriter buffer, int prefixLength)
+            public LengthPrefix(ref BufferWriter buffer, int prefixLength)
             {
                 buffer.Ensure(prefixLength);
                 _span = buffer.Span.Slice(0, prefixLength);

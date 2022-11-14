@@ -14,9 +14,7 @@ namespace DiCor.Net.UpperLayer
             private const int Timedout = 1;
             private const int Unblocked = 2;
 
-#pragma warning disable CA1068 // CancellationToken parameters must come last
-            public static async Task<bool> AwaitResponseAsync(ULConnection connection, CancellationToken cancellationToken = default, int timeout = Timeout.Infinite)
-#pragma warning restore CA1068 // CancellationToken parameters must come last
+            public static async Task<bool> AwaitResponseAsync(ULConnection connection, int timeout = Timeout.Infinite, CancellationToken cancellationToken = default)
             {
                 if (connection._responseAwaiter is not null)
                 {
@@ -32,7 +30,7 @@ namespace DiCor.Net.UpperLayer
 
                 var awaiter = new ResponseAwaiter(connection, timeout, cancellationToken);
 
-                using (cancellationToken.UnsafeRegister(s => ((ResponseAwaiter)s!).OnCancelled(), awaiter))
+                using (cancellationToken.UnsafeRegister(s => ((ResponseAwaiter)s!).OnCanceled(), awaiter))
                 using (awaiter._cts.Token.UnsafeRegister(s => ((ResponseAwaiter)s!).OnTimedOut(), awaiter))
                 using (awaiter._cts)
                 {
@@ -40,7 +38,7 @@ namespace DiCor.Net.UpperLayer
 
                     int result = await awaiter._tcs.Task.ConfigureAwait(false);
 
-                    connection._logger.LogTrace($"Waiting for response {(result switch { IsCompleted => "completed", Timedout => "timed out", Unblocked => "unblocked", _ => "" })} {connection._connection!.ConnectionId}");
+                    connection._logger.LogTrace($"Waiting for response {result switch { IsCompleted => "completed", Timedout => "timed out", Unblocked => "unblocked", _ => "" }} {connection._connection!.ConnectionId}");
 
                     return result == IsCompleted;
                 }
@@ -70,7 +68,7 @@ namespace DiCor.Net.UpperLayer
                 _tcs.TrySetResult(Unblocked);
             }
 
-            private void OnCancelled()
+            private void OnCanceled()
             {
                 _tcs.TrySetCanceled(_cancellationToken);
             }

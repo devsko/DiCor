@@ -51,12 +51,13 @@ namespace DiCor.Net.UpperLayer
 
         public async Task<Task> StartServiceAsync(ConnectionContext connection, CancellationToken cancellationToken = default)
         {
-            if (_isServiceProvider != null)
+            ArgumentNullException.ThrowIfNull(connection);
+            if (_isServiceProvider is bool)
                 throw new InvalidOperationException();
 
             _isServiceProvider = true;
             _logger = _loggerFactory.CreateLogger("ULConnection (Server)");
-            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _connection = connection;
 
             _logger.LogDebug($"Creating server connection {connection.ConnectionId}");
 
@@ -83,13 +84,11 @@ namespace DiCor.Net.UpperLayer
 
         public async Task AssociateAsync(Client client, EndPoint endpoint, AssociationType type, CancellationToken cancellationToken = default)
         {
-            if (client is null)
-                throw new ArgumentNullException(nameof(client));
-            if (endpoint is null)
-                throw new ArgumentNullException(nameof(endpoint));
+            ArgumentNullException.ThrowIfNull(client);
+            ArgumentNullException.ThrowIfNull(endpoint);
             if (!Enum.IsDefined<AssociationType>(type))
                 throw new ArgumentException(null, nameof(type));
-            if (_isServiceProvider != null)
+            if (_isServiceProvider is bool)
                 throw new InvalidOperationException();
 
             _isServiceProvider = false;
@@ -102,7 +101,7 @@ namespace DiCor.Net.UpperLayer
             _readLoopTask = ReadLoopAsync();
             await AE2_SendAAssociateRq(cancellationToken).ConfigureAwait(false);
 
-            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken).ConfigureAwait(false))
+            if (!await ResponseAwaiter.AwaitResponseAsync(this, cancellationToken: cancellationToken).ConfigureAwait(false))
             {
                 await DisposeAsync().ConfigureAwait(false);
             }

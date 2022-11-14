@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -28,17 +29,20 @@ namespace DiCor.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-            AdditionalText? settingsText = context.AdditionalFiles
+            Settings? settings;
+            AdditionalText? settingsText = context
+                .AdditionalFiles
                 .FirstOrDefault(text => Path.GetFileName(text.Path).Equals("settings.json", StringComparison.OrdinalIgnoreCase));
-            string? settingsJson = settingsText?.GetText()?.ToString();
-            Settings settings = (settingsJson is null ? null : JsonSerializer.Deserialize<Settings>(settingsJson)) ?? new Settings();
-
-            settings.CheckForUpdate = settings.LastUpdateCheck.AddHours(1) < DateTime.UtcNow;
+            if (settingsText is null)
+                settings = new Settings();
+            else
+            {
+                string? settingsJson = settingsText.GetText()?.ToString();
+                settings = (settingsJson is null ? null : JsonSerializer.Deserialize<Settings>(settingsJson)) ?? new Settings();
+                settings.CheckForUpdate = settings.LastUpdateCheck.AddHours(1) < DateTime.UtcNow;
+            }
 
             s_jtf.Run(() => ExecuteAsync(context, settings), JoinableTaskCreationOptions.LongRunning);
-
-            if (settings.CheckForUpdate)
-                settings.LastUpdateCheck = DateTime.UtcNow;
 
             if (settingsText is not null)
                 File.WriteAllText(settingsText.Path, JsonSerializer.Serialize(settings));
@@ -68,6 +72,8 @@ $"// {part16.Title} ({Part16.Uri})\r\n\r\n";
                             }
                         }
                     }
+                    if (settings.CheckForUpdate)
+                        settings.LastUpdateCheck = DateTime.UtcNow;
                 }
                 catch (Exception ex)
                 {

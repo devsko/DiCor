@@ -39,15 +39,15 @@ namespace DiCor.ConsoleApp
                 )
                 .BuildServiceProvider();
 
-            Server server = new ServerBuilder(serviceProvider)
-                .UseSockets(builder => builder
-                    .ListenLocalhost(11112, connection => connection
-                        .UseConnectionLogging("Server")
-                        .UseConnectionHandler<DiCorConnectionHandler>()
-                ))
-                .Build();
+            //Server server = new ServerBuilder(serviceProvider)
+            //    .UseSockets(builder => builder
+            //        .ListenLocalhost(11112, connection => connection
+            //            .UseConnectionLogging("Server")
+            //            .UseConnectionHandler<DiCorConnectionHandler>()
+            //    ))
+            //    .Build();
 
-            await server.StartAsync().ConfigureAwait(false);
+            //await server.StartAsync().ConfigureAwait(false);
 
             Client client = new ClientBuilder(serviceProvider)
                 .UseSockets()
@@ -58,8 +58,9 @@ namespace DiCor.ConsoleApp
             {
                 await connection.AssociateAsync(
                     client,
-                    new IPEndPoint(IPAddress.Loopback, 11112),
-                    //new DnsEndPoint("dicomserver.co.uk", 11112),
+                    //new IPEndPoint(IPAddress.Loopback, 11112),
+                    //new IPEndPoint(new IPAddress(new byte[] { 51, 75, 171, 41 }), 11112),
+                    new DnsEndPoint("dicomserver.co.uk", 11112),
                     AssociationType.Find,
                     new CancellationTokenSource(60000).Token).ConfigureAwait(false);
                 Console.WriteLine(connection.CurrentState);
