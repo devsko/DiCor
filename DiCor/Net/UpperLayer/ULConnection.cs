@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DiCor.Net.UpperLayer
 {
-    public partial class ULConnection : IAsyncDisposable
+    public sealed partial class ULConnection : IAsyncDisposable
     {
         private const int RequestTimeout = 500;
         private const int RejectTimeout = 500;

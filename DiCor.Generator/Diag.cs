@@ -8,8 +8,7 @@ namespace DiCor.Generator
     {
         private const string DiagnosticCategory = "Usage";
 
-#pragma warning disable RS2008 // Enable analyzer release tracking
-        private static readonly DiagnosticDescriptor s_resourceOutdated = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor s_resourceOutdated = new(
             "GEN002",
             "Resource outdated",
             "Downloading resource '{0}' from {1}",
@@ -17,7 +16,7 @@ namespace DiCor.Generator
             DiagnosticSeverity.Warning,
             true);
 
-        private static readonly DiagnosticDescriptor s_invalidResourceXml = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor s_invalidResourceXml = new(
             "GEN003",
             "InvalidResourceXml",
             "Invalid XML in resource '{0}': {1}",
@@ -25,14 +24,13 @@ namespace DiCor.Generator
             DiagnosticSeverity.Warning,
             true);
 
-        private static readonly DiagnosticDescriptor s_exception = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor s_exception = new(
             "GEN004",
             "UnexpectedException",
             "Unexpected error '{0}'",
             DiagnosticCategory,
             DiagnosticSeverity.Error,
             true);
-#pragma warning restore RS2008 // Enable analyzer release tracking
 
         public static Diagnostic ResourceOutdated(string resourceKey, string downloadUri)
             => Diagnostic.Create(s_resourceOutdated, default, resourceKey, downloadUri);

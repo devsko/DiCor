@@ -18,14 +18,17 @@ namespace DiCor.Generator
     [Generator]
     public class UidSourceGenerator : ISourceGenerator
     {
-        private static readonly HttpClient s_httpClient = new HttpClient();
-        private static readonly JoinableTaskFactory s_jtf = new JoinableTaskFactory(new JoinableTaskContext());
+        internal static readonly JoinableTaskFactory JoinableTaskFactory = new(new JoinableTaskContext());
+        private static readonly HttpClient s_httpClient = new();
 
         public static Assembly Assembly => typeof(UidSourceGenerator).Assembly;
         public static string AssemblyName => Assembly.GetName().Name ?? string.Empty;
 
         public void Initialize(GeneratorInitializationContext context)
-        { }
+        {
+            if (!Debugger.IsAttached)
+                Debugger.Launch();
+        }
 
         public void Execute(GeneratorExecutionContext context)
         {
@@ -42,7 +45,7 @@ namespace DiCor.Generator
                 settings.CheckForUpdate = settings.LastUpdateCheck.AddHours(1) < DateTime.UtcNow;
             }
 
-            s_jtf.Run(() => ExecuteAsync(context, settings), JoinableTaskCreationOptions.LongRunning);
+            JoinableTaskFactory.Run(() => ExecuteAsync(context, settings), JoinableTaskCreationOptions.LongRunning);
 
             if (settingsText is not null)
                 File.WriteAllText(settingsText.Path, JsonSerializer.Serialize(settings));

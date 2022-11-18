@@ -35,7 +35,7 @@ namespace DiCor.Buffers
         public void Reserved(int count)
         {
             Ensure(count);
-            Span.Slice(0, count).Fill(0x00);
+            Span.Slice(0, count).Clear();
             Advance(count);
         }
 

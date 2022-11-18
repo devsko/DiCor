@@ -11,7 +11,7 @@ namespace DiCor.Test.Buffers
         [Fact]
         public void WriteByte()
         {
-            Assert.Produces(new byte[] { 0x42 },
+            Assert.Produces("B"u8.ToArray(),
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
@@ -23,7 +23,7 @@ namespace DiCor.Test.Buffers
         [Fact]
         public void WriteUShort()
         {
-            Assert.Produces(new byte[] { 0x42, 0x43 },
+            Assert.Produces("BC"u8.ToArray(),
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
@@ -35,7 +35,7 @@ namespace DiCor.Test.Buffers
         [Fact]
         public void WriteUInt()
         {
-            Assert.Produces(new byte[] { 0x42, 0x43, 0x44, 0x45 },
+            Assert.Produces("BCDE"u8.ToArray(),
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);

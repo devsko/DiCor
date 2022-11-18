@@ -41,9 +41,9 @@ namespace DiCor.Net.UpperLayer
                     case Pdu.ItemTypePresentationContextRq:
                         {
                             _input.Reserved(1);
-                            _input.TryReadLength(out ushort itemLength);
+                            _input.TryReadLength(out _); // itemLength
 
-                            _input.TryRead(out byte presentationContextid);
+                            _input.TryRead(out _); // presentationContextid
                             _input.Reserved(3);
 
 

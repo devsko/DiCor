@@ -29,7 +29,7 @@ namespace DiCor.Test
                 .UseConnectionLogging()
                 .Build();
 
-            ULConnection ulConnection = new ULConnection();
+            ULConnection ulConnection = new();
             await ulConnection.AssociateAsync(
                 client,
                 new DnsEndPoint("dicomserver.co.uk", 11112),

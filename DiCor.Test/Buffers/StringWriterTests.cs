@@ -9,7 +9,7 @@ namespace DiCor.Test.Buffers
         [Fact]
         public void WriteAsciiTrims()
         {
-            Assert.Produces(new byte[] { (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o' },
+            Assert.Produces("Hello"u8.ToArray(),
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
@@ -21,7 +21,7 @@ namespace DiCor.Test.Buffers
         [Fact]
         public void WriteAsciiPads()
         {
-            Assert.Produces(new byte[] { (byte)'H', (byte)'e', (byte)' ', (byte)' ', (byte)' ' },
+            Assert.Produces("He   "u8.ToArray(),
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);

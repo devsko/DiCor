@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DiCor.UL.Test
 {
-    public class TestServer : IAsyncDisposable
+    public sealed class TestServer : IAsyncDisposable
     {
         public static async Task<TestServer> CreateAsysnc(bool useMemoryTransport = true)
         {

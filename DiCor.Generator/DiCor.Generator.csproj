@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.4.0-4.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.4.0" />
     <PackageReference Include="System.Text.Json" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.4.27" GeneratePathProperty="true" PrivateAssets="all" />
     <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.64" GeneratePathProperty="true" PrivateAssets="all" />

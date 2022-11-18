@@ -38,10 +38,10 @@ namespace DiCor.Test.Buffers
         {
             int length = blockLength * blockCount;
             Assert.Produces(
-                (new byte[] { (byte)'A', (byte)'B', (byte)'C' })
+                ("ABC"u8.ToArray())
                     .Concat(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness((uint)length)))
                     .Concat(Enumerable.Repeat((byte)0x42, length))
-                    .Concat(new byte[] { (byte)'X', (byte)'Y', (byte)'Z' }),
+                    .Concat("XYZ"u8.ToArray()),
                 writer =>
                 {
                     scoped var buffer = new BufferWriter(writer);
@@ -62,11 +62,11 @@ namespace DiCor.Test.Buffers
         public void NestedBlocks()
         {
             Assert.Produces(
-                (new byte[] { (byte)'A', (byte)'B', (byte)'C' })
+                ("ABC"u8.ToArray())
                     .Concat(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness((ushort)15)))
-                    .Concat(new byte[] { (byte)'D', (byte)'E', (byte)'F', (byte)'1', (byte)'2', (byte)'3' })
+                    .Concat("DEF123"u8.ToArray())
                     .Concat(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness((ushort)7)))
-                    .Concat(new byte[] { (byte)'G', (byte)'H', (byte)'I', (byte)'_', (byte)'4', (byte)'5', (byte)'6' }),
+                    .Concat("GHI_456"u8.ToArray()),
                 writer =>
                 {
                     scoped var buffer = new BufferWriter(writer);

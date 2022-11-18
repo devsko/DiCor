@@ -32,18 +32,18 @@ namespace DiCor
             PresentationContexts.Add(presentationContext);
         }
 
-        private Association(Association original)
-        {
-            CalledAE = original.CalledAE;
-            CallingAE = original.CallingAE;
-            MaxResponseDataLength = original.MaxResponseDataLength;
-            MaxRequestDataLength = original.MaxRequestDataLength;
-            MaxOperationsInvoked = original.MaxOperationsInvoked;
-            MaxOperationsPerformed = original.MaxOperationsPerformed;
-            RemoteImplementationClass = original.RemoteImplementationClass;
-            RemoteImplementationVersion = original.RemoteImplementationVersion;
-            PresentationContexts = new List<PresentationContext>(original.PresentationContexts.Select(pc => pc with { }));
-        }
+        //private Association(Association original)
+        //{
+        //    CalledAE = original.CalledAE;
+        //    CallingAE = original.CallingAE;
+        //    MaxResponseDataLength = original.MaxResponseDataLength;
+        //    MaxRequestDataLength = original.MaxRequestDataLength;
+        //    MaxOperationsInvoked = original.MaxOperationsInvoked;
+        //    MaxOperationsPerformed = original.MaxOperationsPerformed;
+        //    RemoteImplementationClass = original.RemoteImplementationClass;
+        //    RemoteImplementationVersion = original.RemoteImplementationVersion;
+        //    PresentationContexts = new List<PresentationContext>(original.PresentationContexts.Select(pc => pc with { }));
+        //}
 
         public string? CalledAE { get; set; }
         public string? CallingAE { get; set; }
