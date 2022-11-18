@@ -18,8 +18,8 @@ namespace DiCor.Generator
     [Generator]
     public class UidSourceGenerator : ISourceGenerator
     {
-        internal static readonly JoinableTaskFactory JoinableTaskFactory = new(new JoinableTaskContext());
         private static readonly HttpClient s_httpClient = new();
+        internal static JoinableTaskFactory JoinableTaskFactory { get; } = new(new JoinableTaskContext());
 
         public static Assembly Assembly => typeof(UidSourceGenerator).Assembly;
         public static string AssemblyName => Assembly.GetName().Name ?? string.Empty;
