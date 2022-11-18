@@ -26,8 +26,8 @@ namespace DiCor.Generator
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            if (!Debugger.IsAttached)
-                Debugger.Launch();
+            //if (!Debugger.IsAttached)
+            //    Debugger.Launch();
         }
 
         public void Execute(GeneratorExecutionContext context)
