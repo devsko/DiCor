@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Bedrock.Framework;
 using Bedrock.Framework.Transports.Memory;
 using DiCor.Net.UpperLayer;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -11,7 +12,7 @@ namespace DiCor.UL.Test
 {
     public sealed class TestServer : IAsyncDisposable
     {
-        public static async Task<TestServer> CreateAsysnc(bool useMemoryTransport = true)
+        public static async Task<TestServer> CreateAsync(bool useMemoryTransport = true)
         {
             ServiceProvider serviceProvider = new ServiceCollection()
                 .AddLogging(builder => builder
@@ -21,37 +22,35 @@ namespace DiCor.UL.Test
                 )
                 .BuildServiceProvider();
 
-            MemoryTransport? memoryTransport = useMemoryTransport ? new MemoryTransport() : null;
 
-            var clientBuilder = new ClientBuilder(serviceProvider);
-            Client client =
-                (useMemoryTransport
-                    ? clientBuilder.UseConnectionFactory(memoryTransport)
-                    : clientBuilder.UseSockets()
-                )
-                .Build();
+            ClientBuilder clientBuilder = new(serviceProvider);
+            ServerBuilder serverBuilder = new(serviceProvider);
+            Client client;
+            Server server;
+            EndPoint endPoint;
 
-            var serverBuilder = new ServerBuilder(serviceProvider);
-            Server server =
-                (useMemoryTransport
-                    ? serverBuilder.Listen(MemoryEndPoint.Default, memoryTransport, connection => connection
-                        .RunULService()
-                    )
-                    : serverBuilder.UseSockets(builder => builder
-                        .ListenLocalhost(11112, connection => connection
-                            .RunULService()
-                        )
-                    )
-                )
-                .Build();
+            if (useMemoryTransport)
+            {
+                MemoryTransport memoryTransport = new();
+                endPoint = MemoryEndPoint.Default;
+                clientBuilder.UseConnectionFactory(memoryTransport);
+                serverBuilder.Listen(endPoint, memoryTransport, RunULService);
+            }
+            else
+            {
+                endPoint = new IPEndPoint(IPAddress.Loopback, 11112);
+                clientBuilder.UseSockets();
+                serverBuilder.UseSockets(builder => builder.Listen(endPoint, RunULService));
+            }
+
+            client = clientBuilder.Build();
+            server = serverBuilder.Build();
 
             await server.StartAsync();
 
-            EndPoint endPoint = useMemoryTransport
-                ? MemoryEndPoint.Default
-                : new IPEndPoint(IPAddress.Loopback, 11112);
-
             return new TestServer(server, client, serviceProvider, endPoint);
+
+            static void RunULService(IConnectionBuilder builder) => builder.RunULService();
         }
 
         private readonly Server _server;
@@ -67,13 +66,8 @@ namespace DiCor.UL.Test
             _endPoint = endPoint;
         }
 
-        public async Task<ULConnection> AssociateAsync(AssociationType type)
-        {
-            var connection = new ULConnection(_serviceProvider.GetService<ILoggerFactory>());
-            await connection.AssociateAsync(_client, _endPoint, AssociationType.Find);
-
-            return connection;
-        }
+        public Task CreateUserAsync(AssociationType type)
+            => ULConnection.RunScuAsync(_client, _endPoint, type, ULScu.Default, _serviceProvider.GetService<ILoggerFactory>());
 
         public async ValueTask DisposeAsync()
         {

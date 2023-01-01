@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Bedrock.Framework.Protocols;
 
@@ -11,11 +12,18 @@ namespace DiCor.Net.UpperLayer
     {
         public class Protocol : IMessageReader<ULMessage>, IMessageWriter<ULMessage>
         {
-            private readonly ULConnection _ulConnection;
+            private readonly ILogger _logger;
+            private Association? _association;
 
-            public Protocol(ULConnection ulConnection)
+            public Protocol(ILogger logger)
             {
-                _ulConnection = ulConnection;
+                _logger = logger;
+            }
+
+            public Association? Association
+            {
+                get => _association;
+                set => _association = value;
             }
 
             public bool TryParseMessage(in ReadOnlySequence<byte> input, ref SequencePosition consumed, ref SequencePosition examined, out ULMessage message)
@@ -24,40 +32,51 @@ namespace DiCor.Net.UpperLayer
 
                 if (buffer.Remaining >= 6)
                 {
-                    message = default;
-                    buffer.TryReadEnumFromByte(out message.Type);
+                    buffer.TryReadEnumFromByte(out Pdu.Type messageType);
                     buffer.Advance(1);
-                    buffer.TryReadBigEndian(out message.Length);
+                    buffer.TryReadBigEndian(out uint length);
 
-                    _ulConnection._logger.LogDebug($"<<< {message.Type} ({message.Length} bytes)");
+                    _logger.LogDebug($"<<< {messageType} ({length} bytes)");
 
-                    if (buffer.Remaining >= message.Length)
+                    if (buffer.Remaining >= length)
                     {
-                        buffer = new SequenceReader<byte>(input.Slice(buffer.Position, message.Length));
+                        buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
                         var reader = new PduReader(in buffer);
 
-                        switch (message.Type)
+                        message = new ULMessage(messageType);
+                        switch (messageType)
                         {
                             case Pdu.Type.AAssociateRq:
-                                reader.ReadAAssociateRq(ref Unsafe.As<long, AAssociateRqData>(ref message.Data));
+                                Debug.Assert(_association is not null);
+                                reader.ReadAAssociateRq(ref _association);
                                 break;
 
                             case Pdu.Type.AAssociateAc:
-                                ref AAssociateAcData associationData = ref Unsafe.As<long, AAssociateAcData>(ref message.Data);
-                                associationData.Association = _ulConnection.Association! with { };
-                                reader.ReadAAssociateAc(ref associationData);
+                                Debug.Assert(_association is not null);
+                                reader.ReadAAssociateAc(_association);
                                 break;
 
                             case Pdu.Type.AAssociateRj:
-                                reader.ReadAAssociateRj(ref Unsafe.As <long, AAssociateRjData>(ref message.Data));
+                                reader.ReadAAssociateRj(message.GetData<AAssociateRjData>());
+                                break;
+
+                            case Pdu.Type.AReleaseRq:
+                                reader.ReadAReleaseRq();
+                                break;
+
+                            case Pdu.Type.AReleaseRp:
+                                reader.ReadAReleaseRp();
                                 break;
 
                             case Pdu.Type.AAbort:
-                                reader.ReadAAbort(ref Unsafe.As <long, AAbortData>(ref message.Data));
+                                reader.ReadAAbort(message.GetData<AAbortData>());
                                 break;
+
+                            default:
+                                throw new NotSupportedException($"Unknown Upper Layer PDU Type {message.Type}.");
                         }
 
-                        buffer.Advance(message.Length);
+                        buffer.Advance(length);
                         consumed = buffer.Position;
                         examined = consumed;
                         return true;
@@ -72,13 +91,14 @@ namespace DiCor.Net.UpperLayer
 
             public void WriteMessage(ULMessage message, IBufferWriter<byte> output)
             {
-                _ulConnection._logger.LogDebug($">>> {message.Type}");
+                _logger.LogDebug($">>> {message.Type}");
 
-                scoped var writer = new PduWriter(output);
+                var writer = new PduWriter(output);
                 switch (message.Type)
                 {
                     case Pdu.Type.AAssociateRq:
-                        writer.WriteAAssociateRq(ref Unsafe.As<long, AAssociateRqData>(ref message.Data));
+                        Debug.Assert(_association is not null);
+                        writer.WriteAAssociateRq(_association);
                         break;
 
                     case Pdu.Type.AAssociateAc:
@@ -87,8 +107,16 @@ namespace DiCor.Net.UpperLayer
                     case Pdu.Type.AAssociateRj:
                         break;
 
+                    case Pdu.Type.AReleaseRq:
+                        writer.WriteAReleaseRq();
+                        break;
+
+                    case Pdu.Type.AReleaseRp:
+                        writer.WriteAReleaseRp();
+                        break;
+
                     case Pdu.Type.AAbort:
-                        writer.WriteAAbort(ref Unsafe.As<long, AAbortData>(ref message.Data));
+                        writer.WriteAAbort(message.GetData<AAbortData>());
                         break;
 
                     default:

@@ -8,17 +8,31 @@ namespace DiCor.Net.UpperLayer
 {
     public struct ULMessage
     {
-        public uint Length;
-        public Pdu.Type Type;
-        public long Data;
+        private Pdu.Type _type;
+        private long _data;
+
+        public Pdu.Type Type => _type;
 
         public static ULMessage FromData<TData>(TData data) where TData : struct
             => new()
+            {
+                _type = GetType(ref data),
+                _data = Unsafe.As<TData, long>(ref data),
+            };
+
+        public ULMessage(Pdu.Type type)
         {
-            Length = 0,
-            Type = GetType(ref data),
-            Data = Unsafe.As<TData, long>(ref data),
-        };
+            _type = type;
+        }
+
+        public TData GetData<TData>() where TData : struct
+        {
+            TData data = Unsafe.As<long, TData>(ref _data);
+            if (GetType(ref data) != _type)
+                throw new ArgumentException();
+
+            return data;
+        }
 
         private static Pdu.Type GetType<TData>(ref TData data) where TData : struct
             => data switch
@@ -26,27 +40,20 @@ namespace DiCor.Net.UpperLayer
                 AAssociateRqData => Pdu.Type.AAssociateRq,
                 AAssociateAcData => Pdu.Type.AAssociateAc,
                 AAssociateRjData => Pdu.Type.AAssociateRj,
+                PDataTfData => Pdu.Type.PDataTf,
+                ARelaseRqData => Pdu.Type.AReleaseRq,
+                ARelaseRpData => Pdu.Type.AReleaseRp,
                 AAbortData => Pdu.Type.AAbort,
+
                 _ => throw new InvalidOperationException(),
             };
-
-        public TData GetData<TData>() where TData : struct
-        {
-            Debug.Assert(Unsafe.SizeOf<TData>() <= sizeof(long));
-
-            return Unsafe.As<long, TData>(ref Data);
-        }
     }
 
     public struct AAssociateRqData
-    {
-        public Association Association;
-    }
+    { }
 
     public struct AAssociateAcData
-    {
-        public Association Association;
-    }
+    { }
 
     public struct AAssociateRjData
     {
@@ -54,6 +61,17 @@ namespace DiCor.Net.UpperLayer
         public Pdu.RejectSource Source;
         public Pdu.RejectReason Reason;
     }
+
+    public struct PDataTfData
+    {
+
+    }
+
+    public struct ARelaseRqData
+    { }
+
+    public struct ARelaseRpData
+    { }
 
     public struct AAbortData
     {

@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Dicor.Generated\DiCor.Generated.csproj" />
     <PackageReference Include="Bedrock.Framework" Version="0.1.63-alpha.gf69fa1b135" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.4.27" />
+    <PackageReference Include="DotNext.Threading" Version="4.7.4" />
   </ItemGroup>
 
 </Project>

@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using DiCor.Net.UpperLayer;
-
+﻿using System.Data.Common;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DiCor.Net.UpperLayer
 {
@@ -18,12 +10,9 @@ namespace DiCor.Net.UpperLayer
         {
             ILoggerFactory? loggerFactory = (ILoggerFactory?)connectionBuilder.ApplicationServices?.GetService(typeof(ILoggerFactory));
 
-            connectionBuilder.Run(async connection =>
+            connectionBuilder.Run(async context =>
             {
-                await using (var ulConnection = new ULConnection(loggerFactory))
-                {
-                    await ulConnection.StartServiceAsync(connection).Unwrap();
-                }
+                await ULConnection.RunScpAsync(context, ULScp.Default, loggerFactory).ConfigureAwait(false);
             });
 
             return connectionBuilder;

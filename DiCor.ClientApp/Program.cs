@@ -15,11 +15,18 @@ namespace DiCor.ConsoleApp
 {
     public class DiCorConnectionHandler : ConnectionHandler
     {
-        public override async Task OnConnectedAsync(ConnectionContext connection)
+        private readonly ILoggerFactory? _loggerFactory;
+
+        public DiCorConnectionHandler(ILoggerFactory? loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+        }
+
+        public override async Task OnConnectedAsync(ConnectionContext context)
         {
             try
             {
-                await new ULConnection().StartServiceAsync(connection).Unwrap().ConfigureAwait(false);
+                await ULConnection.RunScpAsync(context, ULScp.Default, _loggerFactory).ConfigureAwait(false);
             }
             catch
             {
@@ -34,38 +41,36 @@ namespace DiCor.ConsoleApp
         {
             ServiceProvider serviceProvider = new ServiceCollection()
                 .AddLogging(builder => builder
-                    .SetMinimumLevel(LogLevel.Debug)
+                    .SetMinimumLevel(LogLevel.Trace)
                     .AddConsole()
                 )
                 .BuildServiceProvider();
 
-            //Server server = new ServerBuilder(serviceProvider)
-            //    .UseSockets(builder => builder
-            //        .ListenLocalhost(11112, connection => connection
-            //            .UseConnectionLogging("Server")
-            //            .UseConnectionHandler<DiCorConnectionHandler>()
-            //    ))
-            //    .Build();
+            Server server = new ServerBuilder(serviceProvider)
+                .UseSockets(builder => builder
+                    .ListenLocalhost(11112, connection => connection
+                        .UseConnectionLogging("Server")
+                        .UseConnectionHandler<DiCorConnectionHandler>()
+                ))
+                .Build();
 
-            //await server.StartAsync().ConfigureAwait(false);
+            await server.StartAsync().ConfigureAwait(false);
 
             Client client = new ClientBuilder(serviceProvider)
                 .UseSockets()
                 .UseConnectionLogging()
                 .Build();
 
-            await using (var connection = new ULConnection())
-            {
-                await connection.AssociateAsync(
-                    client,
-                    //new IPEndPoint(IPAddress.Loopback, 11112),
-                    //new IPEndPoint(new IPAddress(new byte[] { 51, 75, 171, 41 }), 11112),
-                    new DnsEndPoint("dicomserver.co.uk", 11112),
-                    AssociationType.Find,
-                    new CancellationTokenSource(60000).Token).ConfigureAwait(false);
-                Console.WriteLine(connection.CurrentState);
-            }
+            EndPoint endpoint = new IPEndPoint(IPAddress.Loopback, 11112);
+            //EndPoint endpoint = new IPEndPoint(new IPAddress(new byte[] { 51, 75, 171, 41 }), 11112);
+            //EndPoint endpoint = new DnsEndPoint("dicomserver.co.uk", 11112);
 
+            await ULConnection.RunScuAsync(
+                client,
+                endpoint,
+                AssociationType.Find,
+                ULScu.Default,
+                serviceProvider.GetService<ILoggerFactory>()).ConfigureAwait(false);
         }
 
     }

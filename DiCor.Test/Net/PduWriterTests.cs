@@ -47,9 +47,8 @@ namespace DiCor.Test.Net
 
             void Write()
             {
-                var message = ULMessage.FromData<AAssociateRqData>(new() { Association = new Association(AssociationType.Find) });
                 scoped var writer = new PduWriter(pipe.Writer);
-                writer.WriteAAssociateRq(ref Unsafe.As<long, AAssociateRqData>(ref message.Data));
+                writer.WriteAAssociateRq(new Association(AssociationType.Find));
             }
         }
     }

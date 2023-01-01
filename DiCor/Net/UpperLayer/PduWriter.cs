@@ -22,10 +22,10 @@ namespace DiCor.Net.UpperLayer
             return _buffer.BeginLengthPrefix(sizeof(uint));
         }
 
-        [UnscopedRef]
-        public void WriteAAssociateRq(scoped ref AAssociateRqData data)
+        public void WriteAAssociateRq(Association association)
         {
-            Association association = data.Association;
+            // PS3.8 - 9.3.2 A-ASSOCIATE-RQ PDU
+
             using (BeginPdu(Pdu.Type.AAssociateRq))
             {
                 _buffer.Write((ushort)0x0001); // Protocol-version
@@ -34,17 +34,17 @@ namespace DiCor.Net.UpperLayer
                 _buffer.WriteAsciiFixed(association.CallingAE, 16); // Calling-AE-title
                 _buffer.Reserved(32);
 
-                // Application Context Item
+                // PS3.8 - 9.3.2.1 Application Context Item
 
                 _buffer.Write(Pdu.ItemTypeApplicationContext); // Item-type
                 _buffer.Reserved(1);
                 _buffer.WriteAscii(association.ApplicationContext.Value); // Application-context-name
 
-                bool needsScpScuRoleNegotiation = false;
+                bool needsRoleNegotiation = false;
                 byte presentationContextId = 1;
                 foreach (PresentationContext presentationContext in association.PresentationContexts)
                 {
-                    // Presentation Context Item
+                    // PS3.8 - 9.3.2.2 Presentation Context Item
 
                     _buffer.Write(Pdu.ItemTypePresentationContextRq); // Item-type
                     _buffer.Reserved(1);
@@ -53,7 +53,7 @@ namespace DiCor.Net.UpperLayer
                         _buffer.Write(presentationContext.Id = presentationContextId); // Presentation-context-ID
                         _buffer.Reserved(3);
 
-                        // Abstract Syntax Sub-Item
+                        // PS3.8 - 9.3.2.2.1 Abstract Syntax Sub-Item
 
                         _buffer.Write(Pdu.ItemTypeAbstractSyntax); // Item-Type
                         _buffer.Reserved(1);
@@ -61,7 +61,7 @@ namespace DiCor.Net.UpperLayer
 
                         foreach (Uid transferSyntax in presentationContext.TransferSyntaxes)
                         {
-                            // Transfer Syntax Sub-Item
+                            // PS3.8 - 9.3.2.2.2 Transfer Syntax Sub-Item
 
                             _buffer.Write(Pdu.ItemTypeTransferSyntax); // Item-Type
                             _buffer.Reserved(1);
@@ -69,69 +69,100 @@ namespace DiCor.Net.UpperLayer
                         }
                     }
 
-                    needsScpScuRoleNegotiation |= (presentationContext.SupportsScuRole != null || presentationContext.SupportsScpRole != null);
+                    needsRoleNegotiation |= (presentationContext.SupportsScuRole != null || presentationContext.SupportsScpRole != null);
                     presentationContextId += 2;
                 }
 
-                // User Information Item
+                // PS3.8 - 9.3.2.3 User Information Item
 
                 _buffer.Write(Pdu.ItemTypeUserInformation); // Item-Type
                 _buffer.Reserved(1);
                 using (_buffer.BeginLengthPrefix())
                 {
-                    // Maximum Length
+                    // PS3.8 - D.1.1 Maximum Length Sub-Item
 
-                    _buffer.Write(Pdu.ItemTypeMaximumLength); // Item-type
+                    _buffer.Write(Pdu.SubItemTypeMaximumLength); // Item-type
                     _buffer.Reserved(1);
                     _buffer.Write((ushort)0x0004); // Item-length
                     _buffer.Write(association.MaxResponseDataLength); // Maximum-length-received
 
-                    // Implementation Class UID
+                    // PS3.7 - D.3.3.2.1 Implementation Class UID
 
-                    _buffer.Write(Pdu.ItemTypeImplementationClassUid); // Item-type
+                    _buffer.Write(Pdu.SubItemTypeImplementationClassUid); // Item-type
                     _buffer.Reserved(1);
                     _buffer.WriteAscii(Implementation.ClassUid.Value); // Implementation-class-uid
 
-                    // Asynchronous Operations Window
+                    // PS3.7 - D.3.3.3.1 Asynchronous Operations Window
 
-                    _buffer.Write(Pdu.ItemTypeAsynchronousOperations); // Item-type
-                    _buffer.Reserved(1);
-                    _buffer.Write((ushort)0x0004); // Item-length
-                    _buffer.Write(association.MaxOperationsInvoked); // Maximum-number-operations-invoked
-                    _buffer.Write(association.MaxOperationsPerformed); // Maximum-number-operations-performed
+                    if (association.MaxOperationsInvoked != 1 && association.MaxOperationsPerformed != 1)
+                    {
+                        _buffer.Write(Pdu.SubItemTypeAsynchronousOperations); // Item-type
+                        _buffer.Reserved(1);
+                        _buffer.Write((ushort)0x0004); // Item-length
+                        _buffer.Write(association.MaxOperationsInvoked); // Maximum-number-operations-invoked
+                        _buffer.Write(association.MaxOperationsPerformed); // Maximum-number-operations-performed
+                    }
 
-                    if (needsScpScuRoleNegotiation)
+                    // PS3.7 - D.3.3.4.1 SCP/SCU Role Selection
+
+                    if (needsRoleNegotiation)
                     {
                         foreach (PresentationContext presentationContext1 in association.PresentationContexts)
                         {
-                            _buffer.Write(Pdu.ItemTypeScpScuRoleSelection); // Item-type
-                            _buffer.Reserved(1);
-                            using (_buffer.BeginLengthPrefix())
+                            if (presentationContext1.SupportsScuRole != null || presentationContext1.SupportsScpRole != null)
                             {
-                                _buffer.WriteAscii(presentationContext1.AbstractSyntax.Value); // SOP-class-uid
-                                _buffer.Write((byte)((presentationContext1.SupportsScuRole ?? false) ? 0 : 1)); // SCU-role
-                                _buffer.Write((byte)((presentationContext1.SupportsScpRole ?? false) ? 0 : 1)); // SCP-role
+                                _buffer.Write(Pdu.SubItemTypeScpScuRoleSelection); // Item-type
+                                _buffer.Reserved(1);
+                                using (_buffer.BeginLengthPrefix())
+                                {
+                                    _buffer.WriteAscii(presentationContext1.AbstractSyntax.Value); // SOP-class-uid
+                                    _buffer.Write((byte)((presentationContext1.SupportsScuRole ?? false) ? 0 : 1)); // SCU-role
+                                    _buffer.Write((byte)((presentationContext1.SupportsScpRole ?? false) ? 0 : 1)); // SCP-role
+                                }
                             }
                         }
                     }
 
-                    // Implementation Version Name
+                    // PS3.7 - D.3.3.2.3 Implementation Version Name
 
-                    _buffer.Write(Pdu.ItemTypeImplementationVersionName); // Item-type
+                    _buffer.Write(Pdu.SubItemTypeImplementationVersionName); // Item-type
                     _buffer.Reserved(1);
                     _buffer.WriteAscii(Implementation.VersionName); // Implementation-version-name
 
-                    // TODO SOP Class Extended Negotiation Sub-Item 0x56
-                    // TODO SOP Class Common Extended Negotiation Sub-Item 0x57
-                    // TODO User Identity Sub-Item 0x58
+                    // TODO PS3.7 - D.3.3.5.1 SOP Class Extended Negotiation Sub-Item 0x56
+                    // TODO PS3.7 - D.3.3.6.1 SOP Class Common Extended Negotiation Sub-Item 0x57
+                    // TODO PS3.7 - D.3.3.7.1 User Identity Sub-Item 0x58
                 }
             }
             _buffer.Commit();
         }
 
-        [UnscopedRef]
-        public void WriteAAbort(scoped ref AAbortData data)
+        public void WriteAReleaseRq()
         {
+            // PS3.8 - 9.3.6 A-RELEASE-RQ PDU
+
+            using (BeginPdu(Pdu.Type.AReleaseRq))
+            {
+                _buffer.Reserved(4);
+            }
+            _buffer.Commit();
+        }
+
+        public void WriteAReleaseRp()
+        {
+            // PS3.8 - 9.3.7 A-RELEASE-RP PDU
+
+            using (BeginPdu(Pdu.Type.AReleaseRp))
+            {
+                _buffer.Reserved(4);
+            }
+            _buffer.Commit();
+        }
+
+        public void WriteAAbort(AAbortData data)
+        {
+            // PS3.8 - 9.3.8 A-ABORT PDU
+
             using (BeginPdu(Pdu.Type.AAbort))
             {
                 _buffer.Reserved(2);

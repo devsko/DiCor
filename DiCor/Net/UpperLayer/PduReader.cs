@@ -12,10 +12,10 @@ namespace DiCor.Net.UpperLayer
             _input = input;
         }
 
-        public void ReadAAssociateRq(scoped ref AAssociateRqData data)
+        public void ReadAAssociateRq(ref Association association)
         {
-            var association = new Association();
-            data.Association = association;
+            association = new Association();
+
             _input.TryReadBigEndian(out ushort _); // Protocol-version
             _input.Reserved(2);
             _input.TryReadAscii(16, out string? calledAE);
@@ -78,36 +78,34 @@ namespace DiCor.Net.UpperLayer
 
                                 switch (itemType)
                                 {
-                                    case Pdu.ItemTypeMaximumLength:
+                                    case Pdu.SubItemTypeMaximumLength:
                                         userInformation.TryReadBigEndian(out uint maxLength); // Maximum-length-received
                                         association.MaxRequestDataLength = maxLength;
                                         break;
 
-                                    case Pdu.ItemTypeImplementationClassUid:
+                                    case Pdu.SubItemTypeImplementationClassUid:
                                         userInformation.TryReadAscii(itemLength, out string? implementationClass); // Implementation-class-uid
                                         association.RemoteImplementationClass = Uid.Get(implementationClass!);
                                         break;
 
-                                    case Pdu.ItemTypeAsynchronousOperations:
+                                    case Pdu.SubItemTypeAsynchronousOperations:
                                         userInformation.TryReadBigEndian(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
                                         userInformation.TryReadBigEndian(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
                                         association.MaxOperationsInvoked = maxOperationsInvoked;
                                         association.MaxOperationsPerformed = maxOperationsPerformed;
                                         break;
 
-                                    case Pdu.ItemTypeScpScuRoleSelection:
+                                    case Pdu.SubItemTypeScpScuRoleSelection:
                                         userInformation.TryReadAscii(out string? syntax); // UID-length / SOP-class-uid
                                         userInformation.TryRead(out byte scuRole); // SCU-role
                                         userInformation.TryRead(out byte scpRole); // SCP-role
-                                        PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!));
-                                        if (presentationContext1 == null)
-                                            // TODO InvalidPduException
-                                            throw new InvalidOperationException();
+                                        // TODO InvalidPduException
+                                        PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!)) ?? throw new InvalidOperationException();
                                         presentationContext1.SupportsScuRole = scuRole == 0x01;
                                         presentationContext1.SupportsScpRole = scpRole == 0x01;
                                         break;
 
-                                    case Pdu.ItemTypeImplementationVersionName:
+                                    case Pdu.SubItemTypeImplementationVersionName:
                                         userInformation.TryReadAscii(itemLength, out string? implementationVersion); // Implementation-version-name
                                         association.RemoteImplementationVersion = implementationVersion!;
                                         break;
@@ -130,9 +128,8 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public void ReadAAssociateAc(scoped ref AAssociateAcData data)
+        public void ReadAAssociateAc(Association association)
         {
-            Association? association = data.Association;
             association.MaxOperationsInvoked = 1;
             association.MaxOperationsPerformed = 1;
 
@@ -161,11 +158,8 @@ namespace DiCor.Net.UpperLayer
                         _input.TryReadEnumFromByte(out Pdu.PresentationContextItemResult result); // Result/Reason
                         _input.Reserved(1);
 
-                        PresentationContext? presentationContext = association.GetPresentationContext(id);
-                        if (presentationContext == null)
-                            // TODO InvalidPduException
-                            throw new InvalidOperationException();
-
+                        // TODO InvalidPduException
+                        PresentationContext? presentationContext = association.GetPresentationContext(id) ?? throw new InvalidOperationException();
                         presentationContext.Result = result;
 
                         if (result == Pdu.PresentationContextItemResult.Acceptance)
@@ -182,7 +176,9 @@ namespace DiCor.Net.UpperLayer
                             presentationContext.AcceptedTransferSyntax = Uid.Get(transferSyntax!);
                         }
                         else
+                        {
                             _input.Reserved((int)(_input.Remaining - end));
+                        }
                         break;
 
                     case Pdu.ItemTypeUserInformation:
@@ -196,36 +192,34 @@ namespace DiCor.Net.UpperLayer
 
                             switch (itemType)
                             {
-                                case Pdu.ItemTypeMaximumLength:
+                                case Pdu.SubItemTypeMaximumLength:
                                     userInformation.TryReadBigEndian(out uint maxLength); // Maximum-length-received
                                     association.MaxRequestDataLength = maxLength;
                                     break;
 
-                                case Pdu.ItemTypeImplementationClassUid:
+                                case Pdu.SubItemTypeImplementationClassUid:
                                     userInformation.TryReadAscii(itemLength, out string? implementationClass); // Implementation-class-uid
                                     association.RemoteImplementationClass = Uid.Get(implementationClass!);
                                     break;
 
-                                case Pdu.ItemTypeAsynchronousOperations:
+                                case Pdu.SubItemTypeAsynchronousOperations:
                                     userInformation.TryReadBigEndian(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
                                     userInformation.TryReadBigEndian(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
                                     association.MaxOperationsInvoked = maxOperationsInvoked;
                                     association.MaxOperationsPerformed = maxOperationsPerformed;
                                     break;
 
-                                case Pdu.ItemTypeScpScuRoleSelection:
+                                case Pdu.SubItemTypeScpScuRoleSelection:
                                     userInformation.TryReadAscii(out string? syntax); // UID-length / SOP-class-uid
                                     userInformation.TryRead(out byte scuRole); // SCU-role
                                     userInformation.TryRead(out byte scpRole); // SCP-role
-                                    PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!));
-                                    if (presentationContext1 == null)
-                                        // TODO InvalidPduException
-                                        throw new InvalidOperationException();
+                                    // TODO InvalidPduException
+                                    PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!)) ?? throw new InvalidOperationException();
                                     presentationContext1.SupportsScuRole = scuRole == 0x01;
                                     presentationContext1.SupportsScpRole = scpRole == 0x01;
                                     break;
 
-                                case Pdu.ItemTypeImplementationVersionName:
+                                case Pdu.SubItemTypeImplementationVersionName:
                                     userInformation.TryReadAscii(itemLength, out string? implementationVersion); // Implementation-version-name
                                     association.RemoteImplementationVersion = implementationVersion!;
                                     break;
@@ -247,7 +241,7 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        public void ReadAAssociateRj(scoped ref AAssociateRjData data)
+        public void ReadAAssociateRj(AAssociateRjData data)
         {
             _input.Reserved(1);
             _input.TryReadEnumFromByte(out data.Result);
@@ -255,7 +249,17 @@ namespace DiCor.Net.UpperLayer
             _input.TryReadEnumFromByte(out data.Reason);
         }
 
-        public void ReadAAbort(scoped ref AAbortData data)
+        public void ReadAReleaseRq()
+        {
+            _input.Reserved(4);
+        }
+
+        public void ReadAReleaseRp()
+        {
+            _input.Reserved(4);
+        }
+
+        public void ReadAAbort(AAbortData data)
         {
             _input.Reserved(2);
             _input.TryReadEnumFromByte(out data.Source);

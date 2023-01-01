@@ -8,6 +8,9 @@
             AAssociateRq = 0x01,
             AAssociateAc = 0x02,
             AAssociateRj = 0x03,
+            PDataTf = 0x04,
+            AReleaseRq = 0x05,
+            AReleaseRp = 0x06,
             AAbort = 0x07,
         }
 
@@ -70,10 +73,10 @@
         public const byte ItemTypeAbstractSyntax = 0x30;
         public const byte ItemTypeTransferSyntax = 0x40;
         public const byte ItemTypeUserInformation = 0x50;
-        public const byte ItemTypeMaximumLength = 0x51;
-        public const byte ItemTypeImplementationClassUid = 0x52;
-        public const byte ItemTypeAsynchronousOperations = 0x53;
-        public const byte ItemTypeScpScuRoleSelection = 0x54;
-        public const byte ItemTypeImplementationVersionName = 0x55;
+        public const byte SubItemTypeMaximumLength = 0x51;
+        public const byte SubItemTypeImplementationClassUid = 0x52;
+        public const byte SubItemTypeAsynchronousOperations = 0x53;
+        public const byte SubItemTypeScpScuRoleSelection = 0x54;
+        public const byte SubItemTypeImplementationVersionName = 0x55;
     }
 }
