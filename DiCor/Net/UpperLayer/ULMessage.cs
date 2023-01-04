@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Buffers;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace DiCor.Net.UpperLayer
 {
@@ -64,7 +61,49 @@ namespace DiCor.Net.UpperLayer
 
     public struct PDataTfData
     {
+        public Pdv SinglePdv;
+        public Pdv[] Pdvs;
 
+        public uint Length
+        {
+            get
+            {
+                if (Pdvs is null)
+                    return SinglePdv.Length;
+
+                uint length = 0;
+                foreach (Pdv pdv in Pdvs)
+                {
+                    length += pdv.Length;
+                }
+
+                return length;
+            }
+        }
+    }
+
+    public struct Pdv
+    {
+        public byte PresentationContextId;
+        public ReadOnlySequence<byte> Data;
+        public byte MessageControlHeader;
+
+        public uint Length => (uint)Data.Length;
+        public bool IsCommand
+        {
+            get => (MessageControlHeader & 0x1) == 1;
+            set => MessageControlHeader = value ? (byte)(MessageControlHeader | 0x1) : (byte)(MessageControlHeader & unchecked((byte)~0x1));
+        }
+        public bool IsDataSet
+        {
+            get => (MessageControlHeader & 0x1) == 0;
+            set => MessageControlHeader = value ? (byte)(MessageControlHeader & unchecked((byte)~0x1)) : (byte)(MessageControlHeader | 0x1);
+        }
+        public bool IsLastSegment
+        {
+            get => (MessageControlHeader & 0x2) == 1;
+            set => MessageControlHeader = value ? (byte)(MessageControlHeader | 0x2) : (byte)(MessageControlHeader & unchecked((byte)~0x2));
+        }
     }
 
     public struct ARelaseRqData

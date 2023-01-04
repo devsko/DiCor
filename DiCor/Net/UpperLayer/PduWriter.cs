@@ -137,6 +137,45 @@ namespace DiCor.Net.UpperLayer
             _buffer.Commit();
         }
 
+        public void WritePDataTf(PDataTfData data)
+        {
+            // PS3.8 - 9.3.5 P-DATA-TF PDU
+
+            _buffer.Write((byte)Pdu.Type.PDataTf);
+            _buffer.Reserved(1);
+
+            _buffer.Write(data.Length);
+
+            if (data.Pdvs is null)
+            {
+                WritePdv(data.SinglePdv);
+            }
+            else
+            {
+                foreach (Pdv pdv in data.Pdvs)
+                {
+                    WritePdv(pdv);
+                }
+            }
+            _buffer.Commit();
+        }
+
+        private void WritePdv(Pdv pdv)
+        {
+            // PS3.8 - 9.3.5.1 Presentation Data Value Item
+
+            _buffer.Write(pdv.Length);
+            _buffer.Write(pdv.PresentationContextId);
+
+            // PS 3.8 - E.2 Message Control Header Encoding
+            _buffer.Write(pdv.MessageControlHeader);
+            foreach (ReadOnlyMemory<byte> memory in pdv.Data)
+            {
+                _buffer.Write(memory.Span);
+                _buffer.Commit();
+            }
+        }
+
         public void WriteAReleaseRq()
         {
             // PS3.8 - 9.3.6 A-RELEASE-RQ PDU

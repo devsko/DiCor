@@ -1,8 +1,7 @@
 ﻿using System.IO.Pipelines;
-using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
-
+using DiCor.Net;
 using DiCor.Net.UpperLayer;
 
 namespace DiCor.Performance

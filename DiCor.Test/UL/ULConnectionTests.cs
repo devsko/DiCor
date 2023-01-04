@@ -1,10 +1,4 @@
-﻿using System.Threading.Tasks;
-
-using DiCor.Net.UpperLayer;
-
-using Xunit;
-
-namespace DiCor.UL.Test
+﻿namespace DiCor.UL.Test
 {
     public static class ULConnectionTests
     {

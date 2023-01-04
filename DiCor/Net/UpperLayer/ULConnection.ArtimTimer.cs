@@ -1,22 +1,22 @@
-﻿using DotNext;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DiCor.Net.UpperLayer
 {
     partial class ULConnection
     {
-        private class ArtimTimer<T>
+        public class ArtimTimer<T>
         {
             private readonly T _state;
             private readonly Action<T> _onTimeout;
             private readonly ILogger _logger;
             private CancellationTokenSource? _cts;
 
-            public ArtimTimer(Action<T> onTimeout, T state, ILogger logger)
+            public ArtimTimer(Action<T> onTimeout, T state, ILogger? logger = null)
             {
                 _state = state;
                 _onTimeout = onTimeout;
-                _logger = logger;
+                _logger = logger ?? NullLogger.Instance;
             }
 
             public void Start(TimeSpan timeout)

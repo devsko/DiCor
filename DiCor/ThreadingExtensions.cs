@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace DiCor
+﻿namespace DiCor
 {
     //public interface ICancellationNotification
     //{
@@ -11,22 +7,22 @@ namespace DiCor
 
     public static class ThreadingExtensions
     {
-        public static void IgnoreExceptions(ValueTask<int> task)
+        public static void IgnoreExceptions(this ValueTask task)
         {
-            _ = IgnoreExceptionsAsync(task);
+            IgnoreExceptionsAsync(task);
 
-            static async Task IgnoreExceptionsAsync(ValueTask<int> task)
+            static async void IgnoreExceptionsAsync(ValueTask task)
             {
                 try { await task.ConfigureAwait(false); } catch { }
             }
         }
 
         /// <summary>Awaits a task, ignoring any resulting exceptions.</summary>
-        public static void IgnoreExceptions(Task task)
+        public static void IgnoreExceptions(this Task task)
         {
-            _ = IgnoreExceptionsAsync(task);
+            IgnoreExceptionsAsync(task);
 
-            static async Task IgnoreExceptionsAsync(Task task)
+            static async void IgnoreExceptionsAsync(Task task)
             {
                 try { await task.ConfigureAwait(false); } catch { }
             }

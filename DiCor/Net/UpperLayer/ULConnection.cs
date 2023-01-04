@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 using Bedrock.Framework;
@@ -10,49 +9,49 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DiCor.Net.UpperLayer
 {
-    public abstract class ULScp
+    public abstract class ImplementationBase
+    {
+        public abstract ValueTask ReleaseRequested(ULConnection connection, bool isCollision, CancellationToken cancellationToken = default);
+        public abstract ValueTask ReleaseConfirmed(ULConnection connection, CancellationToken cancellationToken = default);
+        public abstract ValueTask AbortReceived(ULConnection connection, Pdu.AbortSource source, Pdu.AbortReason reason);
+    }
+    public abstract class ULScp : ImplementationBase
     {
         private class DefaultScp : ULScp
         {
-            public override Task AAssociateRequested(ULConnection connection, Association association, CancellationToken cancellationToken)
+            public override ValueTask AssociationRequested(ULConnection connection, Association association, CancellationToken cancellationToken)
                 => connection.AcceptAssociationAsync(association, cancellationToken);
-            public override Task AReleaseRequested(ULConnection connection, bool isCollision, CancellationToken cancellationToken = default)
+            public override ValueTask ReleaseRequested(ULConnection connection, bool isCollision, CancellationToken cancellationToken = default)
                 => isCollision
-                    ? Task.CompletedTask
+                    ? ValueTask.CompletedTask
                     : connection.ConfirmReleaseAsync(cancellationToken);
-            public override Task AReleaseConfirmed(ULConnection connection, CancellationToken cancellationToken = default)
-                => Task.CompletedTask;
-            public override Task AAbort(ULConnection connection, Pdu.AbortSource source, Pdu.AbortReason reason)
-                => Task.CompletedTask;
+            public override ValueTask ReleaseConfirmed(ULConnection connection, CancellationToken cancellationToken = default)
+                => ValueTask.CompletedTask;
+            public override ValueTask AbortReceived(ULConnection connection, Pdu.AbortSource source, Pdu.AbortReason reason)
+                => ValueTask.CompletedTask;
         }
         public static ULScp Default { get; } = new DefaultScp();
-        public abstract Task AAssociateRequested(ULConnection connection, Association association, CancellationToken cancellationToken = default);
-        public abstract Task AReleaseRequested(ULConnection connection, bool isCollision, CancellationToken cancellationToken = default);
-        public abstract Task AReleaseConfirmed(ULConnection connection, CancellationToken cancellationToken = default);
-        public abstract Task AAbort(ULConnection connection, Pdu.AbortSource source, Pdu.AbortReason reason);
+        public abstract ValueTask AssociationRequested(ULConnection connection, Association association, CancellationToken cancellationToken = default);
     }
 
-    public abstract class ULScu
+    public abstract class ULScu : ImplementationBase
     {
         private class DefaultScu : ULScu
         {
-            public override Task AAssociateAccepted(ULConnection connection, CancellationToken cancellationToken = default)
+            public override ValueTask AssociationAccepted(ULConnection connection, CancellationToken cancellationToken = default)
                 => connection.RequestReleaseAsync(cancellationToken);
-            public override Task AAssociateRejected(ULConnection connection, Pdu.RejectResult result, Pdu.RejectSource source, Pdu.RejectReason reason, CancellationToken cancellationToken = default)
-                => Task.CompletedTask;
-            public override Task AReleaseRequested(ULConnection connection, bool isCollision, CancellationToken cancellationToken = default)
+            public override ValueTask AssociationRejected(ULConnection connection, Pdu.RejectResult result, Pdu.RejectSource source, Pdu.RejectReason reason, CancellationToken cancellationToken = default)
+                => ValueTask.CompletedTask;
+            public override ValueTask ReleaseRequested(ULConnection connection, bool isCollision, CancellationToken cancellationToken = default)
                 => connection.ConfirmReleaseAsync(cancellationToken);
-            public override Task AReleaseConfirmed(ULConnection connection, CancellationToken cancellationToken = default)
-                => Task.CompletedTask;
-            public override Task APAbort(ULConnection connection, Pdu.AbortSource source, Pdu.AbortReason reason)
-                => Task.CompletedTask;
+            public override ValueTask ReleaseConfirmed(ULConnection connection, CancellationToken cancellationToken = default)
+                => ValueTask.CompletedTask;
+            public override ValueTask AbortReceived(ULConnection connection, Pdu.AbortSource source, Pdu.AbortReason reason)
+                => ValueTask.CompletedTask;
         }
         public static ULScu Default { get; } = new DefaultScu();
-        public abstract Task AAssociateAccepted(ULConnection connection, CancellationToken cancellationToken = default);
-        public abstract Task AAssociateRejected(ULConnection connection, Pdu.RejectResult result, Pdu.RejectSource source, Pdu.RejectReason reason, CancellationToken cancellationToken = default);
-        public abstract Task AReleaseRequested(ULConnection connection, bool isCollision, CancellationToken cancellationToken = default);
-        public abstract Task AReleaseConfirmed(ULConnection connection, CancellationToken cancellationToken = default);
-        public abstract Task APAbort(ULConnection connection, Pdu.AbortSource source, Pdu.AbortReason reason);
+        public abstract ValueTask AssociationAccepted(ULConnection connection, CancellationToken cancellationToken = default);
+        public abstract ValueTask AssociationRejected(ULConnection connection, Pdu.RejectResult result, Pdu.RejectSource source, Pdu.RejectReason reason, CancellationToken cancellationToken = default);
     }
 
     public sealed partial class ULConnection : IAsyncDisposable
@@ -66,13 +65,13 @@ namespace DiCor.Net.UpperLayer
         private readonly Protocol _protocol;
         private readonly ArtimTimer<ULConnection> _artimTimer;
         private readonly State _state;
-        private readonly object _implementation;
+        private readonly ImplementationBase _implementation;
         private readonly CancellationTokenSource _lifetime;
         private ConnectionContext? _context;
         private ProtocolReader? _reader;
         private ProtocolWriter? _writer;
 
-        private ULConnection(object implementation, ILoggerFactory? loggerFactory = null)
+        private ULConnection(ImplementationBase implementation, ILoggerFactory? loggerFactory = null)
         {
             bool isProvider = implementation is ULScp;
             _logger = loggerFactory?.CreateLogger($"ULConnection ({(isProvider ? "SCP" : "SCU")})") ?? NullLogger.Instance;
@@ -84,27 +83,22 @@ namespace DiCor.Net.UpperLayer
 
             static void OnArtimTimerExpired(ULConnection connection)
             {
-                _ = OnArtimTimerExpiredAsync(connection);
+                OnArtimTimerExpiredAsync(connection).IgnoreExceptions();
 
-                static async Task OnArtimTimerExpiredAsync(ULConnection connection)
+                static async ValueTask OnArtimTimerExpiredAsync(ULConnection connection)
                 {
-                    try
+                    using (State.Accessor accessor = await connection._state!.AccessAsync(connection._lifetime!.Token).ConfigureAwait(false))
                     {
-                        using (State.Accessor accessor = await connection._state!.AccessAsync(connection._lifetime!.Token).ConfigureAwait(false))
+                        if (accessor.Current is ConnectionState.Sta2_TransportConnectionOpen or ConnectionState.Sta13_AwaitingTransportConnectionClose)
                         {
-                            if (accessor.Current is ConnectionState.Sta2_TransportConnectionOpen or ConnectionState.Sta13_AwaitingTransportConnectionClose)
-                            {
-                                await connection.AA2_CloseConnection(accessor).ConfigureAwait(false);
-                            }
+                            await connection.AA2_Close(accessor).ConfigureAwait(false);
                         }
                     }
-                    catch
-                    { }
                 }
             }
         }
 
-        public static async Task RunScpAsync(ConnectionContext context, ULScp scp, ILoggerFactory? loggerFactory = null, CancellationToken cancellationToken = default)
+        public static async ValueTask RunScpAsync(ConnectionContext context, ULScp scp, ILoggerFactory? loggerFactory = null, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(context);
             ArgumentNullException.ThrowIfNull(scp);
@@ -116,11 +110,11 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private async Task RunScpAsync(ConnectionContext context, CancellationToken cancellationToken = default)
+        private async ValueTask RunScpAsync(ConnectionContext context, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug($"Creating server connection {context.ConnectionId}");
 
-            Task readLoop;
+            ValueTask readLoop;
             using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
             {
                 _context = context;
@@ -131,12 +125,13 @@ namespace DiCor.Net.UpperLayer
             await readLoop.ConfigureAwait(false);
         }
 
-        public static async Task RunScuAsync(Client client, EndPoint endpoint, AssociationType type, ULScu scu, ILoggerFactory? loggerFactory = null, CancellationToken cancellationToken = default)
+        public static async ValueTask RunScuAsync(Client client, EndPoint endpoint, AssociationType type, ULScu scu, ILoggerFactory? loggerFactory = null, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(client);
             ArgumentNullException.ThrowIfNull(endpoint);
             if (!Enum.IsDefined<AssociationType>(type))
                 throw new ArgumentException(null, nameof(type));
+            ArgumentNullException.ThrowIfNull(scu);
 
             ULConnection connection = new(scu, loggerFactory);
             await using (connection.ConfigureAwait(false))
@@ -145,11 +140,11 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private async Task RunScuAsync(Client client, EndPoint endpoint, Association association, CancellationToken cancellationToken)
+        private async ValueTask RunScuAsync(Client client, EndPoint endpoint, Association association, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"Creating client connection to {endpoint}");
 
-            Task readLoop;
+            ValueTask readLoop;
             using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
             {
                 await AE1_Connect(client, endpoint, accessor, cancellationToken).ConfigureAwait(false);
@@ -165,68 +160,6 @@ namespace DiCor.Net.UpperLayer
 
         public bool IsProvider => _implementation is ULScp;
 
-        private ULScp Scp => (ULScp)_implementation;
-
-        private ULScu Scu => (ULScu)_implementation;
-
-        public async Task AcceptAssociationAsync(Association association, CancellationToken cancellationToken)
-        {
-            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
-            {
-                _protocol.Association = association;
-                await AE7_SendAAssociateAc(accessor, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        public async Task RejectAssociationAsync(Pdu.RejectResult result, Pdu.RejectSource source, Pdu.RejectReason reason, CancellationToken cancellationToken)
-        {
-            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
-            {
-                _protocol.Association = null;
-                await AE8_SendAAssociateRj(result, source, reason, accessor, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        public async Task RequestReleaseAsync(CancellationToken cancellationToken = default)
-        {
-            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
-            {
-                if (accessor.Current != ConnectionState.Sta6_Ready)
-                {
-                    throw new InvalidOperationException();
-                }
-                await AR1_SendAReleaseRq(accessor, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        public async Task ConfirmReleaseAsync(CancellationToken cancellationToken = default)
-        {
-            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
-            {
-                await (accessor.Current switch
-                {
-                    ConnectionState.Sta8_AwaitingLocalReleaseResponse or ConnectionState.Sta12_AwaitingLocalReleaseResponseCollisionScp
-                        => AR4_SendAReleaseRp(accessor, cancellationToken),
-                    ConnectionState.Sta9_AwaitingLocalReleaseResponseCollisionScu
-                        => AR9_SendAReleaseRp(accessor, cancellationToken),
-
-                    _
-                        => throw new InvalidOperationException(),
-                }).ConfigureAwait(false);
-            }
-        }
-
-        public async Task AbortAsync(CancellationToken cancellationToken)
-        {
-            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
-            {
-                await (accessor.Current == ConnectionState.Sta4_AwaitingTransportConnectionOpen
-                    ? AA2_CloseConnection(accessor)
-                    : AA1_SendAAbort(accessor, cancellationToken))
-                    .ConfigureAwait(false);
-            }
-        }
-
         public async ValueTask DisposeAsync()
         {
             ConnectionContext? context = Interlocked.Exchange(ref _context, null);
@@ -235,9 +168,6 @@ namespace DiCor.Net.UpperLayer
 
             _logger.LogTrace("Disposing");
 
-            _protocol.Association = null;
-            _context = null;
-
             context.Transport.Input.CancelPendingRead();
             _lifetime!.Cancel();
             await context.DisposeAsync().ConfigureAwait(false);
@@ -245,7 +175,7 @@ namespace DiCor.Net.UpperLayer
             _logger.LogTrace("Disposed");
         }
 
-        public async Task<ConnectionState> GetCurrentStateAsync()
+        public async ValueTask<ConnectionState> GetCurrentStateAsync()
         {
             using (State.Accessor accessor = await _state.AccessAsync(CancellationToken.None).ConfigureAwait(false))
             {
@@ -260,7 +190,7 @@ namespace DiCor.Net.UpperLayer
             accessor.Current = state;
         }
 
-        private async Task RunReadLoopAsync()
+        private async ValueTask RunReadLoopAsync()
         {
             Debug.Assert(_context != null);
 
@@ -301,6 +231,8 @@ namespace DiCor.Net.UpperLayer
                                     => OnAAssociateAcAsync(accessor, cancellationToken),
                                 Pdu.Type.AAssociateRj
                                     => OnAAssociateRjAsync(message.GetData<AAssociateRjData>(), accessor, cancellationToken),
+                                Pdu.Type.PDataTf
+                                    => OnPDataTfAsync(message.GetData<PDataTfData>(), accessor, cancellationToken),
                                 Pdu.Type.AReleaseRq
                                     => OnAReleaseRqAsync(accessor, cancellationToken),
                                 Pdu.Type.AReleaseRp
@@ -322,7 +254,95 @@ namespace DiCor.Net.UpperLayer
             }
         }
 
-        private async Task OnConnectionClosedAsync(State.Accessor accessor)
+        // PS3.8 - 9.2.3 DICOM Upper Layer Protocol for TCP/IP State Transition Table
+
+        public async ValueTask AcceptAssociationAsync(Association association, CancellationToken cancellationToken)
+        {
+            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (accessor.Current != ConnectionState.Sta3_AwaitingLocalAssociateResponse)
+                {
+                    throw new InvalidOperationException();
+                }
+                _protocol.Association = association;
+                await AE7_SendAAssociateAc(accessor, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        public async ValueTask RejectAssociationAsync(Pdu.RejectResult result, Pdu.RejectSource source, Pdu.RejectReason reason, CancellationToken cancellationToken)
+        {
+            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (accessor.Current != ConnectionState.Sta3_AwaitingLocalAssociateResponse)
+                {
+                    throw new InvalidOperationException();
+                }
+                _protocol.Association = null;
+                await AE8_SendAAssociateRj(result, source, reason, accessor, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        public async ValueTask TransferData(CancellationToken cancellationToken = default)
+        {
+            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await (accessor.Current switch
+                {
+                    ConnectionState.Sta6_Ready
+                        => DT1_SendPDataTf(default, accessor, cancellationToken),
+                    ConnectionState.Sta8_AwaitingLocalReleaseResponse
+                        => AR7_SendPDataTf(default, accessor, cancellationToken),
+                    _
+                        => throw new InvalidOperationException(),
+                }).ConfigureAwait(false);
+            }
+        }
+
+        public async ValueTask RequestReleaseAsync(CancellationToken cancellationToken = default)
+        {
+            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (accessor.Current != ConnectionState.Sta6_Ready)
+                {
+                    throw new InvalidOperationException();
+                }
+                await AR1_SendAReleaseRq(accessor, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        public async ValueTask ConfirmReleaseAsync(CancellationToken cancellationToken = default)
+        {
+            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await (accessor.Current switch
+                {
+                    ConnectionState.Sta8_AwaitingLocalReleaseResponse or ConnectionState.Sta12_AwaitingLocalReleaseResponseCollisionScp
+                        => AR4_SendAReleaseRp(accessor, cancellationToken),
+                    ConnectionState.Sta9_AwaitingLocalReleaseResponseCollisionScu
+                        => AR9_SendAReleaseRp(accessor, cancellationToken),
+                    _
+                        => throw new InvalidOperationException(),
+                }).ConfigureAwait(false);
+            }
+        }
+
+        public async ValueTask AbortAsync(CancellationToken cancellationToken)
+        {
+            using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await (accessor.Current switch
+                {
+                    ConnectionState.Sta4_AwaitingTransportConnectionOpen
+                        => AA2_Close(accessor),
+                    ConnectionState.Sta13_AwaitingTransportConnectionClose
+                        => throw new InvalidOperationException(),
+                    _
+                        => AA1_SendAAbort(accessor, cancellationToken),
+                }).ConfigureAwait(false);
+            }
+        }
+
+        private async ValueTask OnConnectionClosedAsync(State.Accessor accessor)
         {
             if (_context == null)
                 return;
@@ -336,11 +356,11 @@ namespace DiCor.Net.UpperLayer
                 ConnectionState.Sta13_AwaitingTransportConnectionClose
                     => AR5_StopTimer(accessor),
                 _
-                    => AA4_IndicateAbort(accessor),
+                    => AA4_IssueAbortReceived(accessor),
             }).ConfigureAwait(false);
         }
 
-        private async Task OnUnrecognizedPduAsync(State.Accessor accessor, CancellationToken cancellationToken)
+        private async ValueTask OnUnrecognizedPduAsync(State.Accessor accessor, CancellationToken cancellationToken)
             => await (accessor.Current switch
             {
                 ConnectionState.Sta2_TransportConnectionOpen
@@ -348,80 +368,95 @@ namespace DiCor.Net.UpperLayer
                 ConnectionState.Sta13_AwaitingTransportConnectionClose
                     => AA7_SendAAbort(accessor, cancellationToken),
                 _
-                    => AA8_SendAndIndicateAAbort(accessor, cancellationToken),
+                    => AA8_SendAAbortAndIssue(accessor, cancellationToken),
             }).ConfigureAwait(false);
 
-        private async Task OnAAssociateRqAsync(State.Accessor accessor, CancellationToken cancellationToken)
+        private async ValueTask OnAAssociateRqAsync(State.Accessor accessor, CancellationToken cancellationToken)
             => await (accessor.Current switch
             {
                 ConnectionState.Sta2_TransportConnectionOpen
-                    => AE6_IndicateAssociate(_protocol.Association!, accessor, cancellationToken),
+                    => AE6_IssueAssociationRequested(_protocol.Association!, accessor, cancellationToken),
                 ConnectionState.Sta13_AwaitingTransportConnectionClose
                     => AA7_SendAAbort(accessor, cancellationToken),
                 _
-                    => AA8_SendAndIndicateAAbort(accessor, cancellationToken),
+                    => AA8_SendAAbortAndIssue(accessor, cancellationToken),
             }).ConfigureAwait(false);
 
-        private async Task OnAAssociateAcAsync(State.Accessor accessor, CancellationToken cancellationToken)
+        private async ValueTask OnAAssociateAcAsync(State.Accessor accessor, CancellationToken cancellationToken)
             => await (accessor.Current switch
             {
                 ConnectionState.Sta2_TransportConnectionOpen
                     => AA1_SendAAbort(accessor, cancellationToken),
                 ConnectionState.Sta5_AwaitingAssociateResponse
-                    => AE3_ConfirmAAssociateAc(accessor, cancellationToken),
+                    => AE3_IssueAssociationAccepted(accessor, cancellationToken),
                 ConnectionState.Sta13_AwaitingTransportConnectionClose
                     => AA6_Ignore(accessor),
                 _
-                    => AA8_SendAndIndicateAAbort(accessor, cancellationToken),
+                    => AA8_SendAAbortAndIssue(accessor, cancellationToken),
             }).ConfigureAwait(false);
 
-        private async Task OnAAssociateRjAsync(AAssociateRjData data, State.Accessor accessor, CancellationToken cancellationToken)
+        private async ValueTask OnAAssociateRjAsync(AAssociateRjData data, State.Accessor accessor, CancellationToken cancellationToken)
             => await (accessor.Current switch
             {
                 ConnectionState.Sta2_TransportConnectionOpen
                     => AA1_SendAAbort(accessor, cancellationToken),
                 ConnectionState.Sta5_AwaitingAssociateResponse
-                    => AE4_ConfirmAAssociateRj(data.Result, data.Source, data.Reason, accessor, cancellationToken),
+                    => AE4_IssueAssociationRejected(data.Result, data.Source, data.Reason, accessor, cancellationToken),
                 ConnectionState.Sta13_AwaitingTransportConnectionClose
                     => AA6_Ignore(accessor),
                 _
-                    => AA8_SendAndIndicateAAbort(accessor, cancellationToken),
+                    => AA8_SendAAbortAndIssue(accessor, cancellationToken),
             }).ConfigureAwait(false);
 
-        private async Task OnAReleaseRqAsync(State.Accessor accessor, CancellationToken cancellationToken)
+        private async ValueTask OnPDataTfAsync(PDataTfData data, State.Accessor accessor, CancellationToken cancellationToken)
             => await (accessor.Current switch
             {
                 ConnectionState.Sta2_TransportConnectionOpen
                     => AA1_SendAAbort(accessor, cancellationToken),
                 ConnectionState.Sta6_Ready
-                    => AR2_IndicateRelease(accessor, cancellationToken),
+                    => DT2_IssueDataReceived(data, accessor, cancellationToken),
                 ConnectionState.Sta7_AwaitingReleaseResponse
-                    => AR8_IndicateReleaseCollision(accessor, cancellationToken),
+                    => AR6_IssueDataReceived(data, accessor, cancellationToken),
                 ConnectionState.Sta13_AwaitingTransportConnectionClose
                     => AA6_Ignore(accessor),
                 _
-                    => AA8_SendAndIndicateAAbort(accessor, cancellationToken),
+                    => AA8_SendAAbortAndIssue(accessor, cancellationToken),
             }).ConfigureAwait(false);
 
-        private async Task OnAReleaseRpAsync(State.Accessor accessor, CancellationToken cancellationToken)
+        private async ValueTask OnAReleaseRqAsync(State.Accessor accessor, CancellationToken cancellationToken)
+            => await (accessor.Current switch
+            {
+                ConnectionState.Sta2_TransportConnectionOpen
+                    => AA1_SendAAbort(accessor, cancellationToken),
+                ConnectionState.Sta6_Ready
+                    => AR2_IssueReleaseRequested(accessor, cancellationToken),
+                ConnectionState.Sta7_AwaitingReleaseResponse
+                    => AR8_IssueReleaseRequestedCollision(accessor, cancellationToken),
+                ConnectionState.Sta13_AwaitingTransportConnectionClose
+                    => AA6_Ignore(accessor),
+                _
+                    => AA8_SendAAbortAndIssue(accessor, cancellationToken),
+            }).ConfigureAwait(false);
+
+        private async ValueTask OnAReleaseRpAsync(State.Accessor accessor, CancellationToken cancellationToken)
             => await (accessor.Current switch
             {
                 ConnectionState.Sta2_TransportConnectionOpen
                     => AA1_SendAAbort(accessor, cancellationToken),
                 ConnectionState.Sta7_AwaitingReleaseResponse or ConnectionState.Sta11_AwaitingReleaseResponseCollisionScu
-                    => AR3_ConfirmReleaseAndCloseConnection(accessor, cancellationToken),
+                    => AR3_IssueReleaseConfirmedAndClose(accessor, cancellationToken),
                 ConnectionState.Sta10_AwaitingReleaseResponseCollisionScp
-                    => AR10_ConfirmReleaseCollision(accessor, cancellationToken),
+                    => AR10_IssueReleaseConfirmedCollision(accessor, cancellationToken),
                 ConnectionState.Sta13_AwaitingTransportConnectionClose
                     => AA6_Ignore(accessor),
                 _
-                    => AA8_SendAndIndicateAAbort(accessor, cancellationToken),
+                    => AA8_SendAAbortAndIssue(accessor, cancellationToken),
             }).ConfigureAwait(false);
 
-        private async Task OnAAbortAsync(AAbortData data, State.Accessor accessor)
+        private async ValueTask OnAAbortAsync(AAbortData data, State.Accessor accessor)
             => await (accessor.Current is ConnectionState.Sta2_TransportConnectionOpen or ConnectionState.Sta13_AwaitingTransportConnectionClose
-                ? AA2_CloseConnection(accessor)
-                : AA3_IndicateAbortAndCloseConnection(data.Source, data.Reason, accessor)
+                ? AA2_Close(accessor)
+                : AA3_IssueAbortReceivedAndClose(data.Source, data.Reason, accessor)
             ).ConfigureAwait(false);
     }
 }

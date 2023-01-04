@@ -4,6 +4,8 @@ namespace DiCor.Net.UpperLayer
 {
     partial class ULConnection
     {
+        // PS3.8 - 9.2.1 Machine States Definition
+
         public enum ConnectionState
         {
             Sta1_Idle,
@@ -26,7 +28,7 @@ namespace DiCor.Net.UpperLayer
             private readonly AsyncExclusiveLock _lock = new();
             private ConnectionState _current;
 
-            public async Task<Accessor> AccessAsync(CancellationToken cancellationToken)
+            public async ValueTask<Accessor> AccessAsync(CancellationToken cancellationToken)
             {
                 await _lock.AcquireAsync(cancellationToken).ConfigureAwait(false);
                 return new Accessor(this);

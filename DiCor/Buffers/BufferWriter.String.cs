@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Diagnostics;
 using System.Text;
 
 namespace DiCor.Buffers
@@ -7,19 +7,20 @@ namespace DiCor.Buffers
     {
         public void WriteAscii(ReadOnlySpan<char> value)
         {
+            Debug.Assert(value.Length <= ushort.MaxValue);
+
             ushort length = (ushort)value.Length;
             Write(length);
-            ushort bytesWritten;
+
             if (Span.Length < length)
             {
-                bytesWritten = (ushort)Encoding.ASCII.GetBytes(value.Slice(0, Span.Length), Span);
+                ushort bytesWritten = (ushort)Encoding.ASCII.GetBytes(value.Slice(0, Span.Length), Span);
                 length -= bytesWritten;
                 Advance(bytesWritten);
                 value = value.Slice(bytesWritten);
                 Ensure(length);
             }
-            bytesWritten = (ushort)Encoding.ASCII.GetBytes(value, Span);
-            Advance(bytesWritten);
+            Advance((ushort)Encoding.ASCII.GetBytes(value, Span));
         }
 
         public void WriteAsciiFixed(ReadOnlySpan<char> value, int length)

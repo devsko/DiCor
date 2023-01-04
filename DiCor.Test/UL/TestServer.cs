@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Bedrock.Framework;
 using Bedrock.Framework.Transports.Memory;
+using DiCor.Net;
 using DiCor.Net.UpperLayer;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,7 +67,7 @@ namespace DiCor.UL.Test
             _endPoint = endPoint;
         }
 
-        public Task CreateUserAsync(AssociationType type)
+        public ValueTask CreateUserAsync(AssociationType type)
             => ULConnection.RunScuAsync(_client, _endPoint, type, ULScu.Default, _serviceProvider.GetService<ILoggerFactory>());
 
         public async ValueTask DisposeAsync()

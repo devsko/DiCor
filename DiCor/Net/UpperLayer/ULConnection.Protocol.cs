@@ -1,7 +1,5 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Bedrock.Framework.Protocols;
 
 using Microsoft.Extensions.Logging;
@@ -38,6 +36,9 @@ namespace DiCor.Net.UpperLayer
 
                     _logger.LogDebug($"<<< {messageType} ({length} bytes)");
 
+                    // TODO
+                    // Handle large PDataTf PDUs better (use a special ROSequence over PDV data blocks to create a DataSet)
+
                     if (buffer.Remaining >= length)
                     {
                         buffer = new SequenceReader<byte>(input.Slice(buffer.Position, length));
@@ -58,6 +59,10 @@ namespace DiCor.Net.UpperLayer
 
                             case Pdu.Type.AAssociateRj:
                                 reader.ReadAAssociateRj(message.GetData<AAssociateRjData>());
+                                break;
+
+                            case Pdu.Type.PDataTf:
+                                reader.ReadPDataTf(message.GetData<PDataTfData>());
                                 break;
 
                             case Pdu.Type.AReleaseRq:
@@ -102,9 +107,15 @@ namespace DiCor.Net.UpperLayer
                         break;
 
                     case Pdu.Type.AAssociateAc:
+                        // TODO
                         break;
 
                     case Pdu.Type.AAssociateRj:
+                        // TODO
+                        break;
+
+                    case Pdu.Type.PDataTf:
+                        writer.WritePDataTf(message.GetData<PDataTfData>());
                         break;
 
                     case Pdu.Type.AReleaseRq:

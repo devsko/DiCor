@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 
-namespace DiCor
+namespace DiCor.Net
 {
     public enum AssociationType
     {

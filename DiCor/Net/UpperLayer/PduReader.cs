@@ -1,5 +1,4 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 
 namespace DiCor.Net.UpperLayer
 {
@@ -247,6 +246,50 @@ namespace DiCor.Net.UpperLayer
             _input.TryReadEnumFromByte(out data.Result);
             _input.TryReadEnumFromByte(out data.Source);
             _input.TryReadEnumFromByte(out data.Reason);
+        }
+
+        public void ReadPDataTf(PDataTfData data)
+        {
+            List<Pdv>? pdvList = null;
+            Pdv singlePdv = default;
+            bool first = true;
+
+            while (_input.Remaining > 0)
+            {
+                if (first)
+                {
+                    singlePdv = ReadPdv();
+                }
+                else
+                {
+                    if (pdvList is null)
+                    {
+                        pdvList = new List<Pdv>() { singlePdv };
+                        singlePdv = default;
+                    }
+                    pdvList.Add(ReadPdv());
+                }
+                first = false;
+            }
+
+            data.SinglePdv = singlePdv;
+            if (pdvList is not null)
+            {
+                data.Pdvs = pdvList.ToArray();
+            }
+        }
+
+        private Pdv ReadPdv()
+        {
+            Pdv pdv;
+            _input.TryReadBigEndian(out int length);
+            _input.TryRead(out pdv.PresentationContextId);
+            _input.TryRead(out pdv.MessageControlHeader);
+            length -= 2;
+            pdv.Data = _input.UnreadSequence.Slice(0, length);
+            _input.Advance(length);
+
+            return pdv;
         }
 
         public void ReadAReleaseRq()
