@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using DiCor.Buffers;
 
 using Xunit;
@@ -37,10 +35,10 @@ namespace DiCor.Test.Buffers
         [Fact]
         public void WriteAsciiLong()
         {
-            IEnumerable<byte> Expected()
+            static IEnumerable<byte> Expected()
             {
-                yield return 0;
-                yield return 100;
+                yield return 100 / 256;
+                yield return 100 % 256;
                 for (int i = 0; i < 100; i++)
                     yield return (byte)' ';
                 yield return 5_000 / 256;

@@ -20,6 +20,7 @@ namespace DiCor.Buffers
                 value = value.Slice(bytesWritten);
                 Ensure(length);
             }
+
             Advance((ushort)Encoding.ASCII.GetBytes(value, Span));
         }
 

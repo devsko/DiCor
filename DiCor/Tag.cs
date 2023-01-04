@@ -1,6 +1,6 @@
 ﻿namespace DiCor
 {
-    public record struct Tag
+    public readonly record struct Tag
     {
         public ushort Group { get; private init; }
 
