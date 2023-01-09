@@ -11,6 +11,7 @@
     <ProjectReference Include="..\Dicor.Generated\DiCor.Generated.csproj" />
     <PackageReference Include="Bedrock.Framework" Version="0.1.63-alpha.gf69fa1b135" />
     <PackageReference Include="DotNext.Threading" Version="4.7.4" />
+    <PackageReference Include="System.Collections.Immutable" Version="8.0.0-alpha.1.23058.2" />
   </ItemGroup>
 
 </Project>

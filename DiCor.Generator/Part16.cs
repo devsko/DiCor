@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
@@ -17,31 +18,41 @@ namespace DiCor.Generator
             : base(httpClient, Uri, context, settings)
         { }
 
-        public async Task<Dictionary<int, string>> GetSectionsByIdAsync()
+        public async Task GetSectionsByIdAsync(Generator generator)
         {
             await InitializeAsync().ConfigureAwait(false);
 
             Debug.Assert(Reader != null);
 
-            var sections = new Dictionary<int, string>();
+            var sections = new Dictionary<int, CidValues>();
             while (await Reader!.ReadAsync().ConfigureAwait(false))
             {
                 _context.CancellationToken.ThrowIfCancellationRequested();
 
                 if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == "section")
                 {
+                    CidValues values = default;
+
                     string? id = Reader.GetAttribute("id", XNamespace.Xml.NamespaceName);
                     if (id != null
                         && id.StartsWith("sect_CID_", StringComparison.Ordinal)
-                        && int.TryParse(id.Substring(9), out int i)
-                        && Reader.ReadToDescendant("title", Ns.NamespaceName))
+                        && int.TryParse(id.Substring(9), out values.Cid))
                     {
-                        sections.Add(i, await Reader.ReadInnerXmlAsync());
+                        XElement element = XElement.Load(Reader.ReadSubtree());
+                        values.Title = GetValue(element.Element(Ns + "title"));
+                        values.Keyword = GetValue(element
+                            .Element(Ns + "variablelist")?
+                            .Elements(Ns + "varlistentry")
+                            .Where(el => GetValue(el.Element(Ns + "term")) == "Keyword:")
+                            .SingleOrDefault()?
+                            .Element(Ns + "listitem")
+                            .Element(Ns + "para"));
+                        sections.Add(values.Cid, values);
                     }
                 }
             }
 
-            return sections;
+            generator.CidTable = sections;
         }
     }
 }

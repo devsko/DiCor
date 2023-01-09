@@ -21,7 +21,7 @@ namespace DiCor.Net
 
             var presentationContext = new PresentationContext
             {
-                AbstractSyntax = Uid.PatientRootQueryRetrieveInformationModelFIND
+                AbstractSyntax = Uid.PatientRootQueryRetrieveInformationModelFind,
             };
             presentationContext.TransferSyntaxes.Add(Uid.ImplicitVRLittleEndian);
 
@@ -30,22 +30,9 @@ namespace DiCor.Net
             PresentationContexts.Add(presentationContext);
         }
 
-        //private Association(Association original)
-        //{
-        //    CalledAE = original.CalledAE;
-        //    CallingAE = original.CallingAE;
-        //    MaxResponseDataLength = original.MaxResponseDataLength;
-        //    MaxRequestDataLength = original.MaxRequestDataLength;
-        //    MaxOperationsInvoked = original.MaxOperationsInvoked;
-        //    MaxOperationsPerformed = original.MaxOperationsPerformed;
-        //    RemoteImplementationClass = original.RemoteImplementationClass;
-        //    RemoteImplementationVersion = original.RemoteImplementationVersion;
-        //    PresentationContexts = new List<PresentationContext>(original.PresentationContexts.Select(pc => pc with { }));
-        //}
-
         public string? CalledAE { get; set; }
         public string? CallingAE { get; set; }
-        public Uid ApplicationContext { get; set; } = Uid.DICOMApplicationContextName;
+        public Uid ApplicationContext { get; set; } = Uid.DICOMApplicationContext;
         public IList<PresentationContext> PresentationContexts { get; } = new List<PresentationContext>();
         public uint MaxResponseDataLength { get; set; } = DefaultMaxDataLength;
         public uint MaxRequestDataLength { get; set; }
@@ -64,7 +51,7 @@ namespace DiCor.Net
             return presentationContext.Id == id ? presentationContext : null;
         }
 
-        public PresentationContext? GetPresentationContext(in Uid uid)
+        public PresentationContext? GetPresentationContext(Uid uid)
         {
             foreach (PresentationContext pc in PresentationContexts)
                 if (pc.AbstractSyntax == uid)

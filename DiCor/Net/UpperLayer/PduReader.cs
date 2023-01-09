@@ -34,7 +34,9 @@ namespace DiCor.Net.UpperLayer
                 {
                     case Pdu.ItemTypeApplicationContext:
                         if (_input.TryReadAscii(length, out string? applicationContext)) // Item-length, Application-context-name
-                            association.ApplicationContext = Uid.Get(applicationContext);
+                        {
+                            association.ApplicationContext = new Uid(applicationContext, false);
+                        }
                         break;
 
                     case Pdu.ItemTypePresentationContextRq:
@@ -83,8 +85,10 @@ namespace DiCor.Net.UpperLayer
                                         break;
 
                                     case Pdu.SubItemTypeImplementationClassUid:
-                                        userInformation.TryReadAscii(itemLength, out string? implementationClass); // Implementation-class-uid
-                                        association.RemoteImplementationClass = Uid.Get(implementationClass!);
+                                        if (userInformation.TryReadAscii(itemLength, out string? implementationClass)) // Implementation-class-uid
+                                        {
+                                            association.RemoteImplementationClass = new Uid(implementationClass, false);
+                                        }
                                         break;
 
                                     case Pdu.SubItemTypeAsynchronousOperations:
@@ -95,13 +99,15 @@ namespace DiCor.Net.UpperLayer
                                         break;
 
                                     case Pdu.SubItemTypeScpScuRoleSelection:
-                                        userInformation.TryReadAscii(out string? syntax); // UID-length / SOP-class-uid
-                                        userInformation.TryRead(out byte scuRole); // SCU-role
-                                        userInformation.TryRead(out byte scpRole); // SCP-role
-                                        // TODO InvalidPduException
-                                        PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!)) ?? throw new InvalidOperationException();
-                                        presentationContext1.SupportsScuRole = scuRole == 0x01;
-                                        presentationContext1.SupportsScpRole = scpRole == 0x01;
+                                        if (userInformation.TryReadAscii(out string? syntax)) // UID-length / SOP-class-uid
+                                        {
+                                            userInformation.TryRead(out byte scuRole); // SCU-role
+                                            userInformation.TryRead(out byte scpRole); // SCP-role
+                                            // TODO InvalidPduException
+                                            PresentationContext? presentationContext1 = association.GetPresentationContext(new Uid(syntax, false)) ?? throw new InvalidOperationException();
+                                            presentationContext1.SupportsScuRole = scuRole == 0x01;
+                                            presentationContext1.SupportsScpRole = scpRole == 0x01;
+                                        }
                                         break;
 
                                     case Pdu.SubItemTypeImplementationVersionName:
@@ -170,9 +176,10 @@ namespace DiCor.Net.UpperLayer
                                 // TODO InvalidPduException
                                 throw new InvalidOperationException();
                             _input.Reserved(1);
-                            _input.TryReadAscii(out string? transferSyntax); // Transfer-syntax-name
-
-                            presentationContext.AcceptedTransferSyntax = Uid.Get(transferSyntax!);
+                            if (_input.TryReadAscii(out string? transferSyntax)) // Transfer-syntax-name
+                            {
+                                presentationContext.AcceptedTransferSyntax = new Uid(transferSyntax, false);
+                            }
                         }
                         else
                         {
@@ -197,8 +204,10 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.SubItemTypeImplementationClassUid:
-                                    userInformation.TryReadAscii(itemLength, out string? implementationClass); // Implementation-class-uid
-                                    association.RemoteImplementationClass = Uid.Get(implementationClass!);
+                                    if (userInformation.TryReadAscii(itemLength, out string? implementationClass)) // Implementation-class-uid
+                                    {
+                                        association.RemoteImplementationClass = new Uid(implementationClass, false);
+                                    }
                                     break;
 
                                 case Pdu.SubItemTypeAsynchronousOperations:
@@ -209,13 +218,15 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.SubItemTypeScpScuRoleSelection:
-                                    userInformation.TryReadAscii(out string? syntax); // UID-length / SOP-class-uid
-                                    userInformation.TryRead(out byte scuRole); // SCU-role
-                                    userInformation.TryRead(out byte scpRole); // SCP-role
-                                    // TODO InvalidPduException
-                                    PresentationContext? presentationContext1 = association.GetPresentationContext(Uid.Get(syntax!)) ?? throw new InvalidOperationException();
-                                    presentationContext1.SupportsScuRole = scuRole == 0x01;
-                                    presentationContext1.SupportsScpRole = scpRole == 0x01;
+                                    if (userInformation.TryReadAscii(out string? syntax)) // UID-length / SOP-class-uid
+                                    {
+                                        userInformation.TryRead(out byte scuRole); // SCU-role
+                                        userInformation.TryRead(out byte scpRole); // SCP-role
+                                        // TODO InvalidPduException
+                                        PresentationContext? presentationContext1 = association.GetPresentationContext(new Uid(syntax, false)) ?? throw new InvalidOperationException();
+                                        presentationContext1.SupportsScuRole = scuRole == 0x01;
+                                        presentationContext1.SupportsScpRole = scpRole == 0x01;
+                                    }
                                     break;
 
                                 case Pdu.SubItemTypeImplementationVersionName:

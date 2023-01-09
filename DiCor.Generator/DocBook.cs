@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -139,5 +141,35 @@ namespace DiCor.Generator
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
+        protected T[]? ReadTable<T>(Func<IEnumerable<XElement>, T> selector) where T : struct
+            => XElement.Load(Reader!.ReadSubtree())
+                .Element(Ns + "tbody")?
+                .Elements(Ns + "tr")
+                .Select(tr => tr.Elements(Ns + "td").Select(td => td.Element(Ns + "para")))
+                .Select(selector)
+                .Where(t => !t.Equals(default(T)))
+                .ToArray();
+
+        protected static TagValues TableToTag(IEnumerable<XElement> row)
+        {
+            TagValues values = default;
+            string tag = GetValue(row.ElementAt(0));
+            if (!(tag.Length == 11 && tag[0] == '(' && tag[10] == ')' && tag[5] == ',') ||
+                !ushort.TryParse(tag.Substring(1, 4), NumberStyles.AllowHexSpecifier, null, out values.Group) ||
+                !ushort.TryParse(tag.Substring(6, 4), NumberStyles.AllowHexSpecifier, null, out values.Element))
+            {
+                return default;
+            }
+            values.MessageField = GetValue(row.ElementAt(1));
+            values.Keyword = GetValue(row.ElementAt(2));
+            values.VR = GetValue(row.ElementAt(3));
+            values.VM = GetValue(row.ElementAt(4));
+            values.IsRetired = (row.ElementAtOrDefault(5)?.Value.TrimStart() ?? string.Empty).StartsWith("RET", StringComparison.Ordinal);
+
+            return values;
+        }
+
+        protected static string GetValue(XElement? element) => element?.Value.Replace("\u200b", "").Trim() ?? string.Empty;
     }
 }

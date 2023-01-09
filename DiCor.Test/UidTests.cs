@@ -7,7 +7,7 @@ namespace DiCor.Test
         [Fact]
         public void Generate()
         {
-            var uid = Uid.NewUid("test", UidType.SOPInstance);
+            var uid = Uid.NewUid();
             _ = uid.ToString();
         }
     }

@@ -9,7 +9,7 @@ namespace DiCor.Generator
 {
     public class FileSaveStream : Stream
     {
-        private readonly AsyncReaderWriterLock _asyncLock = new(UidSourceGenerator.JoinableTaskFactory.Context);
+        private readonly AsyncReaderWriterLock _asyncLock = new(Generator.JoinableTaskFactory.Context);
         private readonly Stream _stream;
         private readonly string _path;
 

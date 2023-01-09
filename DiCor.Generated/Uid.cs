@@ -1,43 +1,10 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace DiCor
-#if GENERATOR
-.Internal
-#endif
 {
-    public enum UidType
-    {
-        TransferSyntax,
-        SOPClass,
-        MetaSOPClass,
-        ServiceClass,
-        SOPInstance,
-        ApplicationContextName,
-        ApplicationHostingModel,
-        CodingScheme,
-        FrameOfReference,
-        Synchronization,
-        LDAP,
-        MappingResource,
-        ContextGroupName,
-        Other,
-    }
-
-    public enum StorageCategory
-    {
-        None,
-        Image,
-        PresentationState,
-        StructuredReport,
-        Waveform,
-        Document,
-        Raw,
-        Other,
-        Private,
-        Volume
-    }
-
-    public readonly partial struct Uid : IEquatable<Uid>
+    public readonly partial record struct Uid
     {
         // PS3.5 - 9 Unique Identifiers (UIDs)
         public const string DicomOrgRoot = "1.2.840.10008.";
@@ -60,129 +27,48 @@ namespace DiCor
         // PS3.5 - B.2 UUID Derived UID
         public const string UUidRoot = "2.25.";
 
-        public string Value { get; }
-        public string Name { get; }
-        public UidType Type { get; }
-        public bool IsRetired { get; }
-        public StorageCategory StorageCategory { get; }
-
-#if GENERATOR
-        public
-#else
-        private
-#endif
-        Uid(string value, string name, UidType type, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
+        public static Uid NewUid()
         {
-            if (!IsValid(value))
+            // PS3.5 - B.2 UUID Derived UID
+
+            var guid = Guid.NewGuid();
+            Span<byte> s = stackalloc byte[16];
+            guid.TryWriteBytes(s);
+
+            (s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]) = (s[6], s[7], s[4], s[5], s[0], s[1], s[2], s[3]);
+            s.Slice(8).Reverse();
+            MemoryMarshal.Cast<byte, ulong>(s).Reverse();
+
+            UInt128 intValue = Unsafe.As<byte, UInt128>(ref s[0]);
+
+            Span<char> value = stackalloc char[39 + UUidRoot.Length];
+            UUidRoot.CopyTo(value);
+            intValue.TryFormat(value.Slice(UUidRoot.Length), out int charsWritten);
+
+            return new Uid(value.Slice(0, charsWritten + UUidRoot.Length).ToString());
+        }
+
+        private static readonly char[] s_allowedChars = new char[] { '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+
+        private static bool IsValid(string value)
+            // TODO .NET 8 IndexOfAnyValues
+            => value.Length > 0 && value.Length <= 64 && value.AsSpan().IndexOfAnyExcept(s_allowedChars) == -1;
+
+        public readonly string Value { get; private init; }
+
+        public Uid(string value, bool validate = true)
+        {
+            ArgumentNullException.ThrowIfNull(value);
+
+            // TODO .NET 8 ArgumentExcption.ThrowIf...
+            if (validate & !IsValid(value))
                 throw new ArgumentException($"{value} is not a valid uid.");
 
             Value = value;
-            Name = name;
-            Type = type;
-            StorageCategory = storageCategory;
-            IsRetired = isRetired;
         }
 
-#pragma warning disable IDE0079 // Remove unnecessary suppression
-#pragma warning disable IDE0051 // Remove unused private members
-        private Uid(string value)
-#pragma warning restore IDE0051 // Remove unused private members
-#pragma warning restore IDE0079 // Remove unnecessary suppression
-        {
-            Value = value;
-            Name = string.Empty;
-            Type = default;
-            StorageCategory = default;
-            IsRetired = default;
-        }
+        public bool IsDicomDefined => Value.StartsWith(DicomOrgRoot);
 
-        public static bool IsValid(string value)
-        {
-            if (value is null)
-                throw new ArgumentNullException(nameof(value));
-
-            if (value.Length == 0 || value.Length > 64)
-                return false;
-
-            foreach (char c in value)
-            {
-                if (c != '.' && (c < '0' || c > '9'))
-                    return false;
-            }
-
-            return true;
-        }
-
-        public static StorageCategory GetStorageCategory(in Uid uid)
-        {
-            if (!uid.IsDicomDefined && uid.Type == UidType.SOPClass)
-                return StorageCategory.Private;
-
-            if (uid.Type != UidType.SOPClass || !uid.Name.Contains("Storage"))
-                return StorageCategory.None;
-
-            if (uid.Name.Contains("Image Storage"))
-                return StorageCategory.Image;
-
-            if (uid.Name.Contains("Volume Storage"))
-                return StorageCategory.Volume;
-
-            if (uid.Value == "1.2.840.10008.5.1.4.1.1.11.4" // BlendingSoftcopyPresentationStateStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.11.2" // ColorSoftcopyPresentationStateStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.11.1" // GrayscaleSoftcopyPresentationStateStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.11.3") // PseudoColorSoftcopyPresentationStateStorage
-                return StorageCategory.PresentationState;
-
-            else if (uid.Value == "1.2.840.10008.5.1.4.1.1.88.2" // AudioSRStorageTrial_RETIRED
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.11" // BasicTextSRStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.65" // ChestCADSRStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.59" // ComprehensiveSRStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.4" // ComprehensiveSRStorageTrial_RETIRED
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.3" // DetailSRStorageTrial_RETIRED
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.22" // EnhancedSRStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.50" // MammographyCADSRStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.1" // TextSRStorageTrial_RETIRED
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.88.67") // XRayRadiationDoseSRStorage)
-                return StorageCategory.StructuredReport;
-
-            else if (uid.Value == "1.2.840.10008.5.1.4.1.1.9.1.3" // AmbulatoryECGWaveformStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.4.1" // BasicVoiceAudioWaveformStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.3.1" // CardiacElectrophysiologyWaveformStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.1.2" // GeneralECGWaveformStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.2.1" // HemodynamicWaveformStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.1.1" // _12LeadECGWaveformStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.9.1") // WaveformStorageTrial_RETIRED
-                return StorageCategory.Waveform;
-
-            else if (uid.Value == "1.2.840.10008.5.1.4.1.1.104.2" // EncapsulatedCDAStorage
-                || uid.Value == "1.2.840.10008.5.1.4.1.1.104.1") // EncapsulatedPDFStorage
-                return StorageCategory.Document;
-
-            else if (uid.Value == "1.2.840.10008.5.1.4.1.1.66") // RawDataStorage
-                return StorageCategory.Raw;
-
-            return StorageCategory.Other;
-        }
-
-        public bool IsDicomDefined
-            => Value.StartsWith(DicomOrgRoot);
-
-        public override string ToString()
-            => $"{(IsRetired ? "*" : "")}{Type}: {Name} [{Value}]";
-
-        public override int GetHashCode()
-            => Value.GetHashCode();
-
-        public override bool Equals(object? obj)
-            => obj is Uid uid && Equals(uid);
-
-        public bool Equals(Uid other)
-            => this == other;
-
-        public static bool operator ==(Uid left, Uid right)
-            => left.Value == right.Value;
-
-        public static bool operator !=(Uid left, Uid right)
-            => !(left == right);
+        public override string ToString() => Value;
     }
 }

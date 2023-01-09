@@ -6,14 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants);GENERATOR</DefineConstants>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Include="..\DiCor.Generated\Uid.cs" Link="Uid.cs" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.4.0" />
     <PackageReference Include="System.Text.Json" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
