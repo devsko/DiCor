@@ -2,7 +2,7 @@
 
 namespace DiCor.Generator
 {
-    public enum UidType
+    internal enum UidType
     {
         TransferSyntax,
         SOPClass,
@@ -20,21 +20,22 @@ namespace DiCor.Generator
         Other,
     }
 
-    public enum StorageCategory
+    internal enum StorageCategory
     {
         None,
         Image,
         PresentationState,
-        StructuredReport,
+        SRDocument,
         Waveform,
-        Document,
+        EncapsulatedDocument,
+        Spectroscopy,
         Raw,
         Other,
         Private,
         Volume
     }
 
-    public readonly struct UidValues
+    internal readonly struct UidValues
     {
         public readonly string Value;
         public readonly string Name;
@@ -138,50 +139,39 @@ namespace DiCor.Generator
 
         private static StorageCategory GetStorageCategory(string value, string name, UidType type)
         {
-            if (!value.StartsWith("1.2.840.10008.") && type == UidType.SOPClass)
+            if (type != UidType.SOPClass)
+                return StorageCategory.None;
+
+            if (!value.StartsWith("1.2.840.10008."))
                 return StorageCategory.Private;
 
-            if (type != UidType.SOPClass || !name.Contains("Storage"))
+            if (!name.Contains("Storage") || name.StartsWith("Storage Commitment"))
                 return StorageCategory.None;
 
             if (name.Contains("Image Storage"))
                 return StorageCategory.Image;
 
+            if (name.Contains("Presentation State Storage"))
+                return StorageCategory.PresentationState;
+
+            if (name.Contains("SR Storage") ||
+                value == "1.2.840.10008.5.1.4.1.1.88.40" || // Procedure Log Storage
+                value == "1.2.840.10008.5.1.4.1.1.88.59")   // Key Object Selection Document Storage
+                return StorageCategory.SRDocument;
+
             if (name.Contains("Volume Storage"))
                 return StorageCategory.Volume;
 
-            if (value == "1.2.840.10008.5.1.4.1.1.11.4" // BlendingSoftcopyPresentationStateStorage
-                || value == "1.2.840.10008.5.1.4.1.1.11.2" // ColorSoftcopyPresentationStateStorage
-                || value == "1.2.840.10008.5.1.4.1.1.11.1" // GrayscaleSoftcopyPresentationStateStorage
-                || value == "1.2.840.10008.5.1.4.1.1.11.3") // PseudoColorSoftcopyPresentationStateStorage
-                return StorageCategory.PresentationState;
-
-            else if (value == "1.2.840.10008.5.1.4.1.1.88.2" // AudioSRStorageTrial_RETIRED
-                || value == "1.2.840.10008.5.1.4.1.1.88.11" // BasicTextSRStorage
-                || value == "1.2.840.10008.5.1.4.1.1.88.65" // ChestCADSRStorage
-                || value == "1.2.840.10008.5.1.4.1.1.88.59" // ComprehensiveSRStorage
-                || value == "1.2.840.10008.5.1.4.1.1.88.4" // ComprehensiveSRStorageTrial_RETIRED
-                || value == "1.2.840.10008.5.1.4.1.1.88.3" // DetailSRStorageTrial_RETIRED
-                || value == "1.2.840.10008.5.1.4.1.1.88.22" // EnhancedSRStorage
-                || value == "1.2.840.10008.5.1.4.1.1.88.50" // MammographyCADSRStorage
-                || value == "1.2.840.10008.5.1.4.1.1.88.1" // TextSRStorageTrial_RETIRED
-                || value == "1.2.840.10008.5.1.4.1.1.88.67") // XRayRadiationDoseSRStorage)
-                return StorageCategory.StructuredReport;
-
-            else if (value == "1.2.840.10008.5.1.4.1.1.9.1.3" // AmbulatoryECGWaveformStorage
-                || value == "1.2.840.10008.5.1.4.1.1.9.4.1" // BasicVoiceAudioWaveformStorage
-                || value == "1.2.840.10008.5.1.4.1.1.9.3.1" // CardiacElectrophysiologyWaveformStorage
-                || value == "1.2.840.10008.5.1.4.1.1.9.1.2" // GeneralECGWaveformStorage
-                || value == "1.2.840.10008.5.1.4.1.1.9.2.1" // HemodynamicWaveformStorage
-                || value == "1.2.840.10008.5.1.4.1.1.9.1.1" // _12LeadECGWaveformStorage
-                || value == "1.2.840.10008.5.1.4.1.1.9.1") // WaveformStorageTrial_RETIRED
+            if (name.Contains("Waveform Storage"))
                 return StorageCategory.Waveform;
 
-            else if (value == "1.2.840.10008.5.1.4.1.1.104.2" // EncapsulatedCDAStorage
-                || value == "1.2.840.10008.5.1.4.1.1.104.1") // EncapsulatedPDFStorage
-                return StorageCategory.Document;
+            if (name.StartsWith("Encapsulated "))
+                return StorageCategory.EncapsulatedDocument;
 
-            else if (value == "1.2.840.10008.5.1.4.1.1.66") // RawDataStorage
+            if (name.Contains("Spectroscopy Storage"))
+                return StorageCategory.Spectroscopy;
+
+            if (name.StartsWith("Raw Data "))
                 return StorageCategory.Raw;
 
             return StorageCategory.Other;

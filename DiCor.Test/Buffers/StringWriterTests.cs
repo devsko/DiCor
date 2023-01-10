@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using DiCor.Buffers;
 
 using Xunit;
@@ -15,7 +15,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAsciiFixed("Hello world!", 5);
+                    buffer.WriteAsciiFixed("Hello world!"u8, 5);
                     buffer.Commit();
                 });
         }
@@ -27,7 +27,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAsciiFixed("He", 5);
+                    buffer.WriteAsciiFixed("He"u8, 5);
                     buffer.Commit();
                 });
         }
@@ -50,8 +50,8 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAscii(new string(' ', 100).AsSpan());
-                    buffer.WriteAscii(new string(' ', 5_000).AsSpan());
+                    buffer.WriteAscii(Enumerable.Repeat((byte)' ', 100).ToArray());
+                    buffer.WriteAscii(Enumerable.Repeat((byte)' ', 5_000).ToArray());
                     buffer.Commit();
                 });
         }

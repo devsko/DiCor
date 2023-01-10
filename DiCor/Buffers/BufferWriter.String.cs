@@ -1,11 +1,10 @@
 ﻿using System.Diagnostics;
-using System.Text;
 
 namespace DiCor.Buffers
 {
     public partial struct BufferWriter
     {
-        public void WriteAscii(ReadOnlySpan<char> value)
+        public void WriteAscii(ReadOnlySpan<byte> value)
         {
             Debug.Assert(value.Length <= ushort.MaxValue);
 
@@ -14,30 +13,35 @@ namespace DiCor.Buffers
 
             if (Span.Length < length)
             {
-                ushort bytesWritten = (ushort)Encoding.ASCII.GetBytes(value.Slice(0, Span.Length), Span);
+                ushort bytesWritten = (ushort)Span.Length;
+                value.Slice(0, bytesWritten).CopyTo(Span);
                 length -= bytesWritten;
                 Advance(bytesWritten);
                 value = value.Slice(bytesWritten);
                 Ensure(length);
             }
 
-            Advance((ushort)Encoding.ASCII.GetBytes(value, Span));
+            value.CopyTo(Span);
+            Advance(value.Length);
         }
 
-        public void WriteAsciiFixed(ReadOnlySpan<char> value, int length)
+        public void WriteAsciiFixed(ReadOnlySpan<byte> value, int length)
         {
             Ensure(length);
             int padding = length - value.Length;
             if (padding <= 0)
             {
-                Encoding.ASCII.GetBytes(value.Slice(0, length), Span);
+                value.Slice(0, length).CopyTo(Span);
             }
             else
             {
-                int bytesWritten = Encoding.ASCII.GetBytes(value, Span);
-                Span.Slice(bytesWritten, padding).Fill((byte)' ');
+                value.CopyTo(Span);
+                Span.Slice(value.Length, padding).Fill((byte)' ');
             }
             Advance(length);
         }
+
+        public void Write(Uid uid)
+            => WriteAscii(uid.Value);
     }
 }

@@ -38,7 +38,7 @@ namespace DiCor.Net.UpperLayer
 
                 _buffer.Write(Pdu.ItemTypeApplicationContext); // Item-type
                 _buffer.Reserved(1);
-                _buffer.WriteAscii(association.ApplicationContext.Value); // Application-context-name
+                _buffer.Write(association.ApplicationContext); // Application-context-name
 
                 bool needsRoleNegotiation = false;
                 byte presentationContextId = 1;
@@ -57,7 +57,7 @@ namespace DiCor.Net.UpperLayer
 
                         _buffer.Write(Pdu.ItemTypeAbstractSyntax); // Item-Type
                         _buffer.Reserved(1);
-                        _buffer.WriteAscii(presentationContext.AbstractSyntax.Value); // Abstract-syntax-name
+                        _buffer.Write(presentationContext.AbstractSyntax); // Abstract-syntax-name
 
                         foreach (Uid transferSyntax in presentationContext.TransferSyntaxes)
                         {
@@ -65,7 +65,7 @@ namespace DiCor.Net.UpperLayer
 
                             _buffer.Write(Pdu.ItemTypeTransferSyntax); // Item-Type
                             _buffer.Reserved(1);
-                            _buffer.WriteAscii(transferSyntax.Value); // Abstract-syntax-name
+                            _buffer.Write(transferSyntax); // Abstract-syntax-name
                         }
                     }
 
@@ -90,7 +90,7 @@ namespace DiCor.Net.UpperLayer
 
                     _buffer.Write(Pdu.SubItemTypeImplementationClassUid); // Item-type
                     _buffer.Reserved(1);
-                    _buffer.WriteAscii(Implementation.ClassUid.Value); // Implementation-class-uid
+                    _buffer.Write(Implementation.ClassUid); // Implementation-class-uid
 
                     // PS3.7 - D.3.3.3.1 Asynchronous Operations Window
 
@@ -115,7 +115,7 @@ namespace DiCor.Net.UpperLayer
                                 _buffer.Reserved(1);
                                 using (_buffer.BeginLengthPrefix())
                                 {
-                                    _buffer.WriteAscii(presentationContext1.AbstractSyntax.Value); // SOP-class-uid
+                                    _buffer.Write(presentationContext1.AbstractSyntax); // SOP-class-uid
                                     _buffer.Write((byte)((presentationContext1.SupportsScuRole ?? false) ? 0 : 1)); // SCU-role
                                     _buffer.Write((byte)((presentationContext1.SupportsScpRole ?? false) ? 0 : 1)); // SCP-role
                                 }

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace DiCor
 {
     public readonly partial record struct Uid
     {
         // PS3.5 - 9 Unique Identifiers (UIDs)
-        public const string DicomOrgRoot = "1.2.840.10008.";
+        public static ReadOnlySpan<byte> DicomOrgRoot => "1.2.840.10008."u8;
 
         // Dear ...
         // I have pleasure in enclosing your UID prefix as requested.It is:
@@ -22,10 +23,10 @@ namespace DiCor
         // www.medicalconnections.co.uk
         // Company Tel: +44-1792-390209
         // Medical Connections Ltd is registered in England & Wales as Company Number 3680043 Medical Connections Ltd, Suite 10, Henley House, Queensway, Fforestfach, Swansea, SA5 4DJ
-        public const string DiCorOrgRoot = "1.2.826.0.1.3680043.10.386.";
+        public static ReadOnlySpan<byte> DiCorOrgRoot => "1.2.826.0.1.3680043.10.386."u8;
 
         // PS3.5 - B.2 UUID Derived UID
-        public const string UUidRoot = "2.25.";
+        public static ReadOnlySpan<byte> UUidRoot => "2.25."u8;
 
         public static Uid NewUid()
         {
@@ -41,34 +42,38 @@ namespace DiCor
 
             UInt128 intValue = Unsafe.As<byte, UInt128>(ref s[0]);
 
-            Span<char> value = stackalloc char[39 + UUidRoot.Length];
+            Span<byte> value = stackalloc byte[39 + UUidRoot.Length];
             UUidRoot.CopyTo(value);
-            intValue.TryFormat(value.Slice(UUidRoot.Length), out int charsWritten);
 
-            return new Uid(value.Slice(0, charsWritten + UUidRoot.Length).ToString());
+            TryUInt128ToDecStr(intValue, value.Slice(UUidRoot.Length), out int bytesWritten);
+
+            // TODO .NET 8 Utf8Formatter.TryFormat
+            //Utf8Formatter.TryFormat(intValue, value.Slice(UUidRoot.Length), out int charsWritten);
+
+            return new Uid(value.Slice(0, UUidRoot.Length + bytesWritten));
         }
 
-        private static readonly char[] s_allowedChars = new char[] { '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+        private static ReadOnlySpan<byte> AllowedChars => ".0123456789"u8;
 
-        private static bool IsValid(string value)
+        private static bool IsValid(ReadOnlySpan<byte> value)
             // TODO .NET 8 IndexOfAnyValues
-            => value.Length > 0 && value.Length <= 64 && value.AsSpan().IndexOfAnyExcept(s_allowedChars) == -1;
+            => value.Length > 0 && value.Length <= 64 && value.IndexOfAnyExcept(AllowedChars) == -1;
 
-        public readonly string Value { get; private init; }
+        public byte[] Value { get; }
 
-        public Uid(string value, bool validate = true)
+        public Uid(ReadOnlySpan<byte> value, bool validate = true)
         {
-            ArgumentNullException.ThrowIfNull(value);
-
             // TODO .NET 8 ArgumentExcption.ThrowIf...
             if (validate & !IsValid(value))
-                throw new ArgumentException($"{value} is not a valid uid.");
+            {
+                throw new ArgumentException($"{value.ToString()} is not a valid uid.");
+            }
 
-            Value = value;
+            Value = value.ToArray();
         }
 
-        public bool IsDicomDefined => Value.StartsWith(DicomOrgRoot);
+        public bool IsDicomDefined => Value.AsSpan().StartsWith(DicomOrgRoot);
 
-        public override string ToString() => Value;
+        public override string? ToString() =>  Encoding.ASCII.GetString(Value);
     }
 }

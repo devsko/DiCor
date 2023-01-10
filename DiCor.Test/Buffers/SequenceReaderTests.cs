@@ -1,6 +1,8 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO.Pipelines;
+using System.Linq;
 using System.Threading.Tasks;
 
 using DiCor.Buffers;
@@ -68,8 +70,8 @@ namespace DiCor.Test.Buffers
         }
 
         [Theory]
-        [MemberData(nameof(StringData))]
-        public async Task ReadAscii(string? value)
+        [MemberData(nameof(Utf8Data))]
+        public async Task ReadAscii(byte[]? value)
         {
             var pipe = new Pipe(new PipeOptions(pauseWriterThreshold: ushort.MaxValue * 2));
             Write();
@@ -87,22 +89,19 @@ namespace DiCor.Test.Buffers
             void Read()
             {
                 var reader = new SequenceReader<byte>(result.Buffer);
-                reader.TryReadAscii(out string? readValue);
+                reader.TryReadAscii(out byte[]? readValue);
 
-                if (string.IsNullOrEmpty(value))
-                    Assert.True(string.IsNullOrEmpty(readValue));
-                else
-                    Assert.Equal(value, readValue);
+                Assert.Equal(value ?? Array.Empty<byte>(), readValue);
             }
         }
 
-        public static IEnumerable<object[]> StringData
+        public static IEnumerable<object[]> Utf8Data
             => new[]
             {
-                new object[] { (string)null! },
-                new object[] { "" },
-                new object[] { "ABCDEFGH" },
-                new object[] { new string('x', ushort.MaxValue - 8) + "ABCDEFGH" },
+                new object[] { (byte[])null! },
+                new object[] { ""u8.ToArray() },
+                new object[] { "ABCDEFGH"u8.ToArray() },
+                new object[] { Enumerable.Repeat((byte)'x', ushort.MaxValue - 8).Concat("ABCDEFGH"u8.ToArray()).ToArray() },
             };
     }
 }

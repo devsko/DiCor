@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
+using DiCor;
 
 namespace System.Buffers
 {
@@ -56,7 +57,7 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryReadAscii(ref this SequenceReader<byte> reader, [NotNullWhen(true)] out string? value)
+        public static bool TryReadAscii(ref this SequenceReader<byte> reader, [NotNullWhen(true)] out byte[]? value)
         {
             if (!TryReadLength(ref reader, out ushort length))
             {
@@ -67,28 +68,51 @@ namespace System.Buffers
             return TryReadAscii(ref reader, length, out value);
         }
 
-        public static bool TryReadAscii(ref this SequenceReader<byte> reader, int length, [NotNullWhen(true)] out string? value)
+        public static bool TryReadAscii(ref this SequenceReader<byte> reader, int length, [NotNullWhen(true)] out byte[]? value)
         {
             ReadOnlySpan<byte> span = reader.UnreadSpan;
             if (span.Length < length)
                 return TryReadAsciiMultiSegment(ref reader, length, out value);
 
-            value = Encoding.ASCII.GetString(reader.UnreadSpan.Slice(0, length).TrimEnd((byte)' '));
+            value = span.Slice(0, length).TrimEnd((byte)' ').ToArray();
             reader.Advance(length);
             return true;
 
-            static bool TryReadAsciiMultiSegment(ref SequenceReader<byte> reader, int length, [NotNullWhen(true)] out string? value)
+            static bool TryReadAsciiMultiSegment(ref SequenceReader<byte> reader, int length, [NotNullWhen(true)] out byte[]? value)
             {
-                Span<byte> buffer = length > 1024 ? new byte[length] : stackalloc byte[length];
+                byte[] buffer = new byte[length];
                 if (!reader.TryCopyTo(buffer))
                 {
                     value = null;
                     return false;
                 }
-                value = Encoding.ASCII.GetString(buffer.TrimEnd((byte)' '));
+                Span<byte> trim = buffer.AsSpan().TrimEnd((byte)' ');
+                value = trim.Length == buffer.Length ? buffer : trim.ToArray();
                 reader.Advance(length);
                 return true;
             }
+        }
+
+        public static bool TryRead(ref this SequenceReader<byte> reader, out Uid uid)
+        {
+            if (TryReadAscii(ref reader, out byte[]? value))
+            {
+                uid = new Uid(value, false);
+                return true;
+            }
+            uid = default;
+            return false;
+        }
+
+        public static bool TryRead(ref this SequenceReader<byte> reader, int length, out Uid uid)
+        {
+            if (TryReadAscii(ref reader, length, out byte[]? value))
+            {
+                uid = new Uid(value, false);
+                return true;
+            }
+            uid = default;
+            return false;
         }
 
         public static void Reserved(ref this SequenceReader<byte> reader, int length)

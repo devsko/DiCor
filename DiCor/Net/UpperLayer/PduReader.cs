@@ -17,9 +17,9 @@ namespace DiCor.Net.UpperLayer
 
             _input.TryReadBigEndian(out ushort _); // Protocol-version
             _input.Reserved(2);
-            _input.TryReadAscii(16, out string? calledAE);
+            _input.TryReadAscii(16, out byte[]? calledAE);
             association.CalledAE = calledAE;
-            _input.TryReadAscii(16, out string? callingAE);
+            _input.TryReadAscii(16, out byte[]? callingAE);
             association.CallingAE = callingAE;
             _input.Reserved(32);
 
@@ -33,10 +33,8 @@ namespace DiCor.Net.UpperLayer
                 switch (type)
                 {
                     case Pdu.ItemTypeApplicationContext:
-                        if (_input.TryReadAscii(length, out string? applicationContext)) // Item-length, Application-context-name
-                        {
-                            association.ApplicationContext = new Uid(applicationContext, false);
-                        }
+                        _input.TryRead(length, out Uid applicationContext); // Item-length, Application-context-name
+                        association.ApplicationContext = applicationContext;
                         break;
 
                     case Pdu.ItemTypePresentationContextRq:
@@ -85,10 +83,8 @@ namespace DiCor.Net.UpperLayer
                                         break;
 
                                     case Pdu.SubItemTypeImplementationClassUid:
-                                        if (userInformation.TryReadAscii(itemLength, out string? implementationClass)) // Implementation-class-uid
-                                        {
-                                            association.RemoteImplementationClass = new Uid(implementationClass, false);
-                                        }
+                                        userInformation.TryRead(itemLength, out Uid implementationClass); // Implementation-class-uid
+                                        association.RemoteImplementationClass = implementationClass;
                                         break;
 
                                     case Pdu.SubItemTypeAsynchronousOperations:
@@ -99,19 +95,17 @@ namespace DiCor.Net.UpperLayer
                                         break;
 
                                     case Pdu.SubItemTypeScpScuRoleSelection:
-                                        if (userInformation.TryReadAscii(out string? syntax)) // UID-length / SOP-class-uid
-                                        {
-                                            userInformation.TryRead(out byte scuRole); // SCU-role
-                                            userInformation.TryRead(out byte scpRole); // SCP-role
-                                            // TODO InvalidPduException
-                                            PresentationContext? presentationContext1 = association.GetPresentationContext(new Uid(syntax, false)) ?? throw new InvalidOperationException();
-                                            presentationContext1.SupportsScuRole = scuRole == 0x01;
-                                            presentationContext1.SupportsScpRole = scpRole == 0x01;
-                                        }
+                                        userInformation.TryRead(out Uid syntax); // UID-length / SOP-class-uid
+                                        userInformation.TryRead(out byte scuRole); // SCU-role
+                                        userInformation.TryRead(out byte scpRole); // SCP-role
+                                        // TODO InvalidPduException
+                                        PresentationContext? presentationContext1 = association.GetPresentationContext(syntax) ?? throw new InvalidOperationException();
+                                        presentationContext1.SupportsScuRole = scuRole == 0x01;
+                                        presentationContext1.SupportsScpRole = scpRole == 0x01;
                                         break;
 
                                     case Pdu.SubItemTypeImplementationVersionName:
-                                        userInformation.TryReadAscii(itemLength, out string? implementationVersion); // Implementation-version-name
+                                        userInformation.TryReadAscii(itemLength, out byte[]? implementationVersion); // Implementation-version-name
                                         association.RemoteImplementationVersion = implementationVersion!;
                                         break;
 
@@ -154,7 +148,7 @@ namespace DiCor.Net.UpperLayer
                 switch (type)
                 {
                     case Pdu.ItemTypeApplicationContext:
-                        _input.TryReadAscii(length, out string _); // Item-length, Application-context-name
+                        _input.TryRead(length, out Uid applicationContext); // Item-length, Application-context-name
                         break;
 
                     case Pdu.ItemTypePresentationContextAc:
@@ -176,10 +170,8 @@ namespace DiCor.Net.UpperLayer
                                 // TODO InvalidPduException
                                 throw new InvalidOperationException();
                             _input.Reserved(1);
-                            if (_input.TryReadAscii(out string? transferSyntax)) // Transfer-syntax-name
-                            {
-                                presentationContext.AcceptedTransferSyntax = new Uid(transferSyntax, false);
-                            }
+                            _input.TryRead(out Uid transferSyntax); // Transfer-syntax-name
+                            presentationContext.AcceptedTransferSyntax = transferSyntax;
                         }
                         else
                         {
@@ -204,10 +196,8 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.SubItemTypeImplementationClassUid:
-                                    if (userInformation.TryReadAscii(itemLength, out string? implementationClass)) // Implementation-class-uid
-                                    {
-                                        association.RemoteImplementationClass = new Uid(implementationClass, false);
-                                    }
+                                    userInformation.TryRead(itemLength, out Uid implementationClass); // Implementation-class-uid
+                                    association.RemoteImplementationClass = implementationClass;
                                     break;
 
                                 case Pdu.SubItemTypeAsynchronousOperations:
@@ -218,19 +208,17 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.SubItemTypeScpScuRoleSelection:
-                                    if (userInformation.TryReadAscii(out string? syntax)) // UID-length / SOP-class-uid
-                                    {
-                                        userInformation.TryRead(out byte scuRole); // SCU-role
-                                        userInformation.TryRead(out byte scpRole); // SCP-role
-                                        // TODO InvalidPduException
-                                        PresentationContext? presentationContext1 = association.GetPresentationContext(new Uid(syntax, false)) ?? throw new InvalidOperationException();
-                                        presentationContext1.SupportsScuRole = scuRole == 0x01;
-                                        presentationContext1.SupportsScpRole = scpRole == 0x01;
-                                    }
+                                    userInformation.TryRead(out Uid syntax); // UID-length / SOP-class-uid
+                                    userInformation.TryRead(out byte scuRole); // SCU-role
+                                    userInformation.TryRead(out byte scpRole); // SCP-role
+                                    // TODO InvalidPduException
+                                    PresentationContext? presentationContext1 = association.GetPresentationContext(syntax) ?? throw new InvalidOperationException();
+                                    presentationContext1.SupportsScuRole = scuRole == 0x01;
+                                    presentationContext1.SupportsScpRole = scpRole == 0x01;
                                     break;
 
                                 case Pdu.SubItemTypeImplementationVersionName:
-                                    userInformation.TryReadAscii(itemLength, out string? implementationVersion); // Implementation-version-name
+                                    userInformation.TryReadAscii(itemLength, out byte[]? implementationVersion); // Implementation-version-name
                                     association.RemoteImplementationVersion = implementationVersion!;
                                     break;
 

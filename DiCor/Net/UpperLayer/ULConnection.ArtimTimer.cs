@@ -5,14 +5,14 @@ namespace DiCor.Net.UpperLayer
 {
     partial class ULConnection
     {
-        public class ArtimTimer<T>
+        public class ArtimTimer<TState>
         {
-            private readonly T _state;
-            private readonly Action<T> _onTimeout;
+            private readonly TState _state;
+            private readonly Action<TState> _onTimeout;
             private readonly ILogger _logger;
             private CancellationTokenSource? _cts;
 
-            public ArtimTimer(Action<T> onTimeout, T state, ILogger? logger = null)
+            public ArtimTimer(Action<TState> onTimeout, TState state, ILogger? logger = null)
             {
                 _state = state;
                 _onTimeout = onTimeout;
@@ -34,12 +34,13 @@ namespace DiCor.Net.UpperLayer
 
                 if (old != current)
                 {
+                    // Don't call any user code that could need ExecutionContext
                     current.Token.UnsafeRegister(OnTimeout, (this, current));
                 }
 
-                static void OnTimeout(object? s)
+                static void OnTimeout(object? state)
                 {
-                    (ArtimTimer<T> timer, CancellationTokenSource cts) = (ValueTuple<ArtimTimer<T>, CancellationTokenSource>)s!;
+                    (ArtimTimer<TState> timer, CancellationTokenSource cts) = (ValueTuple<ArtimTimer<TState>, CancellationTokenSource>)state!;
                     timer.OnTimeout(cts);
                 }
             }

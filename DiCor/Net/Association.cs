@@ -25,13 +25,13 @@ namespace DiCor.Net
             };
             presentationContext.TransferSyntaxes.Add(Uid.ImplicitVRLittleEndian);
 
-            CallingAE = "A";
-            CalledAE = "B";
+            CallingAE = "A"u8.ToArray();
+            CalledAE = "B"u8.ToArray();
             PresentationContexts.Add(presentationContext);
         }
 
-        public string? CalledAE { get; set; }
-        public string? CallingAE { get; set; }
+        public byte[]? CalledAE { get; set; }
+        public byte[]? CallingAE { get; set; }
         public Uid ApplicationContext { get; set; } = Uid.DICOMApplicationContext;
         public IList<PresentationContext> PresentationContexts { get; } = new List<PresentationContext>();
         public uint MaxResponseDataLength { get; set; } = DefaultMaxDataLength;
@@ -39,7 +39,7 @@ namespace DiCor.Net
         public ushort MaxOperationsInvoked { get; set; }
         public ushort MaxOperationsPerformed { get; set; }
         public Uid RemoteImplementationClass { get; set; }
-        public string? RemoteImplementationVersion { get; set; }
+        public byte[]? RemoteImplementationVersion { get; set; }
 
         public PresentationContext? GetPresentationContext(byte id)
         {

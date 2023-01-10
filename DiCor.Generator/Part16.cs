@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    public class Part16 : DocBook
+    internal class Part16 : DocBook
     {
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part16/part16.xml";
 

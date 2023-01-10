@@ -17,12 +17,12 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     scoped var buffer = new BufferWriter(writer);
-                    buffer.WriteAsciiFixed("ABC", 3);
+                    buffer.WriteAsciiFixed("ABC"u8, 3);
                     using (buffer.BeginLengthPrefix())
                     {
-                        buffer.WriteAsciiFixed("7 Bytes", 7);
+                        buffer.WriteAsciiFixed("7 Bytes"u8, 7);
                     }
-                    buffer.WriteAsciiFixed("XYZ", 3);
+                    buffer.WriteAsciiFixed("XYZ"u8, 3);
                     buffer.Commit();
                 });
         }
@@ -45,7 +45,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     scoped var buffer = new BufferWriter(writer);
-                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"ABC", 3);
+                    buffer.WriteAsciiFixed("ABC"u8, 3);
                     using (buffer.BeginLengthPrefix(4))
                     {
                         for (int i = 0; i < blockCount; i++)
@@ -53,7 +53,7 @@ namespace DiCor.Test.Buffers
                             buffer.Write(0x42, blockLength);
                         }
                     }
-                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"XYZ", 3);
+                    buffer.WriteAsciiFixed("XYZ"u8, 3);
                     buffer.Commit();
                 });
         }
@@ -70,11 +70,11 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     scoped var buffer = new BufferWriter(writer);
-                    buffer.WriteAsciiFixed((ReadOnlySpan<char>)"ABC", 3);
+                    buffer.WriteAsciiFixed("ABC"u8, 3);
                     using (buffer.BeginLengthPrefix())
                     {
-                        buffer.WriteAsciiFixed((ReadOnlySpan<char>)"DEF123", 6);
-                        buffer.WriteAscii((ReadOnlySpan<char>)"GHI_456");
+                        buffer.WriteAsciiFixed("DEF123"u8, 6);
+                        buffer.WriteAscii("GHI_456"u8);
                     }
                     buffer.Commit();
                 });

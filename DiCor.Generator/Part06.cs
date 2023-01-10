@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    public class Part06 : DocBook
+    internal class Part06 : DocBook
     {
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part06/part06.xml";
 
@@ -90,7 +90,7 @@ namespace DiCor.Generator
             return new(
                 GetValue(row.ElementAt(0)),
                 $"{cidValues.Title} ({cid})",
-                string.IsNullOrEmpty(cidValues.Keyword) ? string.Empty : $"{cidValues.Keyword}{cid}",
+                string.IsNullOrEmpty(cidValues.Keyword) ? string.Empty : $"{cidValues.Keyword}_{cid}",
                 "ContextGroupName");
         }
     }

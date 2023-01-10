@@ -25,9 +25,10 @@ namespace DiCor
         None,
         Image,
         PresentationState,
-        StructuredReport,
+        SRDocument,
         Waveform,
-        Document,
+        EncapsulatedDocument,
+        Spectroscopy,
         Raw,
         Other,
         Private,
@@ -36,39 +37,51 @@ namespace DiCor
 
     public readonly partial struct UidDetails : IEquatable<UidDetails>
     {
-        public static partial UidDetails Get(Uid uid);
-
         public Uid Uid { get; }
         public string Name { get; }
         public UidType Type { get; }
         public StorageCategory StorageCategory { get; }
         public bool IsRetired { get; }
 
-        private UidDetails(Uid uid, string name, UidType type, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
+        private UidDetails(Uid uid, string? name = null, UidType type = UidType.Other, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
         {
             Uid = uid;
-            Name = name;
+            Name = name ?? string.Empty;
             Type = type;
             StorageCategory = storageCategory;
             IsRetired = isRetired;
         }
 
+        public static partial UidDetails Get(Uid uid);
+
         public override string ToString()
-            => $"{(IsRetired ? "*" : "")}{Type}: {Name} [{Uid}]";
+        {
+            return $"{(IsRetired ? "*" : "")}{Type}: {Name} [{Uid}]";
+        }
 
         public override int GetHashCode()
-            => Uid.GetHashCode();
+        {
+            return Uid.GetHashCode();
+        }
 
         public override bool Equals(object? obj)
-            => obj is UidDetails uid && Equals(uid);
+        {
+            return obj is UidDetails uid && Equals(uid);
+        }
 
         public bool Equals(UidDetails other)
-            => this == other;
+        {
+            return this == other;
+        }
 
         public static bool operator ==(UidDetails left, UidDetails right)
-            => left.Uid.Equals(right.Uid);
+        {
+            return left.Uid.Equals(right.Uid);
+        }
 
         public static bool operator !=(UidDetails left, UidDetails right)
-            => !(left == right);
+        {
+            return !(left == right);
+        }
     }
 }

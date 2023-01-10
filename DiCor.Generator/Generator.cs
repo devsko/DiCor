@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.Threading;
 namespace DiCor.Generator
 {
     [Generator]
-    public class Generator : ISourceGenerator
+    internal class Generator : ISourceGenerator
     {
         private static readonly HttpClient s_httpClient = new();
         internal static JoinableTaskFactory JoinableTaskFactory { get; } = new(new JoinableTaskContext());
@@ -104,10 +104,15 @@ namespace DiCor.Generator
                     partial struct UidDetails
                     {
                         public static partial UidDetails Get(Uid uid)
-                            => s_uids.TryGetValue(uid.Value, out UidDetails details) ? details : new UidDetails(uid, string.Empty, UidType.Other);
+                            => s_dictionary.TryGetValue(uid.Value, out UidDetails details) ? details : new UidDetails(uid);
 
-                        private static readonly FrozenDictionary<string, UidDetails> s_uids = new Dictionary<string, UidDetails>
+                        private static readonly FrozenDictionary<byte[], UidDetails> s_dictionary = InitializeDictionary(new Dictionary<byte[], UidDetails>());
+
+                        private static FrozenDictionary<byte[], UidDetails> InitializeDictionary(Dictionary<byte[], UidDetails> dictionary)
                         {
+                            void Add(Uid uid, string name, UidType type, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
+                                => dictionary.Add(uid.Value, new UidDetails(uid, name, type, storageCategory, isRetired));
+
                 """);
 
             uids.AppendLine("""
@@ -122,20 +127,19 @@ namespace DiCor.Generator
                 context.CancellationToken.ThrowIfCancellationRequested();
 
                 StorageCategory storageCategory = values.StorageCategory;
-                string category = storageCategory != StorageCategory.None ? $", storageCategory: StorageCategory.{storageCategory}" : "";
+                string category = storageCategory != StorageCategory.None ? $", StorageCategory.{storageCategory}" : "";
                 string isRetired = values.IsRetired ? ", isRetired: true" : "";
                 string symbol = values.Symbol();
                 string uidConstant = $"Uid.{symbol}";
-                string uidValue = $"\"{values.Value}\"";
-                string newUid = $"new Uid({uidValue}, false)";
+                string newUid = $"new Uid(\"{values.Value}\"u8, false)";
 
                 if (values.IsRetired)
                 {
-                    AppendNewUidDetails(newUid, uidValue);
+                    AppendNewUidDetails(newUid);
                 }
                 else
                 {
-                    AppendNewUidDetails(uidConstant, $"{uidConstant}.Value");
+                    AppendNewUidDetails(uidConstant);
                     uids.Append(' ', 8)
                         .Append("///<summary>").Append(values.Type).Append(": ").Append(values.Name).AppendLine("</summary>")
                         .Append(' ', 8)
@@ -144,19 +148,17 @@ namespace DiCor.Generator
                         .AppendLine(";");
                 }
 
-                void AppendNewUidDetails(string uid, string uidValue)
+                void AppendNewUidDetails(string uid)
                     => hashSet
                         .Append(' ', 12)
-                        .Append("{ ")
-                        .Append(uidValue)
-                        .Append(", ")
-                        .Append("new(").Append(uid).Append(", \"").Append(values.Name)
-                        .Append("\", UidType.").Append(values.Type).Append(category).Append(isRetired).Append(')')
-                        .AppendLine(" },");
+                        .Append("Add(").Append(uid).Append(", \"")
+                        .Append(values.Name).Append("\", UidType.").Append(values.Type)
+                        .Append(category).Append(isRetired).AppendLine(");");
             }
 
             hashSet.AppendLine("""
-                    }.ToFrozenDictionary();
+                        return dictionary.ToFrozenDictionary();
+                    }
                 }
             }
             """);
