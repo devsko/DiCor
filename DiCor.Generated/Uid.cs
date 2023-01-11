@@ -28,7 +28,7 @@ namespace DiCor
             get
             {
                 Span<byte> span = Value.AsSpan();
-                if (Value is not { Length: > 0 and <= 64 } || span.IndexOfAnyExcept(".0123456789"u8) != -1)
+                if (span.Length is 0 or > 64 || span.IndexOfAnyExcept(".0123456789"u8) != -1)
                 {
                     return false;
                 }
