@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Xunit;
 
 namespace DiCor.Test
@@ -6,7 +7,7 @@ namespace DiCor.Test
     public class UidTests
     {
         [Fact]
-        public void UidConstructor()
+        public void Constructor()
         {
             Uid defaultUid = default;
             Uid newUid = new();
@@ -51,7 +52,7 @@ namespace DiCor.Test
         }
 
         [Fact]
-        public void UidValueIsUnique()
+        public void ValueIsUnique()
         {
             Uid uid = Uid.ImplicitVRLittleEndian;
             Uid.Details? uidDetails = uid.GetDetails();
@@ -82,7 +83,39 @@ namespace DiCor.Test
         }
 
         [Fact]
-        public void GenerateNewUid()
+        public void Validation()
+        {
+            Assert.False(new Uid(""u8, false).IsValid);
+            Assert.False(new Uid("x"u8, false).IsValid);
+            Assert.False(new Uid("."u8, false).IsValid);
+            Assert.False(new Uid("1..1"u8, false).IsValid);
+            Assert.False(new Uid("01"u8, false).IsValid);
+            Assert.False(new Uid("01.1.1"u8, false).IsValid);
+            Assert.False(new Uid("1.01.1"u8, false).IsValid);
+            Assert.False(new Uid("1.1.01"u8, false).IsValid);
+            Assert.False(new Uid("1.1."u8, false).IsValid);
+            Assert.False(new Uid(".1.1"u8, false).IsValid);
+            Assert.False(new Uid(Enumerable.Repeat((byte)1, 65).ToArray(), false).IsValid);
+
+            Assert.True(new Uid("0"u8, false).IsValid);
+            Assert.True(new Uid("1"u8, false).IsValid);
+            Assert.True(new Uid("2"u8, false).IsValid);
+            Assert.True(new Uid("3"u8, false).IsValid);
+            Assert.True(new Uid("4"u8, false).IsValid);
+            Assert.True(new Uid("5"u8, false).IsValid);
+            Assert.True(new Uid("6"u8, false).IsValid);
+            Assert.True(new Uid("7"u8, false).IsValid);
+            Assert.True(new Uid("8"u8, false).IsValid);
+            Assert.True(new Uid("9"u8, false).IsValid);
+            Assert.True(new Uid("1.10.1"u8, false).IsValid);
+            Assert.True(new Uid("0.0.0"u8, false).IsValid);
+            Assert.True(new Uid("1.10.1"u8, false).IsValid);
+            Assert.True(new Uid("10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10"u8, false).IsValid);
+            Assert.True(new Uid(Enumerable.Repeat((byte)'1', 64).ToArray(), false).IsValid);
+        }
+
+        [Fact]
+        public void NewUid()
         {
 
             Uid uid = Uid.NewUid();

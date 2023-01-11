@@ -22,7 +22,35 @@ namespace DiCor
             }
         }
 
-        public bool IsValid => Value is { Length: > 0 and <= 64 } && Value.AsSpan().IndexOfAnyExcept(".0123456789"u8) == -1;
+        // PS 3.5 - 9.1 UID Encoding Rules
+        public bool IsValid
+        {
+            get
+            {
+                Span<byte> span = Value.AsSpan();
+                if (Value is not { Length: > 0 and <= 64 } || span.IndexOfAnyExcept(".0123456789"u8) != -1)
+                {
+                    return false;
+                }
+
+                int index;
+                while ((index = span.IndexOf((byte)'.')) != -1)
+                {
+                    if (!IsValidComponent(span.Slice(0, index)))
+                    {
+                        return false;
+                    }
+                    span = span.Slice(index + 1);
+                }
+
+                return IsValidComponent(span);
+
+                static bool IsValidComponent(Span<byte> component)
+                {
+                    return component.Length > 0 && (component.Length == 1 || component[0] != (byte)'0');
+                }
+            }
+        }
 
         public bool IsDicomDefined => Value.AsSpan().StartsWith(DicomOrgRoot);
 
