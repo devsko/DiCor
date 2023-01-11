@@ -90,7 +90,7 @@ namespace DiCor.Net.UpperLayer
 
                     _buffer.Write(Pdu.SubItemTypeImplementationClassUid); // Item-type
                     _buffer.Reserved(1);
-                    _buffer.Write(Implementation.ClassUid); // Implementation-class-uid
+                    _buffer.Write(Uid.Implementation.ClassUid); // Implementation-class-uid
 
                     // PS3.7 - D.3.3.3.1 Asynchronous Operations Window
 
@@ -127,7 +127,7 @@ namespace DiCor.Net.UpperLayer
 
                     _buffer.Write(Pdu.SubItemTypeImplementationVersionName); // Item-type
                     _buffer.Reserved(1);
-                    _buffer.WriteAscii(Implementation.VersionName); // Implementation-version-name
+                    _buffer.WriteAscii(Uid.Implementation.VersionName); // Implementation-version-name
 
                     // TODO PS3.7 - D.3.3.5.1 SOP Class Extended Negotiation Sub-Item 0x56
                     // TODO PS3.7 - D.3.3.6.1 SOP Class Common Extended Negotiation Sub-Item 0x57

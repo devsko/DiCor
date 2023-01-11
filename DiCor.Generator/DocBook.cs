@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,7 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace DiCor.Generator
 {
@@ -23,9 +25,9 @@ namespace DiCor.Generator
         protected static readonly XNamespace Ns = XNamespace.Get("http://docbook.org/ns/docbook");
 
         private readonly HttpClient _httpClient;
-        protected readonly GeneratorExecutionContext _context;
+        protected readonly SourceProductionContext _context;
         private readonly Settings _settings;
-        private readonly string _path;
+        private readonly AdditionalText _text;
         private readonly string _uri;
 
         private XmlAndTitle? _xml;
@@ -34,13 +36,12 @@ namespace DiCor.Generator
 
         public XmlReader? Reader => _xml?.Xml;
 
-        public DocBook(HttpClient httpClient, string uri, GeneratorExecutionContext context, Settings settings)
+        public DocBook(HttpClient httpClient, string uri, SourceProductionContext context, ImmutableArray<AdditionalText> docbookTexts, Settings settings)
         {
             _httpClient = httpClient;
             _context = context;
             _settings = settings;
-            AdditionalText text = context.AdditionalFiles.First(text => Path.GetFileName(text.Path).Equals($"{GetType().Name}.xml", StringComparison.OrdinalIgnoreCase));
-            _path = text.Path;
+            _text = docbookTexts.First(text => Path.GetFileName(text.Path).Equals($"{GetType().Name}.xml", StringComparison.OrdinalIgnoreCase));
             _uri = uri;
         }
 
@@ -49,22 +50,21 @@ namespace DiCor.Generator
             bool download = false;
             XmlAndTitle? fileXml = null;
 
-            if (!File.Exists(_path))
+            SourceText? source = _text.GetText(_context.CancellationToken);
+            if (source is null)
             {
-                _context.ReportDiagnostic(Diag.InvalidXml(_path, "File not found."));
+                _context.ReportDiagnostic(Diag.InvalidXml(_text.Path, "File not found."));
                 download = true;
             }
             else
             {
-                Stream stream = File.OpenRead(_path);
                 try
                 {
-                    fileXml = await LoadXmlAsync(stream).ConfigureAwait(false);
+                    fileXml = await LoadXmlAsync(new StringReader(source.ToString()));
                 }
                 catch (XmlException ex)
                 {
-                    stream.Dispose();
-                    _context.ReportDiagnostic(Diag.InvalidXml(_path, ex));
+                    _context.ReportDiagnostic(Diag.InvalidXml(_text.Path, ex));
                     download = true;
                 }
             }
@@ -72,12 +72,12 @@ namespace DiCor.Generator
             if (download || _settings.CheckForUpdate)
             {
                 FileSaveStream saveStream = await StartDownloadAsync().ConfigureAwait(false);
-                XmlAndTitle downloadXml = await LoadXmlAsync(saveStream).ConfigureAwait(false);
+                XmlAndTitle downloadXml = await LoadXmlAsync(new StreamReader(saveStream)).ConfigureAwait(false);
 
                 if (download || fileXml?.Title != downloadXml.Title)
                 {
                     fileXml?.Dispose();
-                    _context.ReportDiagnostic(Diag.ResourceOutdated(_path, _uri));
+                    _context.ReportDiagnostic(Diag.ResourceOutdated(_text.Path, _uri));
                     await saveStream.StopBufferingAsync().ConfigureAwait(false);
                     _xml = downloadXml;
 
@@ -100,12 +100,12 @@ namespace DiCor.Generator
 
             Stream content = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-            return new FileSaveStream(content, _path);
+            return new FileSaveStream(content, _text.Path);
         }
 
-        private async Task<XmlAndTitle> LoadXmlAsync(Stream stream)
+        private async Task<XmlAndTitle> LoadXmlAsync(TextReader textReader)
         {
-            XmlReader xml = XmlReader.Create(stream, new XmlReaderSettings
+            XmlReader xml = XmlReader.Create(textReader, new XmlReaderSettings
             {
                 CloseInput = true,
                 Async = true,
@@ -120,11 +120,11 @@ namespace DiCor.Generator
                 if (xml.NodeType == XmlNodeType.Element && xml.LocalName == "subtitle")
                 {
                     string title = await xml.ReadElementContentAsStringAsync().ConfigureAwait(false);
-                    return new(xml, title);
+                    return new XmlAndTitle(xml, title);
                 }
             }
 
-            return new(xml, string.Empty);
+            return new XmlAndTitle(xml, string.Empty);
         }
 
         protected virtual void Dispose(bool disposing)

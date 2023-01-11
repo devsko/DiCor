@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -14,13 +15,10 @@ using Microsoft.VisualStudio.Threading;
 namespace DiCor.Generator
 {
     [Generator]
-    internal class Generator : ISourceGenerator
+    internal class Generator : IIncrementalGenerator
     {
         private static readonly HttpClient s_httpClient = new();
         internal static JoinableTaskFactory JoinableTaskFactory { get; } = new(new JoinableTaskContext());
-
-        public static Assembly Assembly => typeof(Generator).Assembly;
-        public static string AssemblyName => Assembly.GetName().Name ?? string.Empty;
 
         public Dictionary<int, CidValues>? CidTable { get; set; }
         public UidValues[]? TableA1 { get; set; }
@@ -32,45 +30,52 @@ namespace DiCor.Generator
         public TagValues[]? TableE11 { get; set; }
         public TagValues[]? TableE21 { get; set; }
 
-        public void Initialize(GeneratorInitializationContext context)
+        public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             //if (!System.Diagnostics.Debugger.IsAttached)
             //    System.Diagnostics.Debugger.Launch();
+
+            IncrementalValueProvider<ImmutableArray<AdditionalText>> docbooksProvider = context
+                .AdditionalTextsProvider
+                .Where(static text => Path.GetDirectoryName(text.Path).EndsWith("\\docbook", StringComparison.OrdinalIgnoreCase))
+                .Collect();
+
+            context.RegisterSourceOutput(docbooksProvider, (context, docbookTexts) =>
+            {
+                Settings settings;
+                AdditionalText? settingsText = docbookTexts
+                    .FirstOrDefault(text => Path.GetFileName(text.Path).Equals("settings.json", StringComparison.OrdinalIgnoreCase));
+                if (settingsText is null)
+                {
+                    settings = new Settings();
+                }
+                else
+                {
+                    string? settingsJson = settingsText.GetText(context.CancellationToken)?.ToString();
+                    settings = (settingsJson is null ? null : JsonSerializer.Deserialize<Settings>(settingsJson)) ?? new Settings();
+                    settings.CheckForUpdate = settings.LastUpdateCheck.AddHours(1) < DateTime.UtcNow;
+                }
+
+                JoinableTaskFactory.Run(() => ExecuteAsync(context, docbookTexts, settings), JoinableTaskCreationOptions.LongRunning);
+
+                if (settingsText is not null)
+                    File.WriteAllText(settingsText.Path, JsonSerializer.Serialize(settings));
+            });
         }
 
-        public void Execute(GeneratorExecutionContext context)
+        private async Task ExecuteAsync(SourceProductionContext context, ImmutableArray<AdditionalText> docbookTexts, Settings settings)
         {
-            Settings? settings;
-            AdditionalText? settingsText = context
-                .AdditionalFiles
-                .FirstOrDefault(text => Path.GetFileName(text.Path).Equals("settings.json", StringComparison.OrdinalIgnoreCase));
-            if (settingsText is null)
-                settings = new Settings();
-            else
+            try
             {
-                string? settingsJson = settingsText.GetText()?.ToString();
-                settings = (settingsJson is null ? null : JsonSerializer.Deserialize<Settings>(settingsJson)) ?? new Settings();
-                settings.CheckForUpdate = settings.LastUpdateCheck.AddHours(1) < DateTime.UtcNow;
-            }
-
-            JoinableTaskFactory.Run(() => ExecuteAsync(this, context, settings), JoinableTaskCreationOptions.LongRunning);
-
-            if (settingsText is not null)
-                File.WriteAllText(settingsText.Path, JsonSerializer.Serialize(settings));
-
-            static async Task ExecuteAsync(Generator generator, GeneratorExecutionContext context, Settings settings)
-            {
-                try
+                using (var part16 = new Part16(s_httpClient, context, docbookTexts, settings))
+                using (var part06 = new Part06(s_httpClient, context, docbookTexts, settings))
+                using (var part07 = new Part07(s_httpClient, context, docbookTexts, settings))
                 {
-                    using (var part16 = new Part16(s_httpClient, context, settings))
-                    using (var part06 = new Part06(s_httpClient, context, settings))
-                    using (var part07 = new Part07(s_httpClient, context, settings))
-                    {
-                        await part16.GetSectionsByIdAsync(generator).ConfigureAwait(false);
-                        await part06.GetTablesAsync(generator).ConfigureAwait(false);
-                        await part07.GetTablesAsync(generator).ConfigureAwait(false);
+                    await part16.GetSectionsByIdAsync(this).ConfigureAwait(false);
+                    await part06.GetTablesAsync(this).ConfigureAwait(false);
+                    await part07.GetTablesAsync(this).ConfigureAwait(false);
 
-                        string header = $"""
+                    string header = $"""
                             // Generated code
                             // {part06.Title} ({Part06.Uri})
                             // {part07.Title} ({Part07.Uri})
@@ -78,51 +83,52 @@ namespace DiCor.Generator
 
                             """ + Environment.NewLine;
 
-                        CreateCode(generator, context, header);
-                    }
-                    if (settings.CheckForUpdate)
-                        settings.LastUpdateCheck = DateTime.UtcNow;
+                    CreateCode(context, header);
                 }
-                catch (Exception ex)
-                {
-                    context.ReportDiagnostic(Diag.UnexpectedException(ex));
-                }
+                if (settings.CheckForUpdate)
+                    settings.LastUpdateCheck = DateTime.UtcNow;
+            }
+            catch (Exception ex)
+            {
+                context.ReportDiagnostic(Diag.UnexpectedException(ex));
             }
         }
 
-        private static void CreateCode(Generator generator, GeneratorExecutionContext context, string header)
+        private void CreateCode(SourceProductionContext context, string header)
         {
-            var hashSet = new StringBuilder(header);
+            var details = new StringBuilder(header);
             var uids = new StringBuilder(header);
 
-            hashSet.AppendLine("""
+            details.AppendLine("""
+                using System;
                 using System.Collections.Frozen;
                 using System.Collections.Generic;
                 
                 namespace DiCor
                 {
-                    partial struct UidDetails
+                    partial struct Uid
                     {
-                        public static partial UidDetails Get(Uid uid)
-                            => s_dictionary.TryGetValue(uid.Value, out UidDetails details) ? details : new UidDetails(uid);
+                        public partial Details? GetDetails()
+                            => s_dictionary.TryGetValue(this, out Details details) ? details : null;
 
-                        private static readonly FrozenDictionary<byte[], UidDetails> s_dictionary = InitializeDictionary(new Dictionary<byte[], UidDetails>());
+                        private static readonly FrozenDictionary<Uid, Details> s_dictionary = InitializeDictionary();
 
-                        private static FrozenDictionary<byte[], UidDetails> InitializeDictionary(Dictionary<byte[], UidDetails> dictionary)
+                        private static FrozenDictionary<Uid, Details> InitializeDictionary()
                         {
-                            void Add(Uid uid, string name, UidType type, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
-                                => dictionary.Add(uid.Value, new UidDetails(uid, name, type, storageCategory, isRetired));
+                            return Enumerate().ToFrozenDictionary();
 
+                            IEnumerable<KeyValuePair<Uid, Details>> Enumerate()
+                            {
                 """);
 
             uids.AppendLine("""
                 namespace DiCor
                 {
-                    partial record struct Uid
+                    partial struct Uid
                     {
                 """);
 
-            foreach (UidValues values in generator.TableA1.Concat(generator.TableA3))
+            foreach (UidValues values in TableA1.Concat(TableA3))
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
 
@@ -149,15 +155,15 @@ namespace DiCor.Generator
                 }
 
                 void AppendNewUidDetails(string uid)
-                    => hashSet
-                        .Append(' ', 12)
-                        .Append("Add(").Append(uid).Append(", \"")
+                    => details
+                        .Append(' ', 16)
+                        .Append("yield return new(").Append(uid).Append(", ").Append("new(\"")
                         .Append(values.Name).Append("\", UidType.").Append(values.Type)
-                        .Append(category).Append(isRetired).AppendLine(");");
+                        .Append(category).Append(isRetired).AppendLine("));");
             }
 
-            hashSet.AppendLine("""
-                        return dictionary.ToFrozenDictionary();
+            details.AppendLine("""
+                        }
                     }
                 }
             }
@@ -168,7 +174,7 @@ namespace DiCor.Generator
             """);
 
             context.AddSource("Uid.Uids.g.cs", SourceText.From(uids.ToString(), Encoding.UTF8));
-            context.AddSource("UidDetails.Dictionary.g.cs", SourceText.From(hashSet.ToString(), Encoding.UTF8));
+            context.AddSource("Uid.Details.g.cs", SourceText.From(details.ToString(), Encoding.UTF8));
         }
     }
 }

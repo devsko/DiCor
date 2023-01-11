@@ -148,7 +148,7 @@ namespace DiCor.Net.UpperLayer
                 switch (type)
                 {
                     case Pdu.ItemTypeApplicationContext:
-                        _input.TryRead(length, out Uid applicationContext); // Item-length, Application-context-name
+                        _input.TryRead(length, out _); // Item-length, Application-context-name
                         break;
 
                     case Pdu.ItemTypePresentationContextAc:

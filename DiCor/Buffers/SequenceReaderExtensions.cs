@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Text;
 using DiCor;
 
 namespace System.Buffers
@@ -80,14 +79,13 @@ namespace System.Buffers
 
             static bool TryReadAsciiMultiSegment(ref SequenceReader<byte> reader, int length, [NotNullWhen(true)] out byte[]? value)
             {
-                byte[] buffer = new byte[length];
+                Span<byte> buffer = stackalloc byte[length];
                 if (!reader.TryCopyTo(buffer))
                 {
                     value = null;
                     return false;
                 }
-                Span<byte> trim = buffer.AsSpan().TrimEnd((byte)' ');
-                value = trim.Length == buffer.Length ? buffer : trim.ToArray();
+                value = buffer.TrimEnd((byte)' ').ToArray();
                 reader.Advance(length);
                 return true;
             }

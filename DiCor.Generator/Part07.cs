@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
@@ -11,8 +12,8 @@ namespace DiCor.Generator
     {
         public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part07/part07.xml";
 
-        public Part07(HttpClient httpClient, GeneratorExecutionContext context, Settings settings)
-            : base(httpClient, Uri, context, settings)
+        public Part07(HttpClient httpClient, SourceProductionContext context, ImmutableArray<AdditionalText> docbookTexts, Settings settings)
+            : base(httpClient, Uri, context, docbookTexts, settings)
         { }
 
         public async Task GetTablesAsync(Generator generator)

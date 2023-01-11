@@ -1,12 +1,47 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace DiCor
 {
-    public readonly partial record struct Uid
+    [DebuggerDisplay("{DebuggerDisplay(),nq}")]
+    public readonly partial struct Uid : IEquatable<Uid>
     {
+        public byte[] Value { get; }
+
+        public Uid(ReadOnlySpan<byte> value, bool validate = true)
+        {
+            Value = value.ToArray();
+
+            // TODO .NET 8 ArgumentExcption.ThrowIf...
+            if (validate & !IsValid)
+            {
+                throw new ArgumentException($"[{Encoding.ASCII.GetString(Value.AsSpan())}] is not a valid UID.", nameof(value));
+            }
+        }
+
+        public bool IsValid => Value is { Length: > 0 and <= 64 } && Value.AsSpan().IndexOfAnyExcept(".0123456789"u8) == -1;
+
+        public bool IsDicomDefined => Value.AsSpan().StartsWith(DicomOrgRoot);
+
+        private string? DebuggerDisplay()
+        {
+            string value = $"[{Encoding.ASCII.GetString(Value.AsSpan())}]";
+            if (!IsValid)
+            {
+                return $"INVALID {value}";
+            }
+            Details? details = GetDetails();
+            if (details is null)
+            {
+                return $"* {value}";
+            }
+
+            return $"{(details.Value.IsRetired ? "RETIRED " : "")} {value} {details.Value.Type}: {details.Value.Name}";
+        }
+
         // PS3.5 - 9 Unique Identifiers (UIDs)
         public static ReadOnlySpan<byte> DicomOrgRoot => "1.2.840.10008."u8;
 
@@ -52,28 +87,5 @@ namespace DiCor
 
             return new Uid(value.Slice(0, UUidRoot.Length + bytesWritten));
         }
-
-        private static ReadOnlySpan<byte> AllowedChars => ".0123456789"u8;
-
-        private static bool IsValid(ReadOnlySpan<byte> value)
-            // TODO .NET 8 IndexOfAnyValues
-            => value.Length > 0 && value.Length <= 64 && value.IndexOfAnyExcept(AllowedChars) == -1;
-
-        public byte[] Value { get; }
-
-        public Uid(ReadOnlySpan<byte> value, bool validate = true)
-        {
-            // TODO .NET 8 ArgumentExcption.ThrowIf...
-            if (validate & !IsValid(value))
-            {
-                throw new ArgumentException($"{value.ToString()} is not a valid uid.");
-            }
-
-            Value = value.ToArray();
-        }
-
-        public bool IsDicomDefined => Value.AsSpan().StartsWith(DicomOrgRoot);
-
-        public override string? ToString() =>  Encoding.ASCII.GetString(Value);
     }
 }
