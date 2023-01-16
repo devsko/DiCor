@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DiCor
 {
-    [DebuggerDisplay("{DebuggerDisplay(),nq}")]
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public readonly partial struct Uid : IEquatable<Uid>
     {
         public byte[] Value { get; }
@@ -54,20 +54,24 @@ namespace DiCor
 
         public bool IsDicomDefined => Value.AsSpan().StartsWith(DicomOrgRoot);
 
-        private string? DebuggerDisplay()
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private string? DebuggerDisplay
         {
-            string value = $"[{Encoding.ASCII.GetString(Value.AsSpan())}]";
-            if (!IsValid)
+            get
             {
-                return $"INVALID {value}";
-            }
-            Details? details = GetDetails();
-            if (details is null)
-            {
-                return $"* {value}";
-            }
+                string value = $"[{Encoding.ASCII.GetString(Value.AsSpan())}]";
+                if (!IsValid)
+                {
+                    return $"INVALID {value}";
+                }
+                Details? details = GetDetails();
+                if (details is null)
+                {
+                    return $"* {value}";
+                }
 
-            return $"{(details.Value.IsRetired ? "RETIRED " : "")} {value} {details.Value.Type}: {details.Value.Name}";
+                return $"{(details.Value.IsRetired ? "RETIRED " : "")} {value} {details.Value.Type}: {details.Value.Name}";
+            }
         }
 
         // PS3.5 - 9 Unique Identifiers (UIDs)

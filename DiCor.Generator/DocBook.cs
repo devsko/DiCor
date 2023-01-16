@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,7 +11,6 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
 namespace DiCor.Generator
 {
@@ -27,71 +26,97 @@ namespace DiCor.Generator
         private readonly HttpClient _httpClient;
         protected readonly SourceProductionContext _context;
         private readonly Settings _settings;
-        private readonly AdditionalText _text;
-        private readonly string _uri;
+        private readonly Task _initialization;
 
         private XmlAndTitle? _xml;
+
+        public Task Initialization => _initialization;
 
         public string? Title => _xml?.Title;
 
         public XmlReader? Reader => _xml?.Xml;
 
-        public DocBook(HttpClient httpClient, string uri, SourceProductionContext context, ImmutableArray<AdditionalText> docbookTexts, Settings settings)
+        public string Name => GetType().Name;
+
+        public string Uri => $"http://medical.nema.org/medical/dicom/current/source/docbook/{Name}/{Name}.xml";
+
+        public DocBook(HttpClient httpClient, SourceProductionContext context, Settings settings)
         {
             _httpClient = httpClient;
             _context = context;
             _settings = settings;
-            _text = docbookTexts.First(text => Path.GetFileName(text.Path).Equals($"{GetType().Name}.xml", StringComparison.OrdinalIgnoreCase));
-            _uri = uri;
+            _initialization = InitializeAsync();
         }
 
-        protected async Task InitializeAsync()
+        private async Task InitializeAsync()
         {
-            bool download = false;
-            XmlAndTitle? fileXml = null;
+            Stopwatch watch = Stopwatch.StartNew();
+            Logger.Log($"{Name} starting initialization");
 
-            SourceText? source = _text.GetText(_context.CancellationToken);
-            if (source is null)
+            string path = Path.Combine(_settings.DocBookDirectory, $"{Name}.xml");
+            int retries = 0;
+
+        Start:
+            try
             {
-                _context.ReportDiagnostic(Diag.InvalidXml(_text.Path, "File not found."));
-                download = true;
+                _xml = await LoadXmlAsync(File.OpenRead(path));
+                Logger.Log($"XML loaded from {path}");
             }
-            else
+            catch (XmlException ex)
             {
-                try
+                Logger.Log(path, ex);
+                _context.ReportDiagnostic(Diag.InvalidXml(path, ex));
+            }
+            catch (FileNotFoundException ex)
+            {
+                Logger.Log(path, ex);
+                _context.ReportDiagnostic(Diag.InvalidXml(path, ex));
+            }
+            catch (IOException ex)
+            {
+                Logger.Log(path, ex);
+                if (++retries <= 5)
                 {
-                    fileXml = await LoadXmlAsync(new StringReader(source.ToString()));
-                }
-                catch (XmlException ex)
-                {
-                    _context.ReportDiagnostic(Diag.InvalidXml(_text.Path, ex));
-                    download = true;
+                    Logger.Log("Retry in 5 seconds");
+                    await Task.Delay(5_000).ConfigureAwait(false);
+                    goto Start;
                 }
             }
 
-            if (download || _settings.CheckForUpdate)
+            bool checkForUpdates = _settings.ShouldCheckUpdates || _xml is null;
+            if (checkForUpdates)
             {
-                FileSaveStream saveStream = await StartDownloadAsync().ConfigureAwait(false);
-                XmlAndTitle downloadXml = await LoadXmlAsync(new StreamReader(saveStream)).ConfigureAwait(false);
+                Logger.Log($"{Name} checking for updates");
 
-                if (download || fileXml?.Title != downloadXml.Title)
+                string uri = Uri;
+                FileSaveStream saveStream = await DownloadAsync(uri, path).ConfigureAwait(false);
+                XmlAndTitle downloadXml = await LoadXmlAsync(saveStream).ConfigureAwait(false);
+                Logger.Log($"XML loaded from {uri}");
+
+                if (_xml is null || _xml.Title != downloadXml.Title)
                 {
-                    fileXml?.Dispose();
-                    _context.ReportDiagnostic(Diag.ResourceOutdated(_text.Path, _uri));
+                    Logger.Log($"{Name} update found");
+
+                    _context.ReportDiagnostic(Diag.ResourceOutdated(path, uri));
+
+                    _xml?.Dispose();
                     await saveStream.StopBufferingAsync().ConfigureAwait(false);
                     _xml = downloadXml;
-
-                    return;
                 }
-                downloadXml.Dispose();
-            }
+                else
+                {
+                    Logger.Log($"{Name} is up to date");
 
-            _xml = fileXml;
+                    downloadXml.Dispose();
+                }
+            }
+            Logger.Log($"{Name} initialization complete ({watch.ElapsedMilliseconds}ms)");
+            _settings.DidCheckUpdates(checkForUpdates);
         }
 
-        private async Task<FileSaveStream> StartDownloadAsync()
+        private async Task<FileSaveStream> DownloadAsync(string uri, string path)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, _uri);
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
             HttpResponseMessage response = await _httpClient
                     .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _context.CancellationToken)
                     .ConfigureAwait(false);
@@ -100,12 +125,12 @@ namespace DiCor.Generator
 
             Stream content = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-            return new FileSaveStream(content, _text.Path);
+            return new FileSaveStream(content, path);
         }
 
-        private async Task<XmlAndTitle> LoadXmlAsync(TextReader textReader)
+        private async Task<XmlAndTitle> LoadXmlAsync(Stream stream)
         {
-            XmlReader xml = XmlReader.Create(textReader, new XmlReaderSettings
+            XmlReader xml = XmlReader.Create(stream, new XmlReaderSettings
             {
                 CloseInput = true,
                 Async = true,

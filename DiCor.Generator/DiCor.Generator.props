@@ -1,0 +1,32 @@
+<Project>
+
+  <Choose>
+    <When Condition="'$(DesignTimeBuild)' == 'true'">
+      <PropertyGroup>
+        <CheckForUpdates>false</CheckForUpdates>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <CheckForUpdates>true</CheckForUpdates>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+  <PropertyGroup>
+    <DocBookDirectory>docbook\</DocBookDirectory>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <CompilerVisibleProperty Include="CheckForUpdates" />
+    <CompilerVisibleProperty Include="DocBookDirectory" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="docbook\state" />
+    <None Include="docbook\part06.xml" />
+    <None Include="docbook\part07.xml" />
+    <None Include="docbook\part16.xml" />
+  </ItemGroup>
+
+</Project>

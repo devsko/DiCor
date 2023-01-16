@@ -6,7 +6,7 @@ namespace DiCor.Performance
     {
         public static void Main(string[] args)
         {
-            BenchmarkRunner.Run<BufferWriterTests>();
+            BenchmarkRunner.Run<Net.UpperLayer.BufferWriterTests>();
         }
     }
 }

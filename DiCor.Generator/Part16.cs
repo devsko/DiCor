@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -13,15 +12,13 @@ namespace DiCor.Generator
 {
     internal class Part16 : DocBook
     {
-        public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part16/part16.xml";
-
-        public Part16(HttpClient httpClient, SourceProductionContext context, ImmutableArray<AdditionalText> docbookTexts, Settings settings)
-            : base(httpClient, Uri, context, docbookTexts, settings)
+        public Part16(HttpClient httpClient, SourceProductionContext context, Settings settings)
+            : base(httpClient, context, settings)
         { }
 
-        public async Task GetSectionsByIdAsync(Generator generator)
+        public async Task GetSectionsByIdAsync(DocBookData data)
         {
-            await InitializeAsync().ConfigureAwait(false);
+            await Initialization.ConfigureAwait(false);
 
             Debug.Assert(Reader != null);
 
@@ -53,7 +50,7 @@ namespace DiCor.Generator
                 }
             }
 
-            generator.CidTable = sections;
+            data.CidTable = sections;
         }
     }
 }

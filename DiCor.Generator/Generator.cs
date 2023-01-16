@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -16,89 +13,108 @@ namespace DiCor.Generator
     [Generator]
     internal class Generator : IIncrementalGenerator
     {
-        private static readonly HttpClient s_httpClient = new();
         internal static JoinableTaskFactory JoinableTaskFactory { get; } = new(new JoinableTaskContext());
+        private static readonly HttpClient s_httpClient = new();
 
-        public Dictionary<int, CidValues>? CidTable { get; set; }
-        public UidValues[]? TableA1 { get; set; }
-        public UidValues[]? TableA3 { get; set; }
-        public TagValues[]? Table61 { get; set; }
-        public TagValues[]? Table71 { get; set; }
-        public TagValues[]? Table81 { get; set; }
-        public TagValues[]? Table91 { get; set; }
-        public TagValues[]? TableE11 { get; set; }
-        public TagValues[]? TableE21 { get; set; }
+        public Generator()
+        {
+            const string path = "C:\\repos\\Logs\\Dicor.Generator\\log.txt";
+
+            Logger.Initialize(path);
+        }
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            //if (!System.Diagnostics.Debugger.IsAttached)
-            //    System.Diagnostics.Debugger.Launch();
-
-            IncrementalValueProvider<ImmutableArray<AdditionalText>> docbooksProvider = context
-                .AdditionalTextsProvider
-                .Where(static text => Path.GetDirectoryName(text.Path).EndsWith("\\docbook", StringComparison.OrdinalIgnoreCase))
-                .Collect();
-
-            context.RegisterSourceOutput(docbooksProvider, (context, docbookTexts) =>
-            {
-                Settings settings;
-                AdditionalText? settingsText = docbookTexts
-                    .FirstOrDefault(text => Path.GetFileName(text.Path).Equals("settings.json", StringComparison.OrdinalIgnoreCase));
-                if (settingsText is null)
-                {
-                    settings = new Settings();
-                }
-                else
-                {
-                    string? settingsJson = settingsText.GetText(context.CancellationToken)?.ToString();
-                    settings = (settingsJson is null ? null : JsonSerializer.Deserialize<Settings>(settingsJson)) ?? new Settings();
-                    settings.CheckForUpdate = settings.LastUpdateCheck.AddHours(1) < DateTime.UtcNow;
-                }
-
-                JoinableTaskFactory.Run(() => ExecuteAsync(context, docbookTexts, settings), JoinableTaskCreationOptions.LongRunning);
-
-                if (settingsText is not null)
-                    File.WriteAllText(settingsText.Path, JsonSerializer.Serialize(settings));
-            });
-        }
-
-        private async Task ExecuteAsync(SourceProductionContext context, ImmutableArray<AdditionalText> docbookTexts, Settings settings)
-        {
             try
             {
-                using (var part16 = new Part16(s_httpClient, context, docbookTexts, settings))
-                using (var part06 = new Part06(s_httpClient, context, docbookTexts, settings))
-                using (var part07 = new Part07(s_httpClient, context, docbookTexts, settings))
+                System.Net.ServicePointManager.DefaultConnectionLimit = 5;
+
+                Logger.StartSession();
+                Logger.Log("=======================================");
+                Logger.Log($"DefaultConnectionLimit: {System.Net.ServicePointManager.DefaultConnectionLimit}");
+
+                //IncrementalValuesProvider<ClassDeclarationSyntax> syntax = context.SyntaxProvider
+                //    .CreateSyntaxProvider(
+                //        (node, ct) =>
+                //        {
+                //            if (node is ClassDeclarationSyntax classDeclaration)
+                //            {
+                //                Logger.Log($"CreateSyntaxProvider({classDeclaration.Keyword} {classDeclaration.Identifier})");
+                //                return true;
+                //            }
+                //            return false;
+                //        },
+                //        GetSemanticTargetForGeneration)
+                //    //.ForAttributeWithMetadataName(
+                //    //    "DiCor.CodeGenerationSourcesAttribute",
+                //    //    (node, _) => node is ClassDeclarationSyntax,
+                //    //    GetSemanticTargetForGeneration)
+                //    .Where(classDeclaration =>
+                //    {
+                //        Logger.Log($"SyntaxProvider.ForAttributeWithMetadataName().Where(classDeclaration={classDeclaration?.FullSpan}");
+                //        return classDeclaration is not null;
+                //    });
+
+                IncrementalValueProvider<Settings> settings = context.AnalyzerConfigOptionsProvider
+                    .Select((context, _) => new Settings(context));
+
+                context.RegisterSourceOutput(settings, static (context, settings) =>
                 {
-                    await part16.GetSectionsByIdAsync(this).ConfigureAwait(false);
-                    await part06.GetTablesAsync(this).ConfigureAwait(false);
-                    await part07.GetTablesAsync(this).ConfigureAwait(false);
-
-                    string header = $"""
-                            // Generated code
-                            // {part06.Title} ({Part06.Uri})
-                            // {part07.Title} ({Part07.Uri})
-                            // {part16.Title} ({Part16.Uri})
-
-                            """ + Environment.NewLine;
-
-                    CreateCode(context, header);
-                }
-                if (settings.CheckForUpdate)
-                    settings.LastUpdateCheck = DateTime.UtcNow;
+                    JoinableTaskFactory.Run(() => ExecuteAsync(context, settings), JoinableTaskCreationOptions.LongRunning);
+                });
             }
             catch (Exception ex)
             {
-                context.ReportDiagnostic(Diag.UnexpectedException(ex));
+                Logger.Log("Initialize", ex);
+                throw;
             }
         }
 
-        private void CreateCode(SourceProductionContext context, string header)
+        private static async Task ExecuteAsync(SourceProductionContext context, Settings settings)
         {
+            Stopwatch watch = Stopwatch.StartNew();
+            try
+            {
+                Logger.StartSession();
+                Logger.Log(">>>");
+
+                using (var part16 = new Part16(s_httpClient, context, settings))
+                using (var part06 = new Part06(s_httpClient, context, settings))
+                using (var part07 = new Part07(s_httpClient, context, settings))
+                {
+                    DocBookData data = new(part06, part07, part16);
+                    await data.ExtractAsync().ConfigureAwait(false);
+
+                    CreateCode(context, data);
+
+                    settings.SaveState();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("ExecuteAsync", ex);
+                context.ReportDiagnostic(Diag.UnexpectedException(ex));
+            }
+            finally
+            {
+                Logger.Log($"<<< ({watch.ElapsedMilliseconds}ms)");
+            }
+        }
+
+        private static void CreateCode(SourceProductionContext context, DocBookData data)
+        {
+            string header = $"""
+                            // Generated code
+                            // {data.Part06.Title} ({data.Part06.Uri})
+                            // {data.Part07.Title} ({data.Part07.Uri})
+                            // {data.Part16.Title} ({data.Part16.Uri})
+
+                            """ + Environment.NewLine;
+
             var details = new StringBuilder(header);
             var uids = new StringBuilder(header);
 
-            details.AppendLine("""
+            details.AppendLine($$"""
                 using System;
                 using System.Collections.Frozen;
                 using System.Collections.Generic;
@@ -108,15 +124,17 @@ namespace DiCor.Generator
                     partial struct Uid
                     {
                         public partial Details? GetDetails()
-                            => s_dictionary.TryGetValue(this, out Details details) ? details : null;
+                        {
+                            return s_dictionary.TryGetValue(this, out Details details) ? details : null;
+                        }
 
                         private static readonly FrozenDictionary<Uid, Details> s_dictionary = InitializeDictionary();
 
                         private static FrozenDictionary<Uid, Details> InitializeDictionary()
                         {
-                            return Enumerate().ToFrozenDictionary();
+                            return EnumerateDetails().ToFrozenDictionary();
 
-                            IEnumerable<KeyValuePair<Uid, Details>> Enumerate()
+                            IEnumerable<KeyValuePair<Uid, Details>> EnumerateDetails()
                             {
                 """);
 
@@ -127,7 +145,7 @@ namespace DiCor.Generator
                     {
                 """);
 
-            foreach (UidValues values in TableA1.Concat(TableA3))
+            foreach (UidValues values in data.TableA1.Concat(data.TableA3))
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
 
@@ -172,8 +190,11 @@ namespace DiCor.Generator
             }
             """);
 
-            context.AddSource("Uid.Uids.g.cs", SourceText.From(uids.ToString(), Encoding.UTF8));
-            context.AddSource("Uid.Details.g.cs", SourceText.From(details.ToString(), Encoding.UTF8));
+            string uidsString = uids.ToString();
+            string detailsString = details.ToString();
+
+            context.AddSource("Uid.Uids.g.cs", SourceText.From(uidsString, Encoding.UTF8));
+            context.AddSource("Uid.Details.g.cs", SourceText.From(detailsString, Encoding.UTF8));
         }
     }
 }

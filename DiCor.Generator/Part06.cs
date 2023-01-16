@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -13,15 +12,13 @@ namespace DiCor.Generator
 {
     internal class Part06 : DocBook
     {
-        public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part06/part06.xml";
-
-        public Part06(HttpClient httpClient, SourceProductionContext context, ImmutableArray<AdditionalText> docbookTexts, Settings settings)
-            : base(httpClient, Uri, context, docbookTexts, settings)
+        public Part06(HttpClient httpClient, SourceProductionContext context, Settings settings)
+            : base(httpClient, context, settings)
         { }
 
-        public async Task GetTablesAsync(Generator generator)
+        public async Task GetTablesAsync(DocBookData data)
         {
-            await InitializeAsync().ConfigureAwait(false);
+            await Initialization.ConfigureAwait(false);
 
             Debug.Assert(Reader != null);
 
@@ -35,27 +32,27 @@ namespace DiCor.Generator
                     string? id = Reader.GetAttribute("id", XNamespace.Xml.NamespaceName);
                     if (id == "table_A-1")
                     {
-                        generator.TableA1 = ReadTable(A1ToUid);
+                        data.TableA1 = ReadTable(A1ToUid);
                     }
                     else if (id == "table_A-3")
                     {
-                        generator.TableA3 = ReadTable(row => A3ToUid(row, generator.CidTable!));
+                        data.TableA3 = ReadTable(row => A3ToUid(row, data.CidTable!));
                     }
                     else if (id == "table_6-1")
                     {
-                        generator.Table61 = ReadTable(TableToTag);
+                        data.Table61 = ReadTable(TableToTag);
                     }
                     else if (id == "table_7-1")
                     {
-                        generator.Table71 = ReadTable(TableToTag);
+                        data.Table71 = ReadTable(TableToTag);
                     }
                     else if (id == "table_8-1")
                     {
-                        generator.Table81 = ReadTable(TableToTag);
+                        data.Table81 = ReadTable(TableToTag);
                     }
                     else if (id == "table_9-1")
                     {
-                        generator.Table91 = ReadTable(TableToTag);
+                        data.Table91 = ReadTable(TableToTag);
                     }
                     else
                         continue;

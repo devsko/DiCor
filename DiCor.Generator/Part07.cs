@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
@@ -10,15 +9,13 @@ namespace DiCor.Generator
 {
     internal class Part07 : DocBook
     {
-        public const string Uri = "http://medical.nema.org/medical/dicom/current/source/docbook/part07/part07.xml";
-
-        public Part07(HttpClient httpClient, SourceProductionContext context, ImmutableArray<AdditionalText> docbookTexts, Settings settings)
-            : base(httpClient, Uri, context, docbookTexts, settings)
+        public Part07(HttpClient httpClient, SourceProductionContext context, Settings settings)
+            : base(httpClient, context, settings)
         { }
 
-        public async Task GetTablesAsync(Generator generator)
+        public async Task GetTablesAsync(DocBookData data)
         {
-            await InitializeAsync().ConfigureAwait(false);
+            await Initialization.ConfigureAwait(false);
 
             Debug.Assert(Reader != null);
 
@@ -32,11 +29,11 @@ namespace DiCor.Generator
                     string? id = Reader.GetAttribute("id", XNamespace.Xml.NamespaceName);
                     if (id == "table_E.1-1")
                     {
-                        generator.TableE11 = ReadTable(TableToTag);
+                        data.TableE11 = ReadTable(TableToTag);
                     }
                     else if (id == "table_E.2-1")
                     {
-                        generator.TableE21 = ReadTable(TableToTag);
+                        data.TableE21 = ReadTable(TableToTag);
                     }
                     else
                         continue;
