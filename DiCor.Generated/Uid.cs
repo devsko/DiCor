@@ -22,6 +22,8 @@ namespace DiCor
             }
         }
 
+        public override string ToString() => Encoding.ASCII.GetString(Value.AsSpan());
+
         // PS 3.5 - 9.1 UID Encoding Rules
         public bool IsValid
         {

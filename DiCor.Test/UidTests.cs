@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Frozen;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Xunit;
 
 namespace DiCor.Test
@@ -112,6 +115,54 @@ namespace DiCor.Test
             Assert.True(new Uid("1.10.1"u8, false).IsValid);
             Assert.True(new Uid("10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10.10"u8, false).IsValid);
             Assert.True(new Uid(Enumerable.Repeat((byte)'1', 64).ToArray(), false).IsValid);
+        }
+
+        [Fact]
+        public void UidDictionary()
+        {
+            var field = typeof(Uid).GetField("s_dictionary", BindingFlags.Static | BindingFlags.NonPublic)!;
+            var dictionary = (FrozenDictionary<Uid, Uid.Details>)field.GetValue(null)!;
+            var uids = dictionary.Keys.ToArray();
+
+            var stringDictionary = uids
+                .Zip(uids.Select(uid => dictionary[uid]))
+                .Select(tuple => new KeyValuePair<string, Uid.Details>(tuple.First.ToString()!, tuple.Second))
+                .ToFrozenDictionary(StringComparer.Ordinal);
+            var stringUids = uids.Select(uid => uid.ToString()!).ToArray();
+
+            foreach (var uid in uids)
+            {
+                var details = dictionary[uid];
+            }
+        }
+
+        [Fact]
+        public void HashCode()
+        {
+            int hashCode;
+            hashCode = new Uid().GetHashCode();
+            hashCode = new Uid(""u8, false).GetHashCode();
+            hashCode = new Uid("1"u8).GetHashCode();
+            hashCode = new Uid("12"u8).GetHashCode();
+            hashCode = new Uid("123"u8).GetHashCode();
+            hashCode = new Uid("1234"u8).GetHashCode();
+            hashCode = new Uid("12345"u8).GetHashCode();
+            hashCode = new Uid("123456"u8).GetHashCode();
+            hashCode = new Uid("1234567"u8).GetHashCode();
+            hashCode = new Uid("12345678"u8).GetHashCode();
+            hashCode = new Uid("123456789"u8).GetHashCode();
+            hashCode = new Uid("1234567890"u8).GetHashCode();
+            hashCode = new Uid("12345678901"u8).GetHashCode();
+            hashCode = new Uid("123456789012"u8).GetHashCode();
+            hashCode = new Uid("1234567890123"u8).GetHashCode();
+            hashCode = new Uid("12345678901234"u8).GetHashCode();
+            hashCode = new Uid("123456789012345"u8).GetHashCode();
+            hashCode = new Uid("1234567890123456"u8).GetHashCode();
+            hashCode = new Uid("12345678901234567"u8).GetHashCode();
+            hashCode = new Uid("123456789012345678"u8).GetHashCode();
+            hashCode = new Uid("1234567890123456789"u8).GetHashCode();
+            hashCode = new Uid("12345678901234567890"u8).GetHashCode();
+            hashCode = new Uid(Enumerable.Repeat((byte)'1', 256 * 256).ToArray(), false).GetHashCode();
         }
 
         [Fact]

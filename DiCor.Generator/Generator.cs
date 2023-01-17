@@ -16,13 +16,6 @@ namespace DiCor.Generator
         internal static JoinableTaskFactory JoinableTaskFactory { get; } = new(new JoinableTaskContext());
         private static readonly HttpClient s_httpClient = new();
 
-        public Generator()
-        {
-            const string path = "C:\\repos\\Logs\\Dicor.Generator\\log.txt";
-
-            Logger.Initialize(path);
-        }
-
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             try

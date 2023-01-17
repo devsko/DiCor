@@ -12,13 +12,13 @@ namespace DiCor.Generator
         private static readonly AsyncLocal<int> s_sessionId = new();
         private static readonly object s_lock = new();
 
-        private static string s_path = null!;
+        private static string? s_path;
         private static int s_processId;
         private static string s_name = null!;
 
-        public static void Initialize(string path)
+        public static void Initialize(string? path)
         {
-            s_path = path;
+            s_path = string.IsNullOrEmpty(path) ? null : path;
             Process process = Process.GetCurrentProcess();
             s_processId = process.Id;
             s_name = (Assembly.GetEntryAssembly()?.FullName ?? process.ProcessName).PadRight(8).Substring(0, 8);
@@ -33,6 +33,8 @@ namespace DiCor.Generator
         private static readonly string s_indent = new(' ', 36);
         public static void Log(string? message, Exception? ex = null)
         {
+            if (s_path is null) return;
+
             lock (s_lock)
             {
                 using FileStream stream = File.Open(s_path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);

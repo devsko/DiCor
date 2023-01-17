@@ -6,7 +6,8 @@ namespace DiCor.Performance
     {
         public static void Main(string[] args)
         {
-            BenchmarkRunner.Run<Net.UpperLayer.BufferWriterTests>();
+            BenchmarkRunner.Run<UidFrozenDictionary>();
+            //BenchmarkRunner.Run<Net.UpperLayer.BufferWriterTests>();
         }
     }
 }

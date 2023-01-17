@@ -3,23 +3,24 @@
   <Choose>
     <When Condition="'$(DesignTimeBuild)' == 'true'">
       <PropertyGroup>
-        <CheckForUpdates>false</CheckForUpdates>
+        <DiCorGenerator_CheckForUpdates>false</DiCorGenerator_CheckForUpdates>
       </PropertyGroup>
     </When>
     <Otherwise>
       <PropertyGroup>
-        <CheckForUpdates>true</CheckForUpdates>
+        <DiCorGenerator_CheckForUpdates>true</DiCorGenerator_CheckForUpdates>
       </PropertyGroup>
     </Otherwise>
   </Choose>
 
   <PropertyGroup>
-    <DocBookDirectory>docbook\</DocBookDirectory>
+    <DiCorGenerator_DocBookDirectory>docbook\</DiCorGenerator_DocBookDirectory>
   </PropertyGroup>
   
   <ItemGroup>
-    <CompilerVisibleProperty Include="CheckForUpdates" />
-    <CompilerVisibleProperty Include="DocBookDirectory" />
+    <CompilerVisibleProperty Include="DiCorGenerator_LogFilePath" />
+    <CompilerVisibleProperty Include="DiCorGenerator_CheckForUpdates" />
+    <CompilerVisibleProperty Include="DiCorGenerator_DocBookDirectory" />
   </ItemGroup>
 
   <ItemGroup>

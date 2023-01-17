@@ -22,12 +22,16 @@ namespace DiCor.Generator
         public Settings(AnalyzerConfigOptionsProvider options)
         {
             options.GlobalOptions.TryGetValue("build_property.projectdir", out string? projectDir);
-            options.GlobalOptions.TryGetValue("build_property.docbookdirectory", out string? docBookDirectory);
-            options.GlobalOptions.TryGetValue("build_property.checkforupdates", out string? checkForUpdates);
+            options.GlobalOptions.TryGetValue("build_property.dicorgenerator_logfilepath", out string? logFilePath);
+            options.GlobalOptions.TryGetValue("build_property.dicorgenerator_docbookdirectory", out string? docBookDirectory);
+            options.GlobalOptions.TryGetValue("build_property.dicorgenerator_checkforupdates", out string? checkForUpdates);
+
+            Logger.Initialize(logFilePath);
 
             Logger.Log($"build_property.projectdir: {projectDir ?? "null"}");
-            Logger.Log($"build_property.docbookdirectory: {docBookDirectory ?? "null"}");
-            Logger.Log($"build_property.checkforupdates: {checkForUpdates ?? "null"}");
+            Logger.Log($"build_property.dicorgenerator_logfilepath: {logFilePath ?? "null"}");
+            Logger.Log($"build_property.dicorgenerator_docbookdirectory: {docBookDirectory ?? "null"}");
+            Logger.Log($"build_property.dicorgenerator_checkforupdates: {checkForUpdates ?? "null"}");
 
             _docBookDirectory = Path.Combine(
                 projectDir ?? throw new InvalidOperationException("Property 'ProjectDir' not found."),

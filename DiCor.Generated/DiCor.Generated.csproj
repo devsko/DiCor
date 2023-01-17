@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>DiCor</RootNamespace>
+    <!--<DiCorGenerator_LogFilePath>C:\repos\Logs\Dicor.Generator\log.txt</DiCorGenerator_LogFilePath>-->
   </PropertyGroup>
 
   <ItemGroup>
