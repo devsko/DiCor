@@ -19,13 +19,13 @@ namespace DiCor
 
         unsafe public override int GetHashCode()
         {
-            //byte[] value = Value;
-            //if (value is null)
-            //{
-            //    return 0;
-            //}
-            int length = Value.AsSpan().Length;
-            fixed (byte* src = &MemoryMarshal.GetArrayDataReference(Value))
+            byte[] value = Value;
+            if (value is null)
+            {
+                return 0;
+            }
+            int length = value.Length;
+            fixed (byte* src = &MemoryMarshal.GetArrayDataReference(value))
             {
                 uint hash1 = (5381 << 16) + 5381;
                 uint hash2 = hash1;
