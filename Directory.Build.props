@@ -8,14 +8,20 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!--
+  .NET 8.0 alpha has problem with <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+  in auto generated benchmark projects. Special case benchmarks here as workaround
+  -->
+
   <PropertyGroup>
-    <IsTest Condition="$(MSBuildProjectName.Contains('Test')) or $(MSBuildProjectName.Contains('Performance'))">true</IsTest>
+    <IsTest Condition="$(MSBuildProjectName.Contains('Test')) Or $(MSBuildProjectName.Contains('Performance'))">true</IsTest>
+    <IsBenchmark Condition="$(MSBuildProjectName.Contains('BenchmarkDotNet'))">true</IsBenchmark>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(IsTest)' != 'true'">
+  <ItemGroup Condition="'$(IsTest)' != 'true' And '$(IsBenchmark)' != 'true'">
     <EditorConfigFiles Include="..\CodeAnalysis.src.globalconfig" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsTest)' == 'true'">
+  <ItemGroup Condition="'$(IsTest)' == 'true' And '$(IsBenchmark)' != 'true'">
     <EditorConfigFiles Include="..\CodeAnalysis.test.globalconfig" />
   </ItemGroup>
 
