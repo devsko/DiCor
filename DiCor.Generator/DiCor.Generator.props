@@ -1,20 +1,9 @@
 <Project>
-
-  <Choose>
-    <When Condition="'$(DesignTimeBuild)' == 'true'">
-      <PropertyGroup>
-        <DiCorGenerator_CheckForUpdates>false</DiCorGenerator_CheckForUpdates>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <DiCorGenerator_CheckForUpdates>true</DiCorGenerator_CheckForUpdates>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
-
+  
   <PropertyGroup>
     <DiCorGenerator_DocBookDirectory>docbook\</DiCorGenerator_DocBookDirectory>
+    <DiCorGenerator_CheckForUpdates Condition="'$(DesignTimeBuild)' != 'true'">true</DiCorGenerator_CheckForUpdates>
+    <DiCorGenerator_CheckForUpdates Condition="'$(DesignTimeBuild)' == 'true'">false</DiCorGenerator_CheckForUpdates>
   </PropertyGroup>
   
   <ItemGroup>
@@ -24,10 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="docbook\state" />
+    <AdditionalFiles Include="docbook\GenerateUids.txt" />
+    <AdditionalFiles Include="docbook\GenerateTags.txt" />
     <None Include="docbook\part06.xml" />
     <None Include="docbook\part07.xml" />
     <None Include="docbook\part16.xml" />
+    <None Include="docbook\state" Visible="false" />
   </ItemGroup>
 
 </Project>

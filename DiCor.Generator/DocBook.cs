@@ -14,9 +14,9 @@ using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    public class DocBook : IDisposable
+    internal class DocBook : IDisposable
     {
-        private record XmlAndTitle(XmlReader Xml, string Title) : IDisposable
+        private sealed record XmlAndTitle(XmlReader Xml, string Title) : IDisposable
         {
             public void Dispose() => Xml.Dispose();
         }
@@ -29,6 +29,8 @@ namespace DiCor.Generator
         private readonly Task _initialization;
 
         private XmlAndTitle? _xml;
+
+        protected Settings Settings => _settings;
 
         public Task Initialization => _initialization;
 
@@ -195,6 +197,7 @@ namespace DiCor.Generator
             return values;
         }
 
-        protected static string GetValue(XElement? element) => element?.Value.Replace("\u200b", "").Trim() ?? string.Empty;
+        protected static string GetValue(XElement? element)
+            => element?.Value.Replace("\u200b", "").Trim() ?? string.Empty;
     }
 }

@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    internal class Part07 : DocBook
+    internal sealed class Part07 : DocBook
     {
         public Part07(HttpClient httpClient, SourceProductionContext context, Settings settings)
             : base(httpClient, context, settings)
@@ -19,27 +19,32 @@ namespace DiCor.Generator
 
             Debug.Assert(Reader != null);
 
-            int tablesFound = 0;
-            while (await Reader!.ReadAsync().ConfigureAwait(false))
+            const int uidTables = 0;
+            const int tagTables = 2;
+
+            int tables = (Settings.GenerateUids ? uidTables : 0) + (Settings.GenerateTags ? tagTables : 0);
+            int found = 0;
+            while (found < tables && await Reader!.ReadAsync().ConfigureAwait(false))
             {
                 _context.CancellationToken.ThrowIfCancellationRequested();
 
                 if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == "table")
                 {
                     string? id = Reader.GetAttribute("id", XNamespace.Xml.NamespaceName);
-                    if (id == "table_E.1-1")
+                    if (id == "table_E.1-1" && Settings.GenerateTags)
                     {
                         data.TableE11 = ReadTable(TableToTag);
                     }
-                    else if (id == "table_E.2-1")
+                    else if (id == "table_E.2-1" && Settings.GenerateTags)
                     {
                         data.TableE21 = ReadTable(TableToTag);
                     }
                     else
+                    {
                         continue;
+                    }
 
-                    if (++tablesFound >= 2)
-                        break;
+                    found++;
                 }
             }
         }

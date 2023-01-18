@@ -3,17 +3,17 @@ using System.Buffers.Text;
 
 namespace DiCor
 {
-    partial struct Uid
+    public partial struct Uid
     {
         public static readonly Uid ImplementationClass = GetImplementationClass();
 
         private static Uid GetImplementationClass()
         {
-            byte[] value = new byte[Uid.DiCorOrgRoot.Length + 2 + Implementation.Version.Length];
+            byte[] value = new byte[DiCorOrgRoot.Length + 2 + Implementation.Version.Length];
 
             Span<byte> span = value;
-            Uid.DiCorOrgRoot.CopyTo(span);
-            span = span.Slice(Uid.DiCorOrgRoot.Length);
+            DiCorOrgRoot.CopyTo(span);
+            span = span.Slice(DiCorOrgRoot.Length);
             span[0] = (byte)'1';
             span[1] = (byte)'.';
             Implementation.Version.CopyTo(span.Slice(2));
@@ -26,7 +26,7 @@ namespace DiCor
             public static readonly byte[] Version = GetVersion();
             public static readonly byte[] VersionName = GetVersionName();
 
-            public static Uid ClassUid => Uid.ImplementationClass;
+            public static Uid ClassUid => ImplementationClass;
 
             private static byte[] GetVersion()
             {

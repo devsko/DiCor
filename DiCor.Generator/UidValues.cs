@@ -43,6 +43,7 @@ namespace DiCor.Generator
         public readonly UidType Type;
         public readonly StorageCategory StorageCategory;
         public readonly bool IsRetired;
+        public readonly string Symbol;
 
         public UidValues(string value, string name, string keyword, string type)
         {
@@ -52,9 +53,10 @@ namespace DiCor.Generator
             Type = GetUidType(type);
             StorageCategory = GetStorageCategory(Value, Name, Type);
             IsRetired = Name.IndexOf("(Retired)", StringComparison.OrdinalIgnoreCase) >= 0;
+            Symbol = CreateSymbol();
         }
 
-        public string Symbol(bool useValue = false)
+        private string CreateSymbol(bool useValue = false)
         {
             if (!string.IsNullOrEmpty(Keyword))
             {
@@ -94,11 +96,11 @@ namespace DiCor.Generator
                         symbol[writeAt++] = upper ? char.ToUpperInvariant(ch) : ch;
                         upper = false;
                     }
-                    else if (ch == ' ' || ch == '-')
+                    else if (ch is ' ' or '-')
                     {
                         upper = true;
                     }
-                    else if (ch == '&' || ch == '.')
+                    else if (ch is '&' or '.')
                     {
                         symbol[writeAt++] = '_';
                         upper = true;
@@ -108,7 +110,7 @@ namespace DiCor.Generator
             }
             if (writeAt == 0)
             {
-                return Symbol(useValue: true);
+                return CreateSymbol(useValue: true);
             }
             if (char.IsDigit(symbol[0]))
             {
@@ -129,10 +131,11 @@ namespace DiCor.Generator
         {
             if (type.Equals("synchronization frame of reference", StringComparison.OrdinalIgnoreCase))
                 return UidType.Synchronization;
+
             if (type.Equals("ldap oid", StringComparison.OrdinalIgnoreCase))
                 return UidType.LDAP;
 
-            return Enum.TryParse<UidType>(type.Replace(" ", null), out UidType result)
+            return Enum.TryParse(type.Replace(" ", null), out UidType result)
                 ? result
                 : UidType.Other;
         }
@@ -142,10 +145,10 @@ namespace DiCor.Generator
             if (type != UidType.SOPClass)
                 return StorageCategory.None;
 
-            if (!value.StartsWith("1.2.840.10008."))
+            if (!value.StartsWith("1.2.840.10008.", StringComparison.Ordinal))
                 return StorageCategory.Private;
 
-            if (!name.Contains("Storage") || name.StartsWith("Storage Commitment"))
+            if (!name.Contains("Storage") || name.StartsWith("Storage Commitment", StringComparison.Ordinal))
                 return StorageCategory.None;
 
             if (name.Contains("Image Storage"))
@@ -165,13 +168,13 @@ namespace DiCor.Generator
             if (name.Contains("Waveform Storage"))
                 return StorageCategory.Waveform;
 
-            if (name.StartsWith("Encapsulated "))
+            if (name.StartsWith("Encapsulated ", StringComparison.Ordinal))
                 return StorageCategory.EncapsulatedDocument;
 
             if (name.Contains("Spectroscopy Storage"))
                 return StorageCategory.Spectroscopy;
 
-            if (name.StartsWith("Raw Data "))
+            if (name.StartsWith("Raw Data ", StringComparison.Ordinal))
                 return StorageCategory.Raw;
 
             return StorageCategory.Other;

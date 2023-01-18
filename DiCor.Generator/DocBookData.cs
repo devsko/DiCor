@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace DiCor.Generator
 {
-    internal class DocBookData
+    internal sealed class DocBookData
     {
         public Part06 Part06 { get; }
         public Part07 Part07 { get; }
@@ -25,15 +25,9 @@ namespace DiCor.Generator
             ).ConfigureAwait(false);
 
             await Task.WhenAll(
-                GetCidAndPart06TablesAsync(),
+                Part06.GetTablesAsync(this, await Part16.GetSectionsByIdAsync().ConfigureAwait(false)),
                 Part07.GetTablesAsync(this)
             ).ConfigureAwait(false);
-
-            async Task GetCidAndPart06TablesAsync()
-            {
-                await Part16.GetSectionsByIdAsync(this).ConfigureAwait(false);
-                await Part06.GetTablesAsync(this).ConfigureAwait(false);
-            }
         }
 
         public Dictionary<int, CidValues>? CidTable { get; set; }

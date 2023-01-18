@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -15,14 +16,16 @@ namespace DiCor
         {
             Value = value.ToArray();
 
-            // TODO .NET 8 ArgumentExcption.ThrowIf...
             if (validate & !IsValid)
-            {
-                throw new ArgumentException($"[{Encoding.ASCII.GetString(Value.AsSpan())}] is not a valid UID.", nameof(value));
-            }
+                Throw(ToString());
+
+            [DoesNotReturn]
+            static void Throw(string value)
+                => throw new ArgumentException($"{value} is not a valid UID.", nameof(value));
         }
 
-        public override string ToString() => Encoding.ASCII.GetString(Value.AsSpan());
+        public override string ToString()
+            => $"[{Encoding.ASCII.GetString(Value.AsSpan())}]";
 
         // PS 3.5 - 9.1 UID Encoding Rules
         public bool IsValid
@@ -31,53 +34,47 @@ namespace DiCor
             {
                 Span<byte> span = Value.AsSpan();
                 if (span.Length is 0 or > 64 || span.IndexOfAnyExcept(".0123456789"u8) != -1)
-                {
                     return false;
-                }
 
                 int index;
                 while ((index = span.IndexOf((byte)'.')) != -1)
                 {
                     if (!IsValidComponent(span.Slice(0, index)))
-                    {
                         return false;
-                    }
+
                     span = span.Slice(index + 1);
                 }
 
                 return IsValidComponent(span);
 
                 static bool IsValidComponent(Span<byte> component)
-                {
-                    return component.Length > 0 && (component.Length == 1 || component[0] != (byte)'0');
-                }
+                    => component.Length > 0 && (component.Length == 1 || component[0] != (byte)'0');
             }
         }
 
-        public bool IsDicomDefined => Value.AsSpan().StartsWith(DicomOrgRoot);
+        public bool IsDicomDefined
+            => Value.AsSpan().StartsWith(DicomOrgRoot);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string? DebuggerDisplay
         {
             get
             {
-                string value = $"[{Encoding.ASCII.GetString(Value.AsSpan())}]";
                 if (!IsValid)
-                {
-                    return $"INVALID {value}";
-                }
-                Details? details = GetDetails();
-                if (details is null)
-                {
-                    return $"* {value}";
-                }
+                    return $"INVALID {this}";
 
-                return $"{(details.Value.IsRetired ? "RETIRED " : "")} {value} {details.Value.Type}: {details.Value.Name}";
+                Details? details = GetDetails();
+
+                if (details is null)
+                    return $"* {this}";
+
+                return $"{(details.Value.IsRetired ? "RETIRED " : "")} {this} {details.Value.Type}: {details.Value.Name}";
             }
         }
 
         // PS3.5 - 9 Unique Identifiers (UIDs)
-        public static ReadOnlySpan<byte> DicomOrgRoot => "1.2.840.10008."u8;
+        public static ReadOnlySpan<byte> DicomOrgRoot
+            => "1.2.840.10008."u8;
 
         // Dear ...
         // I have pleasure in enclosing your UID prefix as requested.It is:
@@ -92,10 +89,12 @@ namespace DiCor
         // www.medicalconnections.co.uk
         // Company Tel: +44-1792-390209
         // Medical Connections Ltd is registered in England & Wales as Company Number 3680043 Medical Connections Ltd, Suite 10, Henley House, Queensway, Fforestfach, Swansea, SA5 4DJ
-        public static ReadOnlySpan<byte> DiCorOrgRoot => "1.2.826.0.1.3680043.10.386."u8;
+        public static ReadOnlySpan<byte> DiCorOrgRoot
+            => "1.2.826.0.1.3680043.10.386."u8;
 
         // PS3.5 - B.2 UUID Derived UID
-        public static ReadOnlySpan<byte> UUidRoot => "2.25."u8;
+        public static ReadOnlySpan<byte> UUidRoot
+            => "2.25."u8;
 
         public static Uid NewUid()
         {
@@ -114,10 +113,10 @@ namespace DiCor
             Span<byte> value = stackalloc byte[39 + UUidRoot.Length];
             UUidRoot.CopyTo(value);
 
-            TryUInt128ToDecStr(intValue, value.Slice(UUidRoot.Length), out int bytesWritten);
-
             // TODO .NET 8 Utf8Formatter.TryFormat
-            //Utf8Formatter.TryFormat(intValue, value.Slice(UUidRoot.Length), out int charsWritten);
+            //Utf8Formatter.TryFormat(intValue, value.Slice(UUidRoot.Length), out int bytesWritten);
+
+            TryUInt128ToDecStr(intValue, value.Slice(UUidRoot.Length), out int bytesWritten);
 
             return new Uid(value.Slice(0, UUidRoot.Length + bytesWritten));
         }

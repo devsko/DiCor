@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using System.Threading;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DiCor.Net.UpperLayer
 {
-    partial class ULConnection
+    public partial class ULConnection
     {
         public class ArtimTimer<TState>
         {

@@ -1,4 +1,5 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
 using System.Diagnostics;
 using Bedrock.Framework.Protocols;
 
@@ -6,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DiCor.Net.UpperLayer
 {
-    partial class ULConnection
+    public partial class ULConnection
     {
         public class Protocol : IMessageReader<ULMessage>, IMessageWriter<ULMessage>
         {

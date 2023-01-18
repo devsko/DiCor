@@ -1,6 +1,6 @@
 ﻿namespace DiCor.Generator
 {
-    public struct TagValues
+    internal struct TagValues
     {
         public ushort Group;
         public ushort Element;

@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace DiCor
 {
-    partial struct Uid
+    public partial struct Uid
     {
         private static unsafe bool TryUInt128ToDecStr(UInt128 value, Span<byte> destination, out int charsWritten)
         {

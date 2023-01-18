@@ -1,14 +1,15 @@
-﻿#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+﻿#pragma warning disable CA1822 // Mark members as static
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 #pragma warning disable IDE0060 // Remove unused parameter
-#pragma warning disable CA1822 // Mark members as static
 
 using System.Net;
-
+using System.Threading;
+using System.Threading.Tasks;
 using Bedrock.Framework;
 
 namespace DiCor.Net.UpperLayer
 {
-    partial class ULConnection
+    public partial class ULConnection
     {
         // PS3.8 - 9.2.2 State Machine Actions Definition
 
@@ -71,8 +72,10 @@ namespace DiCor.Net.UpperLayer
                     await ((ULScp)_implementation).AssociationRequested(this, association, cancellationToken).ConfigureAwait(false);
                 }
             }
-
-            await AE8_SendAAssociateRj(Pdu.RejectResult.Permanent, Pdu.RejectSource.ServiceProviderAcse, Pdu.RejectReason.NoReasonGiven, accessor, cancellationToken).ConfigureAwait(false);
+            else
+            {
+                await AE8_SendAAssociateRj(Pdu.RejectResult.Permanent, Pdu.RejectSource.ServiceProviderAcse, Pdu.RejectReason.NoReasonGiven, accessor, cancellationToken).ConfigureAwait(false);
+            }
         }
 
         private async ValueTask AE7_SendAAssociateAc(State.Accessor accessor, CancellationToken cancellationToken)
@@ -270,6 +273,6 @@ namespace DiCor.Net.UpperLayer
     }
 }
 
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 #pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 #pragma warning restore CA1822 // Mark members as static

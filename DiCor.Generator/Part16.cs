@@ -10,13 +10,13 @@ using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    internal class Part16 : DocBook
+    internal sealed class Part16 : DocBook
     {
         public Part16(HttpClient httpClient, SourceProductionContext context, Settings settings)
             : base(httpClient, context, settings)
         { }
 
-        public async Task GetSectionsByIdAsync(DocBookData data)
+        public async Task<Dictionary<int, CidValues>> GetSectionsByIdAsync()
         {
             await Initialization.ConfigureAwait(false);
 
@@ -50,7 +50,7 @@ namespace DiCor.Generator
                 }
             }
 
-            data.CidTable = sections;
+            return sections;
         }
     }
 }

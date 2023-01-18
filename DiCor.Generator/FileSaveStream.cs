@@ -13,8 +13,8 @@ namespace DiCor.Generator
         private readonly Stream _stream;
         private readonly string _path;
 
-        private Stream? _memory;
-        private Stream? _file;
+        private MemoryStream? _memory;
+        private FileStream? _file;
 
         public FileSaveStream(Stream stream, string path)
         {
@@ -68,7 +68,7 @@ namespace DiCor.Generator
                     awaiter.UnsafeOnCompleted(
                         () =>
                         {
-                            (_file ?? _memory)!.Write(buffer, offset, result);
+                            ((Stream?)_file ?? _memory)!.Write(buffer, offset, result);
                             awaiter.GetResult().Dispose();
                         });
                 }

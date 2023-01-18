@@ -1,8 +1,11 @@
-﻿using DotNext.Threading;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using DotNext.Threading;
 
 namespace DiCor.Net.UpperLayer
 {
-    partial class ULConnection
+    public partial class ULConnection
     {
         // PS3.8 - 9.2.1 Machine States Definition
 

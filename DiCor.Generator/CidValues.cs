@@ -1,6 +1,6 @@
 ﻿namespace DiCor.Generator
 {
-    public struct CidValues
+    internal struct CidValues
     {
         public int Cid;
         public string Title;

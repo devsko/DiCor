@@ -1,5 +1,4 @@
 ﻿using System;
-
 using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
@@ -43,10 +42,7 @@ namespace DiCor.Generator
             if (ex is AggregateException aex)
             {
                 aex = aex.Flatten();
-                if (aex.InnerExceptions.Count == 1)
-                    ex = aex.InnerException!;
-                else
-                    ex = aex;
+                ex = aex.InnerExceptions.Count == 1 ? aex.InnerException : aex;
             }
 
             return Diagnostic.Create(s_exception, default, ex.Message);

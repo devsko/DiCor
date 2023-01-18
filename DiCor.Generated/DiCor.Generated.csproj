@@ -1,8 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>DiCor</RootNamespace>
     <!--<DiCorGenerator_LogFilePath>C:\repos\Logs\Dicor.Generator\log.txt</DiCorGenerator_LogFilePath>-->
@@ -10,8 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="8.0.0-alpha.1.23063.13" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(NetPackageVersion)" />
   </ItemGroup>
 
   <Import Project="..\Dicor.Generator\Dicor.Generator.props" />

@@ -1,0 +1,3 @@
+DICOMApplicationContext
+Type:SOPClass
+Type:TransferSyntax

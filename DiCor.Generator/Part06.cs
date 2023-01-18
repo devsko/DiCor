@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -10,55 +11,60 @@ using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
-    internal class Part06 : DocBook
+    internal sealed class Part06 : DocBook
     {
         public Part06(HttpClient httpClient, SourceProductionContext context, Settings settings)
             : base(httpClient, context, settings)
         { }
 
-        public async Task GetTablesAsync(DocBookData data)
+        public async Task GetTablesAsync(DocBookData data, Dictionary<int, CidValues> cidTable)
         {
             await Initialization.ConfigureAwait(false);
 
             Debug.Assert(Reader != null);
 
-            int tablesFound = 0;
-            while (await Reader!.ReadAsync().ConfigureAwait(false))
+            const int uidTables = 2;
+            const int tagTables = 4;
+
+            int tables = (Settings.GenerateUids ? uidTables : 0) + (Settings.GenerateTags ? tagTables : 0);
+            int found = 0;
+            while (found < tables && await Reader!.ReadAsync().ConfigureAwait(false))
             {
                 _context.CancellationToken.ThrowIfCancellationRequested();
 
                 if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == "table")
                 {
                     string? id = Reader.GetAttribute("id", XNamespace.Xml.NamespaceName);
-                    if (id == "table_A-1")
+                    if (id == "table_A-1" && Settings.GenerateUids)
                     {
                         data.TableA1 = ReadTable(A1ToUid);
                     }
-                    else if (id == "table_A-3")
+                    else if (id == "table_A-3" && Settings.GenerateUids)
                     {
-                        data.TableA3 = ReadTable(row => A3ToUid(row, data.CidTable!));
+                        data.TableA3 = ReadTable(row => A3ToUid(row, cidTable));
                     }
-                    else if (id == "table_6-1")
+                    else if (id == "table_6-1" && Settings.GenerateTags)
                     {
                         data.Table61 = ReadTable(TableToTag);
                     }
-                    else if (id == "table_7-1")
+                    else if (id == "table_7-1" && Settings.GenerateTags)
                     {
                         data.Table71 = ReadTable(TableToTag);
                     }
-                    else if (id == "table_8-1")
+                    else if (id == "table_8-1" && Settings.GenerateTags)
                     {
                         data.Table81 = ReadTable(TableToTag);
                     }
-                    else if (id == "table_9-1")
+                    else if (id == "table_9-1" && Settings.GenerateTags)
                     {
                         data.Table91 = ReadTable(TableToTag);
                     }
                     else
+                    {
                         continue;
+                    }
 
-                    if (++tablesFound >= 6)
-                        break;
+                    found++;
                 }
             }
         }
@@ -83,7 +89,7 @@ namespace DiCor.Generator
                 return default;
 
             cid = cid.Substring(9);
-            CidValues cidValues = cidTable[int.Parse(cid)];
+            CidValues cidValues = cidTable[int.Parse(cid, CultureInfo.InvariantCulture)];
 
             return new(
                 GetValue(row.ElementAt(0)),

@@ -1,6 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
-
+using System.Threading;
+using System.Threading.Tasks;
 using Bedrock.Framework;
 using Bedrock.Framework.Protocols;
 using Microsoft.AspNetCore.Connections;
@@ -17,7 +20,7 @@ namespace DiCor.Net.UpperLayer
     }
     public abstract class ULScp : ImplementationBase
     {
-        private class DefaultScp : ULScp
+        private sealed class DefaultScp : ULScp
         {
             public override ValueTask AssociationRequested(ULConnection connection, Association association, CancellationToken cancellationToken)
                 => connection.AcceptAssociationAsync(association, cancellationToken);
@@ -36,7 +39,7 @@ namespace DiCor.Net.UpperLayer
 
     public abstract class ULScu : ImplementationBase
     {
-        private class DefaultScu : ULScu
+        private sealed class DefaultScu : ULScu
         {
             public override ValueTask AssociationAccepted(ULConnection connection, CancellationToken cancellationToken = default)
                 => connection.RequestReleaseAsync(cancellationToken);
@@ -54,6 +57,7 @@ namespace DiCor.Net.UpperLayer
         public abstract ValueTask AssociationRejected(ULConnection connection, Pdu.RejectResult result, Pdu.RejectSource source, Pdu.RejectReason reason, CancellationToken cancellationToken = default);
     }
 
+    [SuppressMessage("Reliability", "CA2012:Use ValueTasks correctly", Justification = "<Pending>")]
     public sealed partial class ULConnection : IAsyncDisposable
     {
         private static readonly TimeSpan s_requestTimeout = TimeSpan.FromMilliseconds(500);
@@ -129,7 +133,7 @@ namespace DiCor.Net.UpperLayer
         {
             ArgumentNullException.ThrowIfNull(client);
             ArgumentNullException.ThrowIfNull(endpoint);
-            if (!Enum.IsDefined<AssociationType>(type))
+            if (!Enum.IsDefined(type))
                 throw new ArgumentException(null, nameof(type));
             ArgumentNullException.ThrowIfNull(scu);
 
@@ -208,7 +212,7 @@ namespace DiCor.Net.UpperLayer
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        ProtocolReadResult<ULMessage> result = await _reader.ReadAsync(_protocol, (int)Association.DefaultMaxDataLength, cancellationToken);
+                        ProtocolReadResult<ULMessage> result = await _reader.ReadAsync(_protocol, (int)Association.DefaultMaxDataLength, cancellationToken).ConfigureAwait(false);
 
                         using (State.Accessor accessor = await _state.AccessAsync(cancellationToken).ConfigureAwait(false))
                         {

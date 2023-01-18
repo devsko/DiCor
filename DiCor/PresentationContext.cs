@@ -1,4 +1,5 @@
-﻿using DiCor.Net.UpperLayer;
+﻿using System.Collections.Generic;
+using DiCor.Net.UpperLayer;
 
 namespace DiCor
 {

@@ -1,0 +1,21 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <NetPackageVersion>8.0.0-alpha.1.23067.11</NetPackageVersion>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsTest Condition="$(MSBuildProjectName.Contains('Test')) or $(MSBuildProjectName.Contains('Performance'))">true</IsTest>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsTest)' != 'true'">
+    <EditorConfigFiles Include="..\CodeAnalysis.src.globalconfig" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsTest)' == 'true'">
+    <EditorConfigFiles Include="..\CodeAnalysis.test.globalconfig" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
 ﻿namespace DiCor
 {
-    partial struct Uid
+    public partial struct Uid
     {
         public bool IsKnown => GetDetails() is not null;
 

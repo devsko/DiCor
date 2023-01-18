@@ -1,4 +1,6 @@
-﻿namespace DiCor.Net.UpperLayer
+﻿using System;
+
+namespace DiCor.Net.UpperLayer
 {
     public class ULProtocolException : Exception
     {

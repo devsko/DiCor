@@ -20,16 +20,9 @@ namespace DiCor.ConsoleApp
             _loggerFactory = loggerFactory;
         }
 
-        public override async Task OnConnectedAsync(ConnectionContext context)
+        public override async Task OnConnectedAsync(ConnectionContext connection)
         {
-            try
-            {
-                await ULConnection.RunScpAsync(context, ULScp.Default, _loggerFactory).ConfigureAwait(false);
-            }
-            catch
-            {
-
-            }
+            await ULConnection.RunScpAsync(connection, ULScp.Default, _loggerFactory).ConfigureAwait(false);
         }
     }
 
