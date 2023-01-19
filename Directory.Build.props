@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <!--
-  .NET 8.0 alpha has problem with <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
-  in auto generated benchmark projects. Special case benchmarks here as workaround
+  .NET 8.0 alpha has a problem with <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+  in auto generated benchmark projects. Special case these benchmarks here to workaround this issue.
   -->
 
   <PropertyGroup>
@@ -19,10 +19,10 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsTest)' != 'true' And '$(IsBenchmark)' != 'true'">
-    <EditorConfigFiles Include="..\CodeAnalysis.src.globalconfig" />
+    <EditorConfigFiles Include="$(MSBuildThisFileDirectory)CodeAnalysis.src.globalconfig" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsTest)' == 'true' And '$(IsBenchmark)' != 'true'">
-    <EditorConfigFiles Include="..\CodeAnalysis.test.globalconfig" />
+    <EditorConfigFiles Include="$(MSBuildThisFileDirectory)CodeAnalysis.test.globalconfig" />
   </ItemGroup>
 
 </Project>

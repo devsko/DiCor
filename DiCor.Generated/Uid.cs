@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -28,12 +29,13 @@ namespace DiCor
             => $"[{Encoding.ASCII.GetString(Value.AsSpan())}]";
 
         // PS 3.5 - 9.1 UID Encoding Rules
+        private static readonly IndexOfAnyValues<byte> s_validBytes = IndexOfAnyValues.Create(".0123456789"u8);
         public bool IsValid
         {
             get
             {
                 Span<byte> span = Value.AsSpan();
-                if (span.Length is 0 or > 64 || span.IndexOfAnyExcept(".0123456789"u8) != -1)
+                if (span.Length is 0 or > 64 || span.IndexOfAnyExcept(s_validBytes) != -1)
                     return false;
 
                 int index;

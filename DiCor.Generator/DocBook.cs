@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,7 @@ using Microsoft.CodeAnalysis;
 
 namespace DiCor.Generator
 {
+    [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035:Do not use APIs banned for analyzers", Justification = "<Pending>")]
     internal class DocBook : IDisposable
     {
         private sealed record XmlAndTitle(XmlReader Xml, string Title) : IDisposable
@@ -61,7 +63,7 @@ namespace DiCor.Generator
         Start:
             try
             {
-                _xml = await LoadXmlAsync(File.OpenRead(path));
+                _xml = await LoadXmlAsync(File.OpenRead(path)).ConfigureAwait(false);
                 Logger.Log($"XML loaded from {path}");
             }
             catch (XmlException ex)

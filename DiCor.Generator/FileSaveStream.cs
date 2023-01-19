@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Microsoft.VisualStudio.Threading;
 
 namespace DiCor.Generator
 {
+    [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035:Do not use APIs banned for analyzers", Justification = "<Pending>")]
     public class FileSaveStream : Stream
     {
         private readonly AsyncReaderWriterLock _asyncLock = new(Generator.JoinableTaskFactory.Context);
