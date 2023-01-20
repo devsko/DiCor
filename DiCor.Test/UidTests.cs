@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Xunit;
 
 namespace DiCor.Test
@@ -50,8 +52,8 @@ namespace DiCor.Test
             Assert.True(retiredUid.IsKnown);
             Assert.True(validUid.IsKnown);
 
-            Assert.True(retiredUid.GetDetails()!.Value.IsRetired);
-            Assert.False(validUid.GetDetails()!.Value.IsRetired);
+            Assert.True(retiredUid.GetDetails()!.IsRetired);
+            Assert.False(validUid.GetDetails()!.IsRetired);
         }
 
         [Fact]
@@ -82,7 +84,7 @@ namespace DiCor.Test
 
             Assert.NotNull(uidDetails);
             Assert.NotNull(copyDetails);
-            Assert.Same(uidDetails.Value.Name, copyDetails.Value.Name);
+            Assert.Same(uidDetails.Name, copyDetails.Name);
         }
 
         [Fact]
@@ -139,30 +141,45 @@ namespace DiCor.Test
         [Fact]
         public void HashCode()
         {
-            int hashCode;
-            hashCode = new Uid().GetHashCode();
-            hashCode = new Uid(""u8, false).GetHashCode();
-            hashCode = new Uid("1"u8).GetHashCode();
-            hashCode = new Uid("12"u8).GetHashCode();
-            hashCode = new Uid("123"u8).GetHashCode();
-            hashCode = new Uid("1234"u8).GetHashCode();
-            hashCode = new Uid("12345"u8).GetHashCode();
-            hashCode = new Uid("123456"u8).GetHashCode();
-            hashCode = new Uid("1234567"u8).GetHashCode();
-            hashCode = new Uid("12345678"u8).GetHashCode();
-            hashCode = new Uid("123456789"u8).GetHashCode();
-            hashCode = new Uid("1234567890"u8).GetHashCode();
-            hashCode = new Uid("12345678901"u8).GetHashCode();
-            hashCode = new Uid("123456789012"u8).GetHashCode();
-            hashCode = new Uid("1234567890123"u8).GetHashCode();
-            hashCode = new Uid("12345678901234"u8).GetHashCode();
-            hashCode = new Uid("123456789012345"u8).GetHashCode();
-            hashCode = new Uid("1234567890123456"u8).GetHashCode();
-            hashCode = new Uid("12345678901234567"u8).GetHashCode();
-            hashCode = new Uid("123456789012345678"u8).GetHashCode();
-            hashCode = new Uid("1234567890123456789"u8).GetHashCode();
-            hashCode = new Uid("12345678901234567890"u8).GetHashCode();
-            hashCode = new Uid(Enumerable.Repeat((byte)'1', 256 * 256).ToArray(), false).GetHashCode();
+            Assert.Equal(0, new Uid().GetHashCode());
+            Assert.Equal(757602046, new Uid(""u8, false).GetHashCode());
+            Assert.Equal(-1185404109, new Uid("1"u8).GetHashCode());
+            Assert.Equal(780094491, new Uid("12"u8).GetHashCode());
+            Assert.Equal(766700157, new Uid("123"u8).GetHashCode());
+            Assert.Equal(1534540716, new Uid("1234"u8).GetHashCode());
+            Assert.Equal(-986852606, new Uid("12345"u8).GetHashCode());
+            Assert.Equal(-807301808, new Uid("123456"u8).GetHashCode());
+            Assert.Equal(-1953030292, new Uid("1234567"u8).GetHashCode());
+            Assert.Equal(389592624, new Uid("12345678"u8).GetHashCode());
+            Assert.Equal(-1232935784, new Uid("123456789"u8).GetHashCode());
+            Assert.Equal(204578379, new Uid("1234567890"u8).GetHashCode());
+            Assert.Equal(-1309340940, new Uid("12345678901"u8).GetHashCode());
+            Assert.Equal(-2128575101, new Uid("123456789012"u8).GetHashCode());
+            Assert.Equal(-973791476, new Uid("1234567890123"u8).GetHashCode());
+            Assert.Equal(2014814894, new Uid("12345678901234"u8).GetHashCode());
+            Assert.Equal(1854577296, new Uid("123456789012345"u8).GetHashCode());
+            Assert.Equal(-840584849, new Uid("1234567890123456"u8).GetHashCode());
+            Assert.Equal(-844198371, new Uid("12345678901234567"u8).GetHashCode());
+            Assert.Equal(-1911176152, new Uid("123456789012345678"u8).GetHashCode());
+            Assert.Equal(-2029040861, new Uid("1234567890123456789"u8).GetHashCode());
+            Assert.Equal(-57525021, new Uid("12345678901234567890"u8).GetHashCode());
+            Assert.Equal(-2042848156, new Uid(Enumerable.Repeat((byte)'1', 256 * 256).ToArray(), false).GetHashCode());
+        }
+
+        [Fact]
+        public void ToStringWorks()
+        {
+            foreach (string s in new string[] {
+                "",
+                "12345",
+                new string('1', 64),
+                new string('1', 256 * 256),
+            })
+            {
+                byte[] value = Encoding.ASCII.GetBytes(s);
+                string toString = new Uid(value, false).ToString();
+                Assert.Equal('[' + s + ']', toString);
+            }
         }
 
         [Fact]

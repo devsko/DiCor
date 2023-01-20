@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace DiCor
 {
@@ -16,6 +17,6 @@ namespace DiCor
         }
 
         public override string ToString()
-            => $"[{Group:X4},{Element:X4}]";
+            => string.Create(CultureInfo.InvariantCulture, stackalloc char[11], $"[{Group:X4},{Element:X4}]");
     }
 }

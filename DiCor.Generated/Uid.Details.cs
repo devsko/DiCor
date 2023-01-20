@@ -1,12 +1,15 @@
-﻿namespace DiCor
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace DiCor
 {
     public partial struct Uid
     {
-        public bool IsKnown => GetDetails() is not null;
+        public bool IsKnown
+            => GetDetails() is not null;
 
         public partial Details? GetDetails();
 
-        public readonly struct Details
+        public sealed class Details
         {
             public string? Name { get; }
             public UidType Type { get; }

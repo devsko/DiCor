@@ -113,6 +113,8 @@ namespace DiCor.Generator
                 // {data.Part07.Title} ({data.Part07.Uri})
                 // {data.Part16.Title} ({data.Part16.Uri})
 
+                #nullable enable
+
                 """ + "\r\n";
 
             if (settings.GenerateUids)
@@ -131,7 +133,7 @@ namespace DiCor.Generator
                         {
                             public partial Details? GetDetails()
                             {
-                                return s_dictionary.TryGetValue(this, out Details details) ? details : null;
+                                return s_dictionary.TryGetValue(this, out Details? details) ? details : null;
                             }
 
                             private static readonly FrozenDictionary<Uid, Details> s_dictionary = InitializeDictionary();

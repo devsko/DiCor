@@ -26,7 +26,12 @@ namespace DiCor
         }
 
         public override string ToString()
-            => $"[{Encoding.ASCII.GetString(Value.AsSpan())}]";
+            => string.Create(Value.Length + 2, this, static (span, uid) =>
+            {
+                span[0] = '[';
+                Ascii.ToUtf16(uid.Value, span.Slice(1), out int charsWritten);
+                span[charsWritten + 1] = ']';
+            });
 
         // PS 3.5 - 9.1 UID Encoding Rules
         private static readonly IndexOfAnyValues<byte> s_validBytes = IndexOfAnyValues.Create(".0123456789"u8);
@@ -34,7 +39,7 @@ namespace DiCor
         {
             get
             {
-                Span<byte> span = Value.AsSpan();
+                Span<byte> span = Value;
                 if (span.Length is 0 or > 64 || span.IndexOfAnyExcept(s_validBytes) != -1)
                     return false;
 
@@ -70,7 +75,7 @@ namespace DiCor
                 if (details is null)
                     return $"* {this}";
 
-                return $"{(details.Value.IsRetired ? "RETIRED " : "")} {this} {details.Value.Type}: {details.Value.Name}";
+                return $"{(details.IsRetired ? "RETIRED " : "")} {this} {details.Type}: {details.Name}";
             }
         }
 
