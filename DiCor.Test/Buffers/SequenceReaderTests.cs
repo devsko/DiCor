@@ -82,16 +82,16 @@ namespace DiCor.Test.Buffers
             void Write()
             {
                 var writer = new BufferWriter(pipe.Writer);
-                writer.WriteAscii(value);
+                writer.Write(new AsciiString(value, false));
                 writer.Commit();
             }
 
             void Read()
             {
                 var reader = new SequenceReader<byte>(result.Buffer);
-                reader.TryReadAscii(out byte[]? readValue);
+                reader.TryRead(out AsciiString readValue);
 
-                Assert.Equal(value ?? Array.Empty<byte>(), readValue);
+                Assert.Equal(new AsciiString(value ?? Array.Empty<byte>()), readValue);
             }
         }
 

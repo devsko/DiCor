@@ -184,12 +184,12 @@ namespace DiCor.Generator
         {
             TagValues values = default;
             string tag = GetValue(row.ElementAt(0));
-            if (!(tag.Length == 11 && tag[0] == '(' && tag[10] == ')' && tag[5] == ',') ||
-                !ushort.TryParse(tag.Substring(1, 4), NumberStyles.AllowHexSpecifier, null, out values.Group) ||
-                !ushort.TryParse(tag.Substring(6, 4), NumberStyles.AllowHexSpecifier, null, out values.Element))
+            if (!(tag.Length == 11 && tag[0] == '(' && tag[10] == ')' && tag[5] == ','))
             {
                 return default;
             }
+            values.Group = tag.Substring(1, 4);
+            values.Element = tag.Substring(6, 4);
             values.MessageField = GetValue(row.ElementAt(1));
             values.Keyword = GetValue(row.ElementAt(2));
             values.VR = GetValue(row.ElementAt(3));

@@ -41,9 +41,11 @@ namespace DiCor.Generator
         public readonly string Name;
         public readonly string Keyword;
         public readonly UidType Type;
-        public readonly StorageCategory StorageCategory;
         public readonly bool IsRetired;
         public readonly string Symbol;
+
+        public StorageCategory StorageCategory
+            => GetStorageCategory();
 
         public UidValues(string value, string name, string keyword, string type)
         {
@@ -51,7 +53,6 @@ namespace DiCor.Generator
             Name = name;
             Keyword = keyword;
             Type = GetUidType(type);
-            StorageCategory = GetStorageCategory(Value, Name, Type);
             IsRetired = Name.IndexOf("(Retired)", StringComparison.OrdinalIgnoreCase) >= 0;
             Symbol = CreateSymbol();
         }
@@ -60,55 +61,52 @@ namespace DiCor.Generator
         {
             if (!string.IsNullOrEmpty(Keyword))
             {
-                return Keyword;
+                return Keyword.Contains("(Retired)") ? Keyword + "_RETIRED" : Keyword;
             }
 
             ReadOnlySpan<char> retired = "(Retired)".AsSpan();
             ReadOnlySpan<char> process = "(Process ".AsSpan();
 
-            // Additional 9 chars for appending "_RETIRED" and prepending "_" if needed
-            Span<char> buffer = stackalloc char[(useValue ? Value : Name).Length + 8 + 1];
-
+            string text = useValue ? Value : Name;
+            Span<char> buffer = stackalloc char[text.Length + 8 + 1]; // Additional 9 chars for appending "_RETIRED" and prepending "_" if needed
             Span<char> symbol = buffer.Slice(1);
+            text.AsSpan().CopyTo(symbol);
 
-            (useValue ? Value : Name).AsSpan().CopyTo(symbol);
-
-            ReadOnlySpan<char> read = symbol;
-            int writeAt = 0;
-            bool upper = true;
-
-            while (read.Length > 0)
+            int pos = 0;
+            bool toUpper = true;
+            ReadOnlySpan<char> remainder = symbol;
+            while (remainder.Length > 0)
             {
-                char ch = read[0];
+                char ch = remainder[0];
                 if (ch == ':')
                 {
                     break;
                 }
 
-                if (ch == '(' && (read.StartsWith(retired) || read.StartsWith(process)))
+                if (ch == '(' && (remainder.StartsWith(retired) || remainder.StartsWith(process)))
                 {
-                    read = read.Slice(9);
+                    remainder = remainder.Slice(9);
                 }
                 else
                 {
                     if (char.IsLetterOrDigit(ch) || ch == '_')
                     {
-                        symbol[writeAt++] = upper ? char.ToUpperInvariant(ch) : ch;
-                        upper = false;
+                        symbol[pos++] = toUpper ? char.ToUpperInvariant(ch) : ch;
+                        toUpper = false;
                     }
                     else if (ch is ' ' or '-')
                     {
-                        upper = true;
+                        toUpper = true;
                     }
                     else if (ch is '&' or '.')
                     {
-                        symbol[writeAt++] = '_';
-                        upper = true;
+                        symbol[pos++] = '_';
+                        toUpper = true;
                     }
-                    read = read.Slice(1);
+                    remainder = remainder.Slice(1);
                 }
             }
-            if (writeAt == 0)
+            if (pos == 0)
             {
                 return CreateSymbol(useValue: true);
             }
@@ -116,15 +114,15 @@ namespace DiCor.Generator
             {
                 symbol = buffer;
                 symbol[0] = '_';
-                writeAt++;
+                pos++;
             }
             if (IsRetired)
             {
-                "_RETIRED".AsSpan().CopyTo(symbol.Slice(writeAt));
-                writeAt += 8;
+                "_RETIRED".AsSpan().CopyTo(symbol.Slice(pos));
+                pos += 8;
             }
 
-            return symbol.Slice(0, writeAt).ToString();
+            return symbol.Slice(0, pos).ToString();
         }
 
         private static UidType GetUidType(string type)
@@ -140,41 +138,41 @@ namespace DiCor.Generator
                 : UidType.Other;
         }
 
-        private static StorageCategory GetStorageCategory(string value, string name, UidType type)
+        private StorageCategory GetStorageCategory()
         {
-            if (type != UidType.SOPClass)
+            if (Type != UidType.SOPClass)
                 return StorageCategory.None;
 
-            if (!value.StartsWith("1.2.840.10008.", StringComparison.Ordinal))
+            if (!Value.StartsWith("1.2.840.10008.", StringComparison.Ordinal))
                 return StorageCategory.Private;
 
-            if (!name.Contains("Storage") || name.StartsWith("Storage Commitment", StringComparison.Ordinal))
+            if (!Name.Contains("Storage") || Name.StartsWith("Storage Commitment", StringComparison.Ordinal))
                 return StorageCategory.None;
 
-            if (name.Contains("Image Storage"))
+            if (Name.Contains("Image Storage"))
                 return StorageCategory.Image;
 
-            if (name.Contains("Presentation State Storage"))
+            if (Name.Contains("Presentation State Storage"))
                 return StorageCategory.PresentationState;
 
-            if (name.Contains("SR Storage") ||
-                value == "1.2.840.10008.5.1.4.1.1.88.40" || // Procedure Log Storage
-                value == "1.2.840.10008.5.1.4.1.1.88.59")   // Key Object Selection Document Storage
+            if (Name.Contains("SR Storage") ||
+                Value == "1.2.840.10008.5.1.4.1.1.88.40" || // Procedure Log Storage
+                Value == "1.2.840.10008.5.1.4.1.1.88.59")   // Key Object Selection Document Storage
                 return StorageCategory.SRDocument;
 
-            if (name.Contains("Volume Storage"))
+            if (Name.Contains("Volume Storage"))
                 return StorageCategory.Volume;
 
-            if (name.Contains("Waveform Storage"))
+            if (Name.Contains("Waveform Storage"))
                 return StorageCategory.Waveform;
 
-            if (name.StartsWith("Encapsulated ", StringComparison.Ordinal))
+            if (Name.StartsWith("Encapsulated ", StringComparison.Ordinal))
                 return StorageCategory.EncapsulatedDocument;
 
-            if (name.Contains("Spectroscopy Storage"))
+            if (Name.Contains("Spectroscopy Storage"))
                 return StorageCategory.Spectroscopy;
 
-            if (name.StartsWith("Raw Data ", StringComparison.Ordinal))
+            if (Name.StartsWith("Raw Data ", StringComparison.Ordinal))
                 return StorageCategory.Raw;
 
             return StorageCategory.Other;

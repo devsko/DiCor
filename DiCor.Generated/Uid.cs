@@ -2,36 +2,28 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace DiCor
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public readonly partial struct Uid : IEquatable<Uid>
     {
-        public byte[] Value { get; }
+        public AsciiString Ascii { get; }
 
-        public Uid(ReadOnlySpan<byte> value, bool validate = true)
+        public Uid(AsciiString ascii, bool validate = true)
         {
-            Value = value.ToArray();
-
+            Ascii = ascii;
             if (validate & !IsValid)
-                Throw(ToString());
+                Throw(ascii);
 
             [DoesNotReturn]
-            static void Throw(string value)
-                => throw new ArgumentException($"{value} is not a valid UID.", nameof(value));
+            [StackTraceHidden]
+            static void Throw(AsciiString ascii)
+                => throw new ArgumentException($"{ascii} is not a valid UID.", nameof(ascii));
         }
-
-        public override string ToString()
-            => string.Create(Value.Length + 2, this, static (span, uid) =>
-            {
-                span[0] = '[';
-                Ascii.ToUtf16(uid.Value, span.Slice(1), out int charsWritten);
-                span[charsWritten + 1] = ']';
-            });
 
         // PS 3.5 - 9.1 UID Encoding Rules
         private static readonly IndexOfAnyValues<byte> s_validBytes = IndexOfAnyValues.Create(".0123456789"u8);
@@ -39,7 +31,7 @@ namespace DiCor
         {
             get
             {
-                Span<byte> span = Value;
+                ReadOnlySpan<byte> span = Ascii.Value;
                 if (span.Length is 0 or > 64 || span.IndexOfAnyExcept(s_validBytes) != -1)
                     return false;
 
@@ -54,13 +46,31 @@ namespace DiCor
 
                 return IsValidComponent(span);
 
-                static bool IsValidComponent(Span<byte> component)
+                static bool IsValidComponent(ReadOnlySpan<byte> component)
                     => component.Length > 0 && (component.Length == 1 || component[0] != (byte)'0');
             }
         }
 
         public bool IsDicomDefined
-            => Value.AsSpan().StartsWith(DicomOrgRoot);
+            => Ascii.Value.StartsWith(DicomOrgRoot);
+
+        public bool Equals(Uid other)
+            => Ascii.Equals(other.Ascii);
+
+        public override bool Equals([NotNullWhen(true)] object? obj)
+            => obj is Uid uid && Equals(uid);
+
+        public override unsafe int GetHashCode()
+            => Ascii.GetHashCode();
+
+        public static bool operator ==(Uid left, Uid right)
+            => left.Equals(right);
+
+        public static bool operator !=(Uid left, Uid right)
+            => !left.Equals(right);
+
+        public override string ToString()
+            => string.Create(CultureInfo.InvariantCulture, stackalloc char[Ascii.Length + 2], $"[{Ascii}]");
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string? DebuggerDisplay
@@ -73,7 +83,7 @@ namespace DiCor
                 Details? details = GetDetails();
 
                 if (details is null)
-                    return $"* {this}";
+                    return $"? {this}";
 
                 return $"{(details.IsRetired ? "RETIRED " : "")} {this} {details.Type}: {details.Name}";
             }
@@ -125,7 +135,7 @@ namespace DiCor
 
             TryUInt128ToDecStr(intValue, value.Slice(UUidRoot.Length), out int bytesWritten);
 
-            return new Uid(value.Slice(0, UUidRoot.Length + bytesWritten));
+            return new Uid(new AsciiString(value.Slice(0, UUidRoot.Length + bytesWritten), false));
         }
     }
 }

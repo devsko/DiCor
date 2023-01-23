@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace DiCor
+﻿namespace DiCor
 {
     public partial struct Uid
     {
@@ -16,7 +14,7 @@ namespace DiCor
             public StorageCategory StorageCategory { get; }
             public bool IsRetired { get; }
 
-            internal Details(string? name = null, UidType type = UidType.Other, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
+            internal Details(string? name, UidType type, StorageCategory storageCategory = StorageCategory.None, bool isRetired = false)
             {
                 Name = name;
                 Type = type;

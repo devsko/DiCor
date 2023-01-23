@@ -56,36 +56,37 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryReadAscii(ref this SequenceReader<byte> reader, [NotNullWhen(true)] out byte[]? value)
+        public static bool TryRead(ref this SequenceReader<byte> reader, out AsciiString ascii)
         {
             if (!TryReadLength(ref reader, out ushort length))
             {
-                value = null;
+                ascii = default;
                 return false;
             }
 
-            return TryReadAscii(ref reader, length, out value);
+            return TryRead(ref reader, length, out ascii);
         }
 
-        public static bool TryReadAscii(ref this SequenceReader<byte> reader, int length, [NotNullWhen(true)] out byte[]? value)
+        public static bool TryRead(ref this SequenceReader<byte> reader, int length, out AsciiString ascii)
         {
             ReadOnlySpan<byte> span = reader.UnreadSpan;
             if (span.Length < length)
-                return TryReadAsciiMultiSegment(ref reader, length, out value);
+                return TryReadMultiSegment(ref reader, length, out ascii);
 
-            value = span.Slice(0, length).TrimEnd((byte)' ').ToArray();
+            ascii = new AsciiString(span.Slice(0, length).TrimEnd((byte)' '), false);
             reader.Advance(length);
+
             return true;
 
-            static bool TryReadAsciiMultiSegment(ref SequenceReader<byte> reader, int length, [NotNullWhen(true)] out byte[]? value)
+            static bool TryReadMultiSegment(ref SequenceReader<byte> reader, int length, out AsciiString ascii)
             {
                 Span<byte> buffer = stackalloc byte[length];
                 if (!reader.TryCopyTo(buffer))
                 {
-                    value = null;
+                    ascii = default;
                     return false;
                 }
-                value = buffer.TrimEnd((byte)' ').ToArray();
+                ascii = new AsciiString(buffer.TrimEnd((byte)' '), false);
                 reader.Advance(length);
                 return true;
             }
@@ -93,7 +94,7 @@ namespace System.Buffers
 
         public static bool TryRead(ref this SequenceReader<byte> reader, out Uid uid)
         {
-            if (TryReadAscii(ref reader, out byte[]? value))
+            if (TryRead(ref reader, out AsciiString value))
             {
                 uid = new Uid(value, false);
                 return true;
@@ -104,7 +105,7 @@ namespace System.Buffers
 
         public static bool TryRead(ref this SequenceReader<byte> reader, int length, out Uid uid)
         {
-            if (TryReadAscii(ref reader, length, out byte[]? value))
+            if (TryRead(ref reader, length, out AsciiString value))
             {
                 uid = new Uid(value, false);
                 return true;

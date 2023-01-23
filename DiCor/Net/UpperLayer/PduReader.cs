@@ -19,9 +19,9 @@ namespace DiCor.Net.UpperLayer
 
             _input.TryReadBigEndian(out ushort _); // Protocol-version
             _input.Reserved(2);
-            _input.TryReadAscii(16, out byte[]? calledAE);
+            _input.TryRead(16, out AsciiString calledAE);
             association.CalledAE = calledAE;
-            _input.TryReadAscii(16, out byte[]? callingAE);
+            _input.TryRead(16, out AsciiString callingAE);
             association.CallingAE = callingAE;
             _input.Reserved(32);
 
@@ -107,7 +107,7 @@ namespace DiCor.Net.UpperLayer
                                         break;
 
                                     case Pdu.SubItemTypeImplementationVersionName:
-                                        userInformation.TryReadAscii(itemLength, out byte[]? implementationVersion); // Implementation-version-name
+                                        userInformation.TryRead(itemLength, out AsciiString implementationVersion); // Implementation-version-name
                                         association.RemoteImplementationVersion = implementationVersion!;
                                         break;
 
@@ -150,7 +150,7 @@ namespace DiCor.Net.UpperLayer
                 switch (type)
                 {
                     case Pdu.ItemTypeApplicationContext:
-                        _input.TryRead(length, out _); // Item-length, Application-context-name
+                        _input.TryRead(length, out Uid _); // Item-length, Application-context-name
                         break;
 
                     case Pdu.ItemTypePresentationContextAc:
@@ -220,7 +220,7 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.SubItemTypeImplementationVersionName:
-                                    userInformation.TryReadAscii(itemLength, out byte[]? implementationVersion); // Implementation-version-name
+                                    userInformation.TryRead(itemLength, out AsciiString implementationVersion); // Implementation-version-name
                                     association.RemoteImplementationVersion = implementationVersion!;
                                     break;
 

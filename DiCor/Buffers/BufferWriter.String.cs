@@ -5,11 +5,11 @@ namespace DiCor.Buffers
 {
     public partial struct BufferWriter
     {
-        public void WriteAscii(ReadOnlySpan<byte> value)
+        public void Write(AsciiString ascii)
         {
-            Debug.Assert(value.Length <= ushort.MaxValue);
-
+            ReadOnlySpan<byte> value = ascii.Value;
             ushort length = (ushort)value.Length;
+            Debug.Assert(length <= ushort.MaxValue);
             Write(length);
 
             if (Span.Length < length)
@@ -26,8 +26,9 @@ namespace DiCor.Buffers
             Advance(value.Length);
         }
 
-        public void WriteAsciiFixed(ReadOnlySpan<byte> value, int length)
+        public void Write(AsciiString ascii, int length)
         {
+            ReadOnlySpan<byte> value = ascii.Value;
             Ensure(length);
             int padding = length - value.Length;
             if (padding <= 0)
@@ -43,6 +44,6 @@ namespace DiCor.Buffers
         }
 
         public void Write(Uid uid)
-            => WriteAscii(uid.Value);
+            => Write(uid.Ascii);
     }
 }

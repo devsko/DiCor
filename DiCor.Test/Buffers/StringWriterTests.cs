@@ -15,7 +15,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAsciiFixed("Hello world!"u8, 5);
+                    buffer.Write(new AsciiString("Hello world!"u8, false), 5);
                     buffer.Commit();
                 });
         }
@@ -27,7 +27,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAsciiFixed("He"u8, 5);
+                    buffer.Write(new AsciiString("He"u8, false), 5);
                     buffer.Commit();
                 });
         }
@@ -50,8 +50,8 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.WriteAscii(Enumerable.Repeat((byte)' ', 100).ToArray());
-                    buffer.WriteAscii(Enumerable.Repeat((byte)' ', 5_000).ToArray());
+                    buffer.Write(new AsciiString(Enumerable.Repeat((byte)' ', 100).ToArray(), false));
+                    buffer.Write(new AsciiString(Enumerable.Repeat((byte)' ', 5_000).ToArray(), false));
                     buffer.Commit();
                 });
         }

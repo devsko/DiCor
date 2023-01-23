@@ -35,16 +35,10 @@ namespace DiCor.Performance
             var field = typeof(Uid).GetField("s_dictionary", BindingFlags.Static | BindingFlags.NonPublic)!;
 
             _uidDictionary = (FrozenDictionary<Uid, Uid.Details>)field.GetValue(null)!;
-            _dictionary = _uidDictionary.Keys.ToDictionary(uid => uid.Value, comparer).ToFrozenDictionary(comparer);
+            _dictionary = _uidDictionary.Keys.ToDictionary(uid => uid.Ascii.Value.ToArray(), comparer).ToFrozenDictionary(comparer);
 
-            _uidValues = _uidDictionary.Keys.Select(uid => (byte[])uid.Value.Clone()).ToArray();
-            _uids = _uidValues.Select(value => new Uid(value, false)).ToArray();
-
-            Console.WriteLine("XXXXXXXXXXX");
-            Console.WriteLine(_dictionary.GetType().FullName);
-            Console.WriteLine(_dictionary.GetType().Assembly.Location);
-            Console.WriteLine(_dictionary.Comparer.GetType().FullName);
-            Console.WriteLine(_dictionary.GetType().GetField("_partialComparer", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(_dictionary)!.GetType().FullName ?? "");
+            _uidValues = _uidDictionary.Keys.Select(uid => uid.Ascii.Value.ToArray()).ToArray();
+            _uids = _uidValues.Select(value => new Uid(new AsciiString(value), false)).ToArray();
         }
 
         private byte[][] _uidValues;

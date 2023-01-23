@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers.Binary;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -157,39 +156,36 @@ namespace DiCor
                 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15,
                 15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20
             };
+
+            // TODO: Replace with log2ToPow10[BitOperations.Log2(value)] once https://github.com/dotnet/runtime/issues/79257 is fixed
             uint index = Unsafe.Add(ref MemoryMarshal.GetReference(log2ToPow10), BitOperations.Log2(value));
 
-            // TODO https://github.com/dotnet/runtime/issues/60948: Use ReadOnlySpan<ulong> instead of ReadOnlySpan<byte>.
             // Read the associated power of 10.
-            ReadOnlySpan<byte> powersOf10 = new byte[]
+            ReadOnlySpan<ulong> powersOf10 = new ulong[]
             {
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // unused entry to avoid needing to subtract
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0
-                0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 10
-                0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 100
-                0xE8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 1000
-                0x10, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 10000
-                0xA0, 0x86, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // 100000
-                0x40, 0x42, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, // 1000000
-                0x80, 0x96, 0x98, 0x00, 0x00, 0x00, 0x00, 0x00, // 10000000
-                0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00, // 100000000
-                0x00, 0xCA, 0x9A, 0x3B, 0x00, 0x00, 0x00, 0x00, // 1000000000
-                0x00, 0xE4, 0x0B, 0x54, 0x02, 0x00, 0x00, 0x00, // 10000000000
-                0x00, 0xE8, 0x76, 0x48, 0x17, 0x00, 0x00, 0x00, // 100000000000
-                0x00, 0x10, 0xA5, 0xD4, 0xE8, 0x00, 0x00, 0x00, // 1000000000000
-                0x00, 0xA0, 0x72, 0x4E, 0x18, 0x09, 0x00, 0x00, // 10000000000000
-                0x00, 0x40, 0x7A, 0x10, 0xF3, 0x5A, 0x00, 0x00, // 100000000000000
-                0x00, 0x80, 0xC6, 0xA4, 0x7E, 0x8D, 0x03, 0x00, // 1000000000000000
-                0x00, 0x00, 0xC1, 0x6F, 0xF2, 0x86, 0x23, 0x00, // 10000000000000000
-                0x00, 0x00, 0x8A, 0x5D, 0x78, 0x45, 0x63, 0x01, // 100000000000000000
-                0x00, 0x00, 0x64, 0xA7, 0xB3, 0xB6, 0xE0, 0x0D, // 1000000000000000000
-                0x00, 0x00, 0xE8, 0x89, 0x04, 0x23, 0xC7, 0x8A, // 10000000000000000000
+                0, // unused entry to avoid needing to subtract
+                0,
+                10,
+                100,
+                1000,
+                10000,
+                100000,
+                1000000,
+                10000000,
+                100000000,
+                1000000000,
+                10000000000,
+                100000000000,
+                1000000000000,
+                10000000000000,
+                100000000000000,
+                1000000000000000,
+                10000000000000000,
+                100000000000000000,
+                1000000000000000000,
+                10000000000000000000,
             };
-            ulong powerOf10 = Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref MemoryMarshal.GetReference(powersOf10), index * sizeof(ulong)));
-            if (!BitConverter.IsLittleEndian)
-            {
-                powerOf10 = BinaryPrimitives.ReverseEndianness(powerOf10);
-            }
+            ulong powerOf10 = Unsafe.Add(ref MemoryMarshal.GetReference(powersOf10), index);
 
             // Return the number of digits based on the power of 10, shifted by 1
             // if it falls below the threshold.

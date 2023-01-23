@@ -129,12 +129,10 @@ namespace DiCor.Generator
                 
                     namespace DiCor
                     {
-                        partial struct Uid
+                        public partial struct Uid
                         {
                             public partial Details? GetDetails()
-                            {
-                                return s_dictionary.TryGetValue(this, out Details? details) ? details : null;
-                            }
+                                => s_dictionary.TryGetValue(this, out Details? details) ? details : null;
 
                             private static readonly FrozenDictionary<Uid, Details> s_dictionary = InitializeDictionary();
 
@@ -161,11 +159,11 @@ namespace DiCor.Generator
                     string category = storageCategory != StorageCategory.None ? $", StorageCategory.{storageCategory}" : "";
                     string isRetired = values.IsRetired ? ", isRetired: true" : "";
                     string uidConstant = $"Uid.{values.Symbol}";
-                    string newUid = $"new Uid(\"{values.Value}\"u8, false)";
+                    string newUid = $"new(new(\"{values.Value}\"u8, false), false)";
 
-                    if (settings.ShouldGenerateIdentifier(values))
+                    if (!values.IsRetired && settings.ShouldGenerateIdentifier(values))
                     {
-                        AppendNewUidDetails(uidConstant);
+                        AppendNewDetails(uidConstant);
                         uids.Append(' ', 8)
                             .Append("///<summary>").Append(values.Type).Append(": ").Append(values.Name).AppendLine("</summary>")
                             .Append(' ', 8)
@@ -175,10 +173,10 @@ namespace DiCor.Generator
                     }
                     else
                     {
-                        AppendNewUidDetails(newUid);
+                        AppendNewDetails(newUid);
                     }
 
-                    void AppendNewUidDetails(string uid)
+                    void AppendNewDetails(string uid)
                         => details
                             .Append(' ', 16)
                             .Append("yield return new(").Append(uid).Append(", ").Append("new(\"")
@@ -197,11 +195,150 @@ namespace DiCor.Generator
                     }
                     """);
 
-                string uidsString = uids.ToString();
-                string detailsString = details.ToString();
+                context.AddSource("Uid.Uids.g.cs", SourceText.From(uids.ToString(), Encoding.UTF8));
+                context.AddSource("Uid.Details.g.cs", SourceText.From(details.ToString(), Encoding.UTF8));
+            }
 
-                context.AddSource("Uid.Uids.g.cs", SourceText.From(uidsString, Encoding.UTF8));
-                context.AddSource("Uid.Details.g.cs", SourceText.From(detailsString, Encoding.UTF8));
+            if (settings.GenerateTags)
+            {
+                var details = new StringBuilder(header);
+                var tags = new StringBuilder(header);
+
+                details.AppendLine($$"""
+                    using System;
+                    using System.Collections.Frozen;
+                    using System.Collections.Generic;
+                
+                    namespace DiCor
+                    {
+                        public partial struct Tag
+                        {
+                            public partial Details? GetDetails()
+                            {
+                                Details? details;
+                                if (s_dictionary.TryGetValue(Value, out details))
+                                    return details;
+
+                                foreach (TemplateTagPart templateTagPart in s_templateTagParts)
+                                {
+                                    Tag tag = this;
+                                    if (templateTagPart.IsMatch(ref tag) && s_dictionary.TryGetValue(tag.Value, out details))
+                                        return details;
+                                }
+
+                                return null;
+                            }
+
+                            private static readonly FrozenDictionary<int, Details> s_dictionary = InitializeDictionary();
+
+                            private static FrozenDictionary<int, Details> InitializeDictionary()
+                            {
+                                return EnumerateDetails().ToFrozenDictionary();
+
+                                IEnumerable<KeyValuePair<int, Details>> EnumerateDetails()
+                                {
+                    """);
+
+                tags.AppendLine("""
+                    namespace DiCor
+                    {
+                        partial struct Tag
+                        {
+                    """);
+
+                HashSet<string> vrs = new();
+
+                Dictionary<string, (string, bool, int)> templateValues = new();
+                foreach (TagValues values in data.Table61.Concat(data.Table71).Concat(data.Table81).Concat(data.Table91).Concat(data.TableE11).Concat(data.TableE21))
+                {
+                    context.CancellationToken.ThrowIfCancellationRequested();
+
+                    string tagValue = GetTag(values, templateValues);
+                    string isRetired = values.IsRetired ? ", isRetired: true" : "";
+                    string newTag = $"new Tag(0x{tagValue.Substring(0, 4)}, 0x{tagValue.Substring(4, 4)}).Value";
+                    (byte Min, byte Max, byte Step) vm = values.GetVM();
+
+                    vrs.Add(values.VR);
+
+                    AppendNewDetails(newTag);
+
+                    void AppendNewDetails(string tag)
+                        => details
+                            .Append(' ', 16)
+                            .Append("yield return new(").Append(tag).Append(", new(\"")
+                            .Append(values.MessageField).Append("\", ")
+                            .Append("new(").Append(vm.Min).Append(", ").Append(vm.Max).Append(", ").Append(vm.Step).Append(")")
+                            .Append(isRetired).AppendLine("));");
+                }
+
+                details.AppendLine("""
+                                }
+                            }
+
+                            private static TemplateTagPart[] s_templateTagParts = new TemplateTagPart[]
+                            {
+                    """);
+                foreach (KeyValuePair<string, (string, bool, int)> templateValue in templateValues)
+                {
+                    details.Append(' ', 12)
+                        .Append($"new(0x{templateValue.Key.Substring(0, 4)}, 0x{templateValue.Key.Substring(4, 4)}), // ")
+                        .Append($"{(templateValue.Value.Item2 ? "Group" : "Element")} {templateValue.Value.Item1}");
+                    if (templateValue.Value.Item3 > 1)
+                    {
+                        details.Append($" ({templateValue.Value.Item3} times)");
+                    }
+                    details.AppendLine();
+                }
+                details.AppendLine("""
+                            };
+                        }
+                    }
+                    """);
+                tags.AppendLine("""
+                        }
+                    }
+                    """);
+
+                foreach (var vr in vrs)
+                    details.AppendLine("// " + vr);
+
+                context.AddSource("Tag.Tags.g.cs", SourceText.From(tags.ToString(), Encoding.UTF8));
+                context.AddSource("Tag.Details.g.cs", SourceText.From(details.ToString(), Encoding.UTF8));
+            }
+
+            static string GetTag(TagValues values, Dictionary<string, (string, bool, int)> templateValues)
+            {
+                (string tagValue, string? templateGroupValue, string? templateElementValue) = values.GetValues();
+
+                if (templateGroupValue is null)
+                {
+                    if (templateElementValue is null)
+                    {
+                        // TODO Diag
+                    }
+                    else
+                    {
+                        Add(templateValues, templateElementValue, values.Element, false);
+                    }
+                }
+                else
+                {
+                    Add(templateValues, templateGroupValue, values.Group, true);
+                }
+
+                return tagValue;
+
+                static void Add(Dictionary<string, (string, bool, int)> templateValues, string templateValue, string part, bool isGroup)
+                {
+                    if (templateValues.TryGetValue(templateValue, out (string, bool, int) existing))
+                    {
+                        templateValues[templateValue] = (existing.Item1, existing.Item2, existing.Item3 + 1);
+                    }
+                    else
+                    {
+                        templateValues.Add(templateValue, (part, isGroup, 1));
+                    }
+                }
             }
         }
 

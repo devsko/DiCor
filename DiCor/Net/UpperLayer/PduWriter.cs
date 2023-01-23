@@ -31,8 +31,8 @@ namespace DiCor.Net.UpperLayer
             {
                 _buffer.Write((ushort)0x0001); // Protocol-version
                 _buffer.Reserved(2);
-                _buffer.WriteAsciiFixed(association.CalledAE, 16); // Called-AE-title
-                _buffer.WriteAsciiFixed(association.CallingAE, 16); // Calling-AE-title
+                _buffer.Write(association.CalledAE, 16); // Called-AE-title
+                _buffer.Write(association.CallingAE, 16); // Calling-AE-title
                 _buffer.Reserved(32);
 
                 // PS3.8 - 9.3.2.1 Application Context Item
@@ -128,7 +128,7 @@ namespace DiCor.Net.UpperLayer
 
                     _buffer.Write(Pdu.SubItemTypeImplementationVersionName); // Item-type
                     _buffer.Reserved(1);
-                    _buffer.WriteAscii(Uid.Implementation.VersionName); // Implementation-version-name
+                    _buffer.Write(Uid.Implementation.VersionName); // Implementation-version-name
 
                     // TODO PS3.7 - D.3.3.5.1 SOP Class Extended Negotiation Sub-Item 0x56
                     // TODO PS3.7 - D.3.3.6.1 SOP Class Common Extended Negotiation Sub-Item 0x57

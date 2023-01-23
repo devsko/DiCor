@@ -9,31 +9,31 @@ namespace DiCor
 
         private static Uid GetImplementationClass()
         {
-            byte[] value = new byte[DiCorOrgRoot.Length + 2 + Implementation.Version.Length];
-
-            Span<byte> span = value;
+            ReadOnlySpan<byte> version = Implementation.Version.Value;
+            Span<byte> buffer = stackalloc byte[DiCorOrgRoot.Length + 2 + version.Length];
+            Span<byte> span = buffer;
             DiCorOrgRoot.CopyTo(span);
             span = span.Slice(DiCorOrgRoot.Length);
             span[0] = (byte)'1';
             span[1] = (byte)'.';
-            Implementation.Version.CopyTo(span.Slice(2));
+            version.CopyTo(span.Slice(2));
 
-            return new Uid(value);
+            return new Uid(new AsciiString(buffer, false));
         }
 
         public static class Implementation
         {
-            public static readonly byte[] Version = GetVersion();
-            public static readonly byte[] VersionName = GetVersionName();
+            public static readonly AsciiString Version = GetVersion();
+            public static readonly AsciiString VersionName = GetVersionName();
 
             public static Uid ClassUid => ImplementationClass;
 
-            private static byte[] GetVersion()
+            private static AsciiString GetVersion()
             {
                 Version? version = typeof(Implementation).Assembly.GetName().Version;
                 if (version is null)
                 {
-                    return "1.0"u8.ToArray();
+                    return new AsciiString("1.0"u8, false);
                 }
 
                 Span<byte> buffer = stackalloc byte[2 * 10 + 1];
@@ -44,16 +44,17 @@ namespace DiCor
                 Utf8Formatter.TryFormat(version.Minor, buffer.Slice(length), out bytesWritten);
                 length += bytesWritten;
 
-                return buffer.Slice(0, length).ToArray();
+                return new AsciiString(buffer.Slice(0, length), false);
             }
 
-            private static byte[] GetVersionName()
+            private static AsciiString GetVersionName()
             {
-                byte[] value = new byte[Version.Length + 6];
-                "DiCor "u8.CopyTo(value);
-                Version.CopyTo(value, 6);
+                ReadOnlySpan<byte> version = Version.Value;
+                Span<byte> buffer = stackalloc byte[version.Length + 6];
+                "DiCor "u8.CopyTo(buffer);
+                version.CopyTo(buffer.Slice(6));
 
-                return value;
+                return new AsciiString(buffer, false);
             }
         }
     }
