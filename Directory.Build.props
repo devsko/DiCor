@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <NetPackageVersion>8.0.0-alpha.1.23068.2</NetPackageVersion>
+    <NetPackageVersion>8.0.0-alpha.1.23072.5</NetPackageVersion>
     <MsCodeAnalysisPackageVersion>4.5.0-2.final</MsCodeAnalysisPackageVersion>
+    <MsCodeAnalysisAnalyzersPackageVersion>3.3.5-beta1.23070.1</MsCodeAnalysisAnalyzersPackageVersion>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>

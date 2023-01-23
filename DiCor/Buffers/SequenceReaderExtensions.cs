@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using DiCor;
 
 namespace System.Buffers
@@ -28,7 +27,8 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryReadEnumFromByte<TEnum>(ref this SequenceReader<byte> reader, out TEnum value) where TEnum : struct, Enum
+        public static bool TryReadEnumFromByte<TEnum>(ref this SequenceReader<byte> reader, out TEnum value)
+            where TEnum : struct, Enum
         {
             if (!reader.TryRead(out byte b))
             {

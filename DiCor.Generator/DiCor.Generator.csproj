@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MsCodeAnalysisPackageVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.5-beta1.23068.2">
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="$(MsCodeAnalysisAnalyzersPackageVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
