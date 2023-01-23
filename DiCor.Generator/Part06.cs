@@ -70,7 +70,7 @@ namespace DiCor.Generator
         }
 
         private static UidValues A1ToUid(IEnumerable<XElement> row)
-            => new(
+            => new UidValues(
                 GetValue(row.ElementAt(0)),
                 GetValue(row.ElementAt(1)),
                 GetValue(row.ElementAt(2)),
@@ -91,7 +91,7 @@ namespace DiCor.Generator
             cid = cid.Substring(9);
             CidValues cidValues = cidTable[int.Parse(cid, CultureInfo.InvariantCulture)];
 
-            return new(
+            return new UidValues(
                 GetValue(row.ElementAt(0)),
                 $"{cidValues.Title} ({cid})",
                 string.IsNullOrEmpty(cidValues.Keyword) ? string.Empty : $"{cidValues.Keyword}_{cid}",

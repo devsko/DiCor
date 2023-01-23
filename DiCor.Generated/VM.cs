@@ -5,6 +5,9 @@ namespace DiCor
 {
     public readonly struct VM
     {
+        public static readonly VM One = new(1);
+        public static readonly VM OneToN = new(1, 0);
+
         public byte Min { get; }
 
         public byte Max { get; }
@@ -16,10 +19,6 @@ namespace DiCor
 
         public VM(byte count)
             : this(count, count, 0)
-        { }
-
-        public VM(byte min, byte max)
-            : this(min, max, 1)
         { }
 
         public VM(byte min, byte max, byte step = 1)

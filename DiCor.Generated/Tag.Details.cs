@@ -1,4 +1,6 @@
-﻿namespace DiCor
+﻿using System;
+
+namespace DiCor
 {
     public partial struct Tag
     {
@@ -15,10 +17,23 @@
 
             public bool IsRetired { get; }
 
-            internal Details(string? name, VM vm, bool isRetired = false)
+            public VR SingleVR { get; }
+
+            public VR[]? MultipleVRs { get; }
+
+            internal Details(string? name, VM vm, VR vr, bool isRetired = false)
             {
                 Name = name;
                 VM = vm;
+                SingleVR = vr;
+                IsRetired = isRetired;
+            }
+
+            internal Details(string? name, VM vm, VR[] multipleVRs, bool isRetired = false)
+            {
+                Name = name;
+                VM = vm;
+                MultipleVRs = multipleVRs;
                 IsRetired = isRetired;
             }
         }

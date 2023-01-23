@@ -20,9 +20,7 @@ namespace DiCor
             => _value;
 
         public Tag(ushort group, ushort element)
-        {
-            _value = group << 16 | element;
-        }
+            => _value = group << 16 | element;
 
         public bool Equals(Tag other)
             => _value == other._value;
@@ -52,7 +50,17 @@ namespace DiCor
                 if (details is null)
                     return $"? {this}";
 
-                return $"{(details.IsRetired ? "RETIRED " : "")} {this} {details.Name} VM={details.VM}";
+                string vr;
+                if (details.MultipleVRs is not null)
+                {
+                    vr = string.Join('/', details.MultipleVRs);
+                }
+                else
+                {
+                    vr = details.SingleVR.ToString();
+                }
+
+                return $"{(details.IsRetired ? "RETIRED " : "")} {this} {details.Name} VR={vr} VM={details.VM}";
             }
         }
     }

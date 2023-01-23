@@ -140,14 +140,14 @@ namespace DiCor.Generator
                             {
                                 return EnumerateDetails().ToFrozenDictionary();
 
-                                IEnumerable<KeyValuePair<Uid, Details>> EnumerateDetails()
+                                static IEnumerable<KeyValuePair<Uid, Details>> EnumerateDetails()
                                 {
                     """);
 
                 uids.AppendLine("""
                     namespace DiCor
                     {
-                        partial struct Uid
+                        public partial struct Uid
                         {
                     """);
 
@@ -235,18 +235,16 @@ namespace DiCor.Generator
                             {
                                 return EnumerateDetails().ToFrozenDictionary();
 
-                                IEnumerable<KeyValuePair<int, Details>> EnumerateDetails()
+                                static IEnumerable<KeyValuePair<int, Details>> EnumerateDetails()
                                 {
                     """);
 
                 tags.AppendLine("""
                     namespace DiCor
                     {
-                        partial struct Tag
+                        public partial struct Tag
                         {
                     """);
-
-                HashSet<string> vrs = new();
 
                 Dictionary<string, (string, bool, int)> templateValues = new();
                 foreach (TagValues values in data.Table61.Concat(data.Table71).Concat(data.Table81).Concat(data.Table91).Concat(data.TableE11).Concat(data.TableE21))
@@ -255,19 +253,39 @@ namespace DiCor.Generator
 
                     string tagValue = GetTag(values, templateValues);
                     string isRetired = values.IsRetired ? ", isRetired: true" : "";
-                    string newTag = $"new Tag(0x{tagValue.Substring(0, 4)}, 0x{tagValue.Substring(4, 4)}).Value";
-                    (byte Min, byte Max, byte Step) vm = values.GetVM();
+                    string tagConstant = $"Tag.{values.Symbol}";
+                    string newTag = $"new Tag(0x{tagValue.Substring(0, 4)}, 0x{tagValue.Substring(4, 4)})";
+                    (byte Min, byte Max, byte Step) vmValue = values.GetVM();
+                    string vm = vmValue switch
+                    {
+                        { Min: 1, Max: 1 } => "VM.One",
+                        { Min: 1, Max: 0, Step: 1 } => "VM.OneToN",
+                        _ => $"new({vmValue.Min}, {vmValue.Max}, {vmValue.Step})"
+                    };
+                    string[] vrs = values.GetVRs();
+                    string vr = vrs.Length > 1 ? $"new VR[] {{ {vrs.Select(vr => $"VR.{vr}").Aggregate("", (acc, value) => acc + value + ", ")} }}" : $"VR.{vrs[0]}";
 
-                    vrs.Add(values.VR);
-
-                    AppendNewDetails(newTag);
+                    if (!values.IsRetired && settings.ShouldGenerateIdentifier(values))
+                    {
+                        AppendNewDetails(tagConstant);
+                        tags.Append(' ', 8)
+                            .Append("///<summary>").Append(values.MessageField).Append(" VM=").Append(values.VM).Append(" VR=").Append(values.VR).AppendLine("</summary>")
+                            .Append(' ', 8)
+                            .Append("public static readonly Tag ").Append(values.Symbol).Append(" = ")
+                            .Append(newTag)
+                            .AppendLine(";");
+                    }
+                    else
+                    {
+                        AppendNewDetails(newTag);
+                    }
 
                     void AppendNewDetails(string tag)
                         => details
                             .Append(' ', 16)
-                            .Append("yield return new(").Append(tag).Append(", new(\"")
+                            .Append("yield return new(").Append(tag).Append(".Value, new(\"")
                             .Append(values.MessageField).Append("\", ")
-                            .Append("new(").Append(vm.Min).Append(", ").Append(vm.Max).Append(", ").Append(vm.Step).Append(")")
+                            .Append(vm).Append(", ").Append(vr)
                             .Append(isRetired).AppendLine("));");
                 }
 
@@ -298,9 +316,6 @@ namespace DiCor.Generator
                         }
                     }
                     """);
-
-                foreach (var vr in vrs)
-                    details.AppendLine("// " + vr);
 
                 context.AddSource("Tag.Tags.g.cs", SourceText.From(tags.ToString(), Encoding.UTF8));
                 context.AddSource("Tag.Details.g.cs", SourceText.From(details.ToString(), Encoding.UTF8));

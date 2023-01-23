@@ -10,10 +10,19 @@ namespace DiCor.Test
     public class TagTests
     {
         [Fact]
-        public void Test()
+        public void Tag()
         {
-            var details = new Tag(0x7f33, 0x0010).GetDetails();
-            details!.VM.ToString();
+            Tag tag = new Tag(0x0014, 0x3050);
+            var details = tag.GetDetails()!;
+            VM vm = details.VM;
+        }
+
+        [Fact]
+        public void TestVR()
+        {
+            var vr = new VR("AE"u8);
+            var details = vr.GetDetails();
+            var s = vr.ToString();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Xml.Linq;
 
 namespace DiCor.Generator
 {
@@ -8,9 +9,80 @@ namespace DiCor.Generator
         public string Element;
         public string MessageField;
         public string Keyword;
-        public string VM;
         public string VR;
+        public string VM;
         public bool IsRetired;
+        public readonly string Symbol;
+
+        public TagValues(string group, string element, string messageField, string keyword, string vr, string vm, bool isRetired)
+        {
+            Group = group;
+            Element = element;
+            MessageField = messageField;
+            Keyword = keyword;
+            VR = vr;
+            VM = vm;
+            IsRetired = isRetired;
+            Symbol = CreateSymbol();
+        }
+
+        private string CreateSymbol(bool useValue = false)
+        {
+            if (!string.IsNullOrEmpty(Keyword))
+            {
+                return IsRetired ? Keyword + "_RETIRED" : Keyword;
+            }
+
+            string text = useValue ? $"{Group}_{Element}" : MessageField;
+            Span<char> buffer = stackalloc char[text.Length + 8 + 1]; // Additional 9 chars for appending "_RETIRED" and prepending "_" if needed
+            Span<char> symbol = buffer.Slice(1);
+            text.AsSpan().CopyTo(symbol);
+
+            int pos = 0;
+            bool toUpper = true;
+            ReadOnlySpan<char> remainder = symbol;
+            while (remainder.Length > 0)
+            {
+                char ch = remainder[0];
+                if (ch == ':')
+                {
+                    break;
+                }
+
+                if (char.IsLetterOrDigit(ch) || ch == '_')
+                {
+                    symbol[pos++] = toUpper ? char.ToUpperInvariant(ch) : ch;
+                    toUpper = false;
+                }
+                else if (ch is ' ' or '-')
+                {
+                    toUpper = true;
+                }
+                else if (ch is '&' or '.')
+                {
+                    symbol[pos++] = '_';
+                    toUpper = true;
+                }
+                remainder = remainder.Slice(1);
+            }
+            if (pos == 0)
+            {
+                return CreateSymbol(useValue: true);
+            }
+            if (char.IsDigit(symbol[0]))
+            {
+                symbol = buffer;
+                symbol[0] = '_';
+                pos++;
+            }
+            if (IsRetired)
+            {
+                "_RETIRED".AsSpan().CopyTo(symbol.Slice(pos));
+                pos += 8;
+            }
+
+            return symbol.Slice(0, pos).ToString();
+        }
 
         public (byte, byte, byte) GetVM()
         {
@@ -42,6 +114,15 @@ namespace DiCor.Generator
             }
 
             return (min, byte.Parse(span.ToString()), 1);
+        }
+
+        public string[] GetVRs()
+        {
+            string[] vrs = VR.Split(new[] { " or " }, StringSplitOptions.RemoveEmptyEntries);
+            if (vrs.Length == 0 || vrs[0].IndexOf(' ') >= 0)
+                return new[] { "UN" };
+
+            return vrs;
         }
 
         public (string, string?, string?) GetValues()

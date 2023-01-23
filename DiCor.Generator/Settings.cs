@@ -79,12 +79,16 @@ namespace DiCor.Generator
         }
 
         internal bool ShouldGenerateIdentifier(UidValues values)
-        {
-            return _uidIdentifiers is not null && (
+            => _uidIdentifiers is not null && (
                 _uidIdentifiers.Contains(values.Value, StringComparer.Ordinal) ||
                 _uidIdentifiers.Contains(values.Symbol, StringComparer.OrdinalIgnoreCase) ||
                 _uidIdentifiers.Contains($"Type:{values.Type}", StringComparer.OrdinalIgnoreCase));
-        }
+
+        internal bool ShouldGenerateIdentifier(TagValues values)
+            => _tagIdentifiers is not null && (
+                _tagIdentifiers.Contains(values.Group, StringComparer.Ordinal) ||
+                _tagIdentifiers.Contains($"{values.Group},{values.Element}", StringComparer.Ordinal) ||
+                _tagIdentifiers.Contains(values.Symbol, StringComparer.OrdinalIgnoreCase));
 
         public void DidCheckUpdates(bool didCheck)
         {

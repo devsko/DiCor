@@ -61,7 +61,7 @@ namespace DiCor.Generator
         {
             if (!string.IsNullOrEmpty(Keyword))
             {
-                return Keyword.Contains("(Retired)") ? Keyword + "_RETIRED" : Keyword;
+                return IsRetired ? Keyword + "_RETIRED" : Keyword;
             }
 
             ReadOnlySpan<char> retired = "(Retired)".AsSpan();
