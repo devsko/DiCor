@@ -6,26 +6,22 @@ namespace DiCor.Values
     public readonly struct DAValue<TIsQueryContext> : IValue<DAValue<TIsQueryContext>>
         where TIsQueryContext : struct, IRuntimeConst
     {
-        private enum Flags : byte
-        {
-            IsEmpty = 0x01,
-            IsRange = 0x02,
-        }
+        private static readonly DateOnly s_InvalidDate = InvalidDate();
+
         private readonly (DateOnly, DateOnly) _dates;
-        private readonly Flags _flags;
 
         public DAValue(DateOnly date)
         {
-            _dates = (date, default);
+            _dates = (date, s_InvalidDate);
         }
 
         public DAValue(DateOnly minDate, DateOnly maxDate)
         {
             if (!TIsQueryContext.Value)
                 throw new InvalidOperationException("DAValue can only accept 2 dates in context of a query.");
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(minDate, maxDate);
 
             _dates = (minDate, maxDate);
-            _flags = Flags.IsRange;
         }
 
         public DAValue(EmptyValue emptyValue)
@@ -33,22 +29,25 @@ namespace DiCor.Values
             if (!TIsQueryContext.Value)
                 throw new InvalidOperationException("DAValue can only be an empty value in context of a query.");
 
-            _flags = Flags.IsEmpty;
+            _dates = (s_InvalidDate, s_InvalidDate);
         }
 
         public static int MaximumLength
             => TIsQueryContext.Value ? 18 : 8;
+
+        public static bool IsFixedLength
+            => !TIsQueryContext.Value;
 
         public static bool IsCompatible<T>()
             => TIsQueryContext.Value
             ? typeof(T) == typeof(ValueTuple<DateOnly, DateOnly>)
             : typeof(T) == typeof(DateOnly);
 
-        public bool IsSingleValue => _flags == (Flags)0;
+        public bool IsSingleValue => _dates.Item1 != s_InvalidDate && _dates.Item2 == s_InvalidDate;
 
-        public bool IsEmptyValue => _flags == Flags.IsEmpty;
+        public bool IsEmptyValue => _dates == (s_InvalidDate, s_InvalidDate);
 
-        public bool IsRange => _flags == Flags.IsRange;
+        public bool IsRange => _dates.Item1 != s_InvalidDate && _dates.Item2 != s_InvalidDate;
 
         public T Get<T>()
         {
@@ -58,38 +57,13 @@ namespace DiCor.Values
             if (TIsQueryContext.Value && typeof(T) == typeof((DateOnly, DateOnly)) && IsRange)
                 return Unsafe.As<(DateOnly, DateOnly), T>(ref Unsafe.AsRef(in _dates));
 
-            Value.ThrowIncompatible<T>(nameof(DAValue<TIsQueryContext>));
-            return default;
+            return Value.ThrowIncompatible<T>(nameof(DAValue<TIsQueryContext>));
         }
 
-        //public void Set<T>(T value)
-        //{
-        //    if (typeof(T) == typeof(DateOnly))
-        //    {
-        //        _dates = (Unsafe.As<T, DateOnly>(ref value), default);
-        //    }
-        //    else if (typeof(T) == typeof((DateOnly, DateOnly)))
-        //    {
-        //        _dates = Unsafe.As<T, (DateOnly, DateOnly)>(ref value);
-        //    }
-        //    else
-        //    {
-        //        Value.ThrowIncompatible<T>(nameof(DAValue<TIsQueryContext>));
-        //    }
-        //}
-    }
-
-    public interface IRuntimeConst
-    {
-        static abstract bool Value { get; }
-    }
-
-    public struct TrueConst : IRuntimeConst
-    {
-        public static bool Value => true;
-    }
-    public struct FalseConst : IRuntimeConst
-    {
-        public static bool Value => false;
+        private static DateOnly InvalidDate()
+        {
+            int i = -1;
+            return (Unsafe.As<int, DateOnly>(ref i));
+        }
     }
 }

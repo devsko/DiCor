@@ -28,5 +28,21 @@ namespace DiCor.Test.Buffers
                 reader.TryReadValue(11, out DAValue<TrueConst> value);
             }
         }
+
+        [Fact]
+        public static async Task AETest()
+        {
+            Pipe pipe = new();
+            await pipe.Writer.WriteAsync("\"\"    xyz"u8.ToArray());
+            await pipe.Writer.FlushAsync();
+            ReadResult result = await pipe.Reader.ReadAsync();
+            Read(result);
+
+            static void Read(ReadResult result)
+            {
+                SequenceReader<byte> reader = new(result.Buffer);
+                reader.TryReadValue(9, out AEValue<TrueConst> value);
+            }
+        }
     }
 }

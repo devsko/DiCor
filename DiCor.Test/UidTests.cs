@@ -15,10 +15,10 @@ namespace DiCor.Test
         {
             Uid defaultUid = default;
             Uid newUid = new();
-            Assert.Throws<ArgumentException>("ascii", () => new Uid(default));
-            Assert.Throws<ArgumentException>("ascii", () => new Uid(new AsciiString(""u8, false)));
+            Assert.Throws<ArgumentException>("value", () => new Uid(default));
+            Assert.Throws<ArgumentException>("value", () => new Uid(new AsciiString(""u8, false)));
             Uid emptyUid = new(new AsciiString(""u8, false), false);
-            Assert.Throws<ArgumentException>("ascii", () => new Uid(new AsciiString("x"u8, false))) ;
+            Assert.Throws<ArgumentException>("value", () => new Uid(new AsciiString("x"u8, false))) ;
             Uid invalidUid = new(new AsciiString("x"u8, false), false);
             Uid unknownUid = Uid.NewUid();
             Uid retiredUid = new(new AsciiString("1.2.840.10008.1.2.2"u8, false));

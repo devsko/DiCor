@@ -79,8 +79,7 @@ namespace System.Buffers
                 }
             }
 
-            int bytesConsumed;
-            if (!Utf8Parser.TryParse(span.Slice(0, 4), out int year, out bytesConsumed) || bytesConsumed != 4 ||
+            if (!Utf8Parser.TryParse(span.Slice(0, 4), out int year, out int bytesConsumed) || bytesConsumed != 4 ||
                 !Utf8Parser.TryParse(span.Slice(4, 2), out int month, out bytesConsumed) || bytesConsumed != 2 ||
                 !Utf8Parser.TryParse(span.Slice(6, 2), out int day, out bytesConsumed) || bytesConsumed != 2)
             {

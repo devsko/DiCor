@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DiCor.Test.Buffers
 {
-    public class BinaryTests
+    public class BinaryWriterTests
     {
         [Fact]
         public void WriteByte()
