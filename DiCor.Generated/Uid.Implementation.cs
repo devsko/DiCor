@@ -9,7 +9,7 @@ namespace DiCor
 
         private static Uid GetImplementationClass()
         {
-            ReadOnlySpan<byte> version = Implementation.Version.Value;
+            ReadOnlySpan<byte> version = Implementation.Version.Bytes;
             Span<byte> buffer = stackalloc byte[DiCorOrgRoot.Length + 2 + version.Length];
             Span<byte> span = buffer;
             DiCorOrgRoot.CopyTo(span);
@@ -49,7 +49,7 @@ namespace DiCor
 
             private static AsciiString GetVersionName()
             {
-                ReadOnlySpan<byte> version = Version.Value;
+                ReadOnlySpan<byte> version = Version.Bytes;
                 Span<byte> buffer = stackalloc byte[version.Length + 6];
                 "DiCor "u8.CopyTo(buffer);
                 version.CopyTo(buffer.Slice(6));

@@ -216,13 +216,13 @@ namespace DiCor.Generator
                             public partial Details? GetDetails()
                             {
                                 Details? details;
-                                if (s_dictionary.TryGetValue(Value, out details))
+                                if (s_dictionary.TryGetValue(_value, out details))
                                     return details;
 
                                 foreach (TemplateTagPart templateTagPart in s_templateTagParts)
                                 {
                                     Tag tag = this;
-                                    if (templateTagPart.IsMatch(ref tag) && s_dictionary.TryGetValue(tag.Value, out details))
+                                    if (templateTagPart.IsMatch(ref tag) && s_dictionary.TryGetValue(tag._value, out details))
                                         return details;
                                 }
 
@@ -283,7 +283,7 @@ namespace DiCor.Generator
                     void AppendNewDetails(string tag)
                         => details
                             .Append(' ', 16)
-                            .Append("yield return new(").Append(tag).Append(".Value, new(\"")
+                            .Append("yield return new(").Append(tag).Append("._value, new(\"")
                             .Append(values.MessageField).Append("\", ")
                             .Append(vm).Append(", ").Append(vr)
                             .Append(isRetired).AppendLine("));");

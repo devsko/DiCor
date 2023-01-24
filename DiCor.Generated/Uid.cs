@@ -11,18 +11,18 @@ namespace DiCor
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public readonly partial struct Uid : IEquatable<Uid>
     {
-        public AsciiString Ascii { get; }
+        public AsciiString Value { get; }
 
-        public Uid(AsciiString ascii, bool validate = true)
+        public Uid(AsciiString value, bool validate = true)
         {
-            Ascii = ascii;
+            Value = value;
             if (validate & !IsValid)
-                Throw(ascii);
+                Throw(value);
 
             [DoesNotReturn]
             [StackTraceHidden]
-            static void Throw(AsciiString ascii)
-                => throw new ArgumentException($"{ascii} is not a valid UID.", nameof(ascii));
+            static void Throw(AsciiString value)
+                => throw new ArgumentException($"{value} is not a valid UID.", nameof(value));
         }
 
         // PS 3.5 - 9.1 UID Encoding Rules
@@ -31,20 +31,20 @@ namespace DiCor
         {
             get
             {
-                ReadOnlySpan<byte> span = Ascii.Value;
-                if (span.Length is 0 or > 64 || span.IndexOfAnyExcept(s_validBytes) != -1)
+                ReadOnlySpan<byte> value = Value.Bytes;
+                if (value.Length is 0 or > 64 || value.IndexOfAnyExcept(s_validBytes) != -1)
                     return false;
 
                 int index;
-                while ((index = span.IndexOf((byte)'.')) != -1)
+                while ((index = value.IndexOf((byte)'.')) != -1)
                 {
-                    if (!IsValidComponent(span.Slice(0, index)))
+                    if (!IsValidComponent(value.Slice(0, index)))
                         return false;
 
-                    span = span.Slice(index + 1);
+                    value = value.Slice(index + 1);
                 }
 
-                return IsValidComponent(span);
+                return IsValidComponent(value);
 
                 static bool IsValidComponent(ReadOnlySpan<byte> component)
                     => component.Length > 0 && (component.Length == 1 || component[0] != (byte)'0');
@@ -52,16 +52,16 @@ namespace DiCor
         }
 
         public bool IsDicomDefined
-            => Ascii.Value.StartsWith(DicomOrgRoot);
+            => Value.Bytes.StartsWith(DicomOrgRoot);
 
         public bool Equals(Uid other)
-            => Ascii.Equals(other.Ascii);
+            => Value.Equals(other.Value);
 
         public override bool Equals([NotNullWhen(true)] object? obj)
             => obj is Uid uid && Equals(uid);
 
         public override unsafe int GetHashCode()
-            => Ascii.GetHashCode();
+            => Value.GetHashCode();
 
         public static bool operator ==(Uid left, Uid right)
             => left.Equals(right);
@@ -70,7 +70,7 @@ namespace DiCor
             => !left.Equals(right);
 
         public override string ToString()
-            => string.Create(CultureInfo.InvariantCulture, stackalloc char[Ascii.Length + 2], $"[{Ascii}]");
+            => string.Create(CultureInfo.InvariantCulture, stackalloc char[Value.Length + 2], $"[{Value}]");
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string? DebuggerDisplay
@@ -80,9 +80,7 @@ namespace DiCor
                 if (!IsValid)
                     return $"INVALID {this}";
 
-                Details? details = GetDetails();
-
-                if (details is null)
+                if (!IsKnown(out Details? details))
                     return $"? {this}";
 
                 return $"{(details.IsRetired ? "RETIRED " : "")} {this} {details.Type}: {details.Name}";

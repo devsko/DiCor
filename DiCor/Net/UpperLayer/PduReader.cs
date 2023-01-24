@@ -156,7 +156,7 @@ namespace DiCor.Net.UpperLayer
                     case Pdu.ItemTypePresentationContextAc:
                         _input.TryRead(out byte id);  // Presentation-context-ID
                         _input.Reserved(1);
-                        _input.TryReadEnumFromByte(out Pdu.PresentationContextItemResult result); // Result/Reason
+                        _input.TryRead(out Pdu.PresentationContextItemResult result); // Result/Reason
                         _input.Reserved(1);
 
                         // TODO InvalidPduException
@@ -244,9 +244,9 @@ namespace DiCor.Net.UpperLayer
         public void ReadAAssociateRj(AAssociateRjData data)
         {
             _input.Reserved(1);
-            _input.TryReadEnumFromByte(out data.Result);
-            _input.TryReadEnumFromByte(out data.Source);
-            _input.TryReadEnumFromByte(out data.Reason);
+            _input.TryRead(out data.Result);
+            _input.TryRead(out data.Source);
+            _input.TryRead(out data.Reason);
         }
 
         public void ReadPDataTf(PDataTfData data)
@@ -306,8 +306,8 @@ namespace DiCor.Net.UpperLayer
         public void ReadAAbort(AAbortData data)
         {
             _input.Reserved(2);
-            _input.TryReadEnumFromByte(out data.Source);
-            _input.TryReadEnumFromByte(out data.Reason);
+            _input.TryRead(out data.Source);
+            _input.TryRead(out data.Reason);
         }
 
     }

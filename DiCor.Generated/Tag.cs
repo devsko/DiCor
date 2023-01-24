@@ -16,9 +16,6 @@ namespace DiCor
         public ushort Element
             => unchecked((ushort)_value);
 
-        internal int Value
-            => _value;
-
         public Tag(ushort group, ushort element)
             => _value = group << 16 | element;
 
@@ -50,15 +47,9 @@ namespace DiCor
                 if (details is null)
                     return $"? {this}";
 
-                string vr;
-                if (details.MultipleVRs is not null)
-                {
-                    vr = string.Join('/', details.MultipleVRs);
-                }
-                else
-                {
-                    vr = details.SingleVR.ToString();
-                }
+                string vr = details.MultipleVRs is null
+                    ? details.SingleVR.ToString()
+                    : string.Join('/', details.MultipleVRs);
 
                 return $"{(details.IsRetired ? "RETIRED " : "")} {this} {details.Name} VR={vr} VM={details.VM}";
             }

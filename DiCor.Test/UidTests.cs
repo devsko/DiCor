@@ -39,13 +39,13 @@ namespace DiCor.Test
             Assert.True(retiredUid.IsValid);
             Assert.True(validUid.IsValid);
 
-            Assert.False(defaultUid.IsKnown);
-            Assert.False(newUid.IsKnown);
-            Assert.False(emptyUid.IsKnown);
-            Assert.False(invalidUid.IsKnown);
-            Assert.False(unknownUid.IsKnown);
-            Assert.True(retiredUid.IsKnown);
-            Assert.True(validUid.IsKnown);
+            Assert.False(defaultUid.IsKnown(out _));
+            Assert.False(newUid.IsKnown(out _));
+            Assert.False(emptyUid.IsKnown(out _));
+            Assert.False(invalidUid.IsKnown(out _));
+            Assert.False(unknownUid.IsKnown(out _));
+            Assert.True(retiredUid.IsKnown(out _));
+            Assert.True(validUid.IsKnown(out _));
 
             Assert.True(retiredUid.GetDetails()!.IsRetired);
             Assert.False(validUid.GetDetails()!.IsRetired);
@@ -56,7 +56,7 @@ namespace DiCor.Test
         {
             Uid uid = Uid.ImplicitVRLittleEndian;
             Uid.Details? uidDetails = uid.GetDetails();
-            byte[] bytes = uid.Ascii.Value.ToArray();
+            byte[] bytes = uid.Value.Bytes.ToArray();
 
             byte[] copy = new byte[bytes.Length];
             bytes.CopyTo(copy, 0);

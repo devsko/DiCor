@@ -1,61 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers.Text;
 using DiCor;
 
 namespace System.Buffers
 {
-    public static class SequenceReaderExtensions
+    public static partial class SequenceReaderExtensions
     {
-        public static bool TryReadBigEndian(ref this SequenceReader<byte> reader, out ushort value)
-        {
-            if (!reader.TryReadBigEndian(out short val))
-            {
-                value = default;
-                return false;
-            }
-            value = unchecked((ushort)val);
-            return true;
-        }
-
-        public static bool TryReadBigEndian(ref this SequenceReader<byte> reader, out uint value)
-        {
-            if (!reader.TryReadBigEndian(out int val))
-            {
-                value = default;
-                return false;
-            }
-            value = unchecked((uint)val);
-            return true;
-        }
-
-        public static bool TryReadEnumFromByte<TEnum>(ref this SequenceReader<byte> reader, out TEnum value)
-            where TEnum : struct, Enum
-        {
-            if (!reader.TryRead(out byte b))
-            {
-                value = default!;
-                return false;
-            }
-
-            value = Unsafe.As<byte, TEnum>(ref b);
-            if (!Enum.IsDefined(value))
-                // TODO InvalidPduException
-                throw new InvalidOperationException();
-
-            return true;
-        }
-
-        public static bool TryReadLength(ref this SequenceReader<byte> reader, out ushort length)
-        {
-            if (!reader.TryReadBigEndian(out length))
-                return false;
-
-            if (length > reader.Remaining)
-                // TODO InvalidPduException
-                throw new InvalidOperationException();
-
-            return true;
-        }
-
         public static bool TryRead(ref this SequenceReader<byte> reader, out AsciiString ascii)
         {
             if (!TryReadLength(ref reader, out ushort length))
@@ -114,13 +63,35 @@ namespace System.Buffers
             return false;
         }
 
-        public static void Reserved(ref this SequenceReader<byte> reader, int length)
+        public static bool TryRead(ref this SequenceReader<byte> reader, out DateOnly date)
         {
-            if (reader.Remaining < length)
-                // TODO InvalidPduException
-                throw new InvalidOperationException();
+            // TODO .NET x Utf8Parser.TryParse(DateOnly)
 
-            reader.Advance(length);
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            if (span.Length < 8)
+            {
+                Span<byte> copy = stackalloc byte[8];
+                span = copy;
+                if (!reader.TryCopyTo(copy))
+                {
+                    date = default;
+                    return false;
+                }
+            }
+
+            int bytesConsumed;
+            if (!Utf8Parser.TryParse(span.Slice(0, 4), out int year, out bytesConsumed) || bytesConsumed != 4 ||
+                !Utf8Parser.TryParse(span.Slice(4, 2), out int month, out bytesConsumed) || bytesConsumed != 2 ||
+                !Utf8Parser.TryParse(span.Slice(6, 2), out int day, out bytesConsumed) || bytesConsumed != 2)
+            {
+                // TODO
+                throw new Exception("invalid date format");
+            }
+
+            reader.Advance(8);
+
+            date = new DateOnly(year, month, day);
+            return true;
         }
     }
 }

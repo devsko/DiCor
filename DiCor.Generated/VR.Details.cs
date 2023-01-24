@@ -13,6 +13,7 @@ namespace DiCor
             return EnumerateDetails().ToFrozenDictionary();
 
             // PS3.5 - 6.2 Value Representation
+            // https://dicom.nema.org/medical/dicom/current/output/html/part05.html#sect_6.2
 
             static IEnumerable<KeyValuePair<ushort, Details>> EnumerateDetails()
             {

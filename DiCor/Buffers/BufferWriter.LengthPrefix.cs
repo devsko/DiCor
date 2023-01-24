@@ -33,16 +33,24 @@ namespace DiCor.Buffers
             public void Write()
             {
                 if (_currentPrefixCount != --_state._lengthPrefixCount)
+                {
                     throw new InvalidOperationException("Legnth prefix mismatch");
+                }
 
                 uint length = (uint)(_state._committed + _state._buffered - _position);
 
                 if (_span.Length == sizeof(uint))
+                {
                     BinaryPrimitives.WriteUInt32BigEndian(_span, length);
+                }
                 else if (_span.Length == sizeof(ushort))
+                {
                     BinaryPrimitives.WriteUInt16BigEndian(_span, (ushort)length);
+                }
                 else
+                {
                     throw new InvalidOperationException();
+                }
             }
 
             public void Dispose()

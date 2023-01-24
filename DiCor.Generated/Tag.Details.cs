@@ -1,11 +1,14 @@
-﻿using System;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace DiCor
 {
     public partial struct Tag
     {
-        public bool IsKnown
-            => GetDetails() is not null;
+        public bool IsKnown([NotNullWhen(true)] out Details? details)
+        {
+            details = GetDetails();
+            return details is not null;
+        }
 
         public partial Details? GetDetails();
 

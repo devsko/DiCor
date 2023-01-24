@@ -31,7 +31,7 @@ namespace DiCor.Net.UpperLayer
 
                 if (buffer.Remaining >= 6)
                 {
-                    buffer.TryReadEnumFromByte(out Pdu.Type messageType);
+                    buffer.TryRead(out Pdu.Type messageType);
                     buffer.Advance(1);
                     buffer.TryReadBigEndian(out uint length);
 

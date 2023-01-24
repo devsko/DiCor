@@ -7,7 +7,7 @@ namespace DiCor.Buffers
     {
         public void Write(AsciiString ascii)
         {
-            ReadOnlySpan<byte> value = ascii.Value;
+            ReadOnlySpan<byte> value = ascii.Bytes;
             ushort length = (ushort)value.Length;
             Debug.Assert(length <= ushort.MaxValue);
             Write(length);
@@ -28,7 +28,7 @@ namespace DiCor.Buffers
 
         public void Write(AsciiString ascii, int length)
         {
-            ReadOnlySpan<byte> value = ascii.Value;
+            ReadOnlySpan<byte> value = ascii.Bytes;
             Ensure(length);
             int padding = length - value.Length;
             if (padding <= 0)
@@ -44,6 +44,6 @@ namespace DiCor.Buffers
         }
 
         public void Write(Uid uid)
-            => Write(uid.Ascii);
+            => Write(uid.Value);
     }
 }

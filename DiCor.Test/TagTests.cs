@@ -12,7 +12,7 @@ namespace DiCor.Test
         [Fact]
         public void Tag()
         {
-            Tag tag = new Tag(0x0014, 0x3050);
+            Tag tag = new Tag(0x0014, 0x31cc);
             var details = tag.GetDetails()!;
             VM vm = details.VM;
         }
