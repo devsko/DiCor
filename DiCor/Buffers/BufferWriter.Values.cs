@@ -8,7 +8,7 @@ namespace DiCor.Buffers
     public partial struct BufferWriter
     {
         public void Write<TIsQueryContext>(AEValue<TIsQueryContext> value)
-            where TIsQueryContext : struct, IRuntimeConst
+            where TIsQueryContext : struct, IIsQueryContext
         {
             if (TIsQueryContext.Value && value.IsEmptyValue)
             {
@@ -16,13 +16,13 @@ namespace DiCor.Buffers
             }
             else
             {
-                Write(value.Get<AsciiString>(), -1);
+                Write(value.Ascii, -1);
             }
         }
 
         public void Write(ASValue value)
         {
-            Age age = value.Get<Age>();
+            Age age = value.Age;
 
             Ensure(4);
             Utf8Formatter.TryFormat(age.Value, Span, out _, new StandardFormat('D', 3));
@@ -31,11 +31,11 @@ namespace DiCor.Buffers
         }
 
         public void Write<TIsQueryContext>(DAValue<TIsQueryContext> value)
-            where TIsQueryContext : struct, IRuntimeConst
+            where TIsQueryContext : struct, IIsQueryContext
         {
-            if (!TIsQueryContext.Value || value.IsSingleValue)
+            if (!TIsQueryContext.Value || value.IsSingleDate)
             {
-                Write(value.Get<DateOnly>());
+                Write(value.Date);
             }
             else
             {
@@ -43,9 +43,9 @@ namespace DiCor.Buffers
                 {
                     Write(Value.DoubleQuotationMark);
                 }
-                else if (value.IsRange)
+                else if (value.IsDateRange)
                 {
-                    (DateOnly date1, DateOnly date2) = value.Get<(DateOnly, DateOnly)>();
+                    (DateOnly date1, DateOnly date2) = value.DateRange;
                     if (date1 > DateOnly.MinValue)
                     {
                         Write(date1);

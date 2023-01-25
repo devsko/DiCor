@@ -24,7 +24,7 @@ namespace System.Buffers
         }
 
         public static bool TryReadValue<TIsQueryContext>(ref this SequenceReader<byte> reader, int length, out AEValue<TIsQueryContext> value)
-            where TIsQueryContext : struct, IRuntimeConst
+            where TIsQueryContext : struct, IIsQueryContext
         {
             // Short values
             if (reader.Remaining < length)
@@ -81,7 +81,7 @@ namespace System.Buffers
         }
 
         public static bool TryReadValue<TIsQueryContext>(ref this SequenceReader<byte> reader, int length, out DAValue<TIsQueryContext> value)
-            where TIsQueryContext : struct, IRuntimeConst
+            where TIsQueryContext : struct, IIsQueryContext
         {
             // Short values
             if (reader.Remaining < length)

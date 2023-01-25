@@ -25,7 +25,7 @@ namespace DiCor.Test.Buffers
             static void Read(ReadResult result)
             {
                 SequenceReader<byte> reader = new(result.Buffer);
-                reader.TryReadValue(11, out DAValue<TrueConst> value);
+                reader.TryReadValue(11, out DAValue<IsQueryContext> value);
             }
         }
 
@@ -41,7 +41,7 @@ namespace DiCor.Test.Buffers
             static void Read(ReadResult result)
             {
                 SequenceReader<byte> reader = new(result.Buffer);
-                reader.TryReadValue(9, out AEValue<TrueConst> value);
+                reader.TryReadValue(9, out AEValue<IsQueryContext> value);
             }
         }
     }
