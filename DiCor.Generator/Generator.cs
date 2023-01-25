@@ -41,12 +41,8 @@ namespace DiCor.Generator
                 System.Net.ServicePointManager.DefaultConnectionLimit = 5;
 
                 context.RegisterSourceOutput(
-                    context.AnalyzerConfigOptionsProvider.Select((context, _) =>
-                    {
-                        context.GlobalOptions.TryGetValue("build_property.dicorgenerator_logfilepath", out string? logFilePath);
-                        return logFilePath;
-                    }),
-                    (_, logFilePath) => { Logger.Initialize(logFilePath); });
+                    context.AnalyzerConfigOptionsProvider.Select((context, _) => context.GetStringProperty("dicorgenerator_logfilepath")),
+                    (_, logFilePath) => Logger.Initialize(logFilePath));
 
                 IncrementalValueProvider<Settings> settings = context.AnalyzerConfigOptionsProvider
                     .Select((context, _) => new Settings(context));

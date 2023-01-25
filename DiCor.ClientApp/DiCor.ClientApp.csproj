@@ -1,14 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DiCor\DiCor.csproj" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(NetPackageVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="$(NetPackageVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(NetPackageVersion)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(NetVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="$(NetVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(NetVersion)" />
   </ItemGroup>
 
 </Project>

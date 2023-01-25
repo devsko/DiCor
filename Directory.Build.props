@@ -1,13 +1,23 @@
 <Project>
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <NetPackageVersion>8.0.0-alpha.1.23072.5</NetPackageVersion>
-    <MsCodeAnalysisPackageVersion>4.5.0-2.final</MsCodeAnalysisPackageVersion>
-    <MsCodeAnalysisAnalyzersPackageVersion>3.3.5-beta1.23070.1</MsCodeAnalysisAnalyzersPackageVersion>
-    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>7.0-all</AnalysisLevel>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <NetVersion>8.0.0-alpha.1.23074.4</NetVersion>
+    <MsCodeAnalysisVersion>4.5.0-2.final</MsCodeAnalysisVersion>
+    <MsCodeAnalysisAnalyzersVersion>3.3.5-beta1.23074.3</MsCodeAnalysisAnalyzersVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="$(MsCodeAnalysisVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="$(MsCodeAnalysisVersion)" PrivateAssets="all" />
+  </ItemGroup>
 
   <!--
   .NET 8.0 alpha has a problem with <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>

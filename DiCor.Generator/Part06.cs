@@ -70,16 +70,19 @@ namespace DiCor.Generator
         }
 
         private static UidValues A1ToUid(IEnumerable<XElement> row)
-            => new UidValues(
-                GetValue(row.ElementAt(0)),
-                GetValue(row.ElementAt(1)),
-                GetValue(row.ElementAt(2)),
-                GetValue(row.ElementAt(3)));
+        {
+            XElement[] elements = row.ToArray();
+            return new UidValues(
+                        GetValue(elements[0]),
+                        GetValue(elements[1]),
+                        GetValue(elements[2]),
+                        GetValue(elements[3]));
+        }
 
         private static UidValues A3ToUid(IEnumerable<XElement> row, Dictionary<int, CidValues> cidTable)
         {
-            string? cid = row
-                .ElementAt(1)
+            XElement[] elements = row.ToArray();
+            string? cid = elements[1]
                 .Descendants(Ns + "olink")?
                 .FirstOrDefault()?
                 .Attribute("targetptr")?
@@ -92,7 +95,7 @@ namespace DiCor.Generator
             CidValues cidValues = cidTable[int.Parse(cid, CultureInfo.InvariantCulture)];
 
             return new UidValues(
-                GetValue(row.ElementAt(0)),
+                GetValue(elements[0]),
                 $"{cidValues.Title} ({cid})",
                 string.IsNullOrEmpty(cidValues.Keyword) ? string.Empty : $"{cidValues.Keyword}_{cid}",
                 "ContextGroupName");

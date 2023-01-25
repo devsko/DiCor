@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
@@ -8,7 +9,7 @@
     <ProjectReference Include="..\DiCor\DiCor.csproj" />
     <PackageReference Include="BenchmarkDotNet" Version="0.13.4" />
     <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.4" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="$(MsCodeAnalysisAnalyzersPackageVersion)">
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="$(MsCodeAnalysisAnalyzersVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

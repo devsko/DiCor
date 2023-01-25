@@ -181,7 +181,8 @@ namespace DiCor.Generator
 
         protected static TagValues TableToTag(IEnumerable<XElement> row)
         {
-            string tag = GetValue(row.ElementAt(0));
+            XElement[] elements = row.ToArray();
+            string tag = GetValue(elements[0]);
             if (!(tag.Length == 11 && tag[0] == '(' && tag[10] == ')' && tag[5] == ','))
             {
                 return default;
@@ -189,11 +190,11 @@ namespace DiCor.Generator
             return new TagValues(
                 tag.Substring(1, 4),
                 tag.Substring(6, 4),
-                GetValue(row.ElementAt(1)),
-                GetValue(row.ElementAt(2)),
-                GetValue(row.ElementAt(3)),
-                GetValue(row.ElementAt(4)),
-                (row.ElementAtOrDefault(5)?.Value.TrimStart() ?? string.Empty).StartsWith("RET", StringComparison.Ordinal));
+                GetValue(elements[1]),
+                GetValue(elements[2]),
+                GetValue(elements[3]),
+                GetValue(elements[4]),
+                ((elements.Length > 5 ? elements[5] : null)?.Value.TrimStart() ?? string.Empty).StartsWith("RET", StringComparison.Ordinal));
         }
 
         protected static string GetValue(XElement? element)

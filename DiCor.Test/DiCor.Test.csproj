@@ -1,10 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\DiCor\DiCor.csproj" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(NetPackageVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="$(NetPackageVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(NetPackageVersion)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(NetVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="$(NetVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(NetVersion)" />
     <PackageReference Include="fo-dicom" Version="5.0.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0-preview-20221221-03" />
     <PackageReference Include="xunit" Version="2.4.2" />

@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>DiCor</RootNamespace>
     <!--<DiCorGenerator_LogFilePath>C:\repos\Logs\Dicor.Generator\log.txt</DiCorGenerator_LogFilePath>-->
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <PackageReference Include="System.Collections.Immutable" Version="$(NetPackageVersion)" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(NetVersion)" />
   </ItemGroup>
 
   <Import Project="..\Dicor.Generator\Dicor.Generator.props" />
