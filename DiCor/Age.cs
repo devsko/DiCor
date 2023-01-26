@@ -10,6 +10,7 @@ namespace DiCor
         Months = (byte)'M',
         Years = (byte)'Y',
     }
+
     public readonly struct Age
     {
         private readonly short _value;

@@ -62,20 +62,8 @@ namespace DiCor.Values
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCompatible<T>()
-        {
-            if (typeof(T) == typeof(AsciiString))
-            {
-                return true;
-            }
-            else if (typeof(T) == typeof(EmptyValue))
-            {
-                return TIsQuery.Value;
-            }
-            else
-            {
-                return false;
-            }
-        }
+            => (typeof(T) == typeof(AsciiString) ||
+                (typeof(T) == typeof(EmptyValue) && TIsQuery.Value));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static AEValue<TIsQuery> Create<T>(T content)

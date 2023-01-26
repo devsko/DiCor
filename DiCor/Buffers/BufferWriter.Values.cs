@@ -2,6 +2,7 @@
 using System.Buffers.Text;
 using System.Buffers;
 using DiCor.Values;
+using System.Diagnostics;
 
 namespace DiCor.Buffers
 {
@@ -30,32 +31,32 @@ namespace DiCor.Buffers
             Advance(4);
         }
 
-        public void Write<TIsQuery>(DAValue<TIsQuery> value)
-            where TIsQuery : struct, IIsInQuery
+        public void Write(DAValue value)
+            => Write(value.Date);
+
+        public void Write(DAQueryValue value)
         {
-            if (!TIsQuery.Value || value.IsSingleDate)
+            if (value.IsSingleDate)
             {
                 Write(value.Date);
             }
+            else if (value.IsDateRange)
+            {
+                (DateOnly date1, DateOnly date2) = value.DateRange;
+                if (date1 > DateOnly.MinValue)
+                {
+                    Write(date1);
+                }
+                Write((byte)'-');
+                if (date2 < DateOnly.MaxValue)
+                {
+                    Write(date2);
+                }
+            }
             else
             {
-                if (value.IsEmptyValue)
-                {
-                    Write(Value.DoubleQuotationMark);
-                }
-                else if (value.IsDateRange)
-                {
-                    (DateOnly date1, DateOnly date2) = value.DateRange;
-                    if (date1 > DateOnly.MinValue)
-                    {
-                        Write(date1);
-                    }
-                    Write((byte)'-');
-                    if (date2 < DateOnly.MaxValue)
-                    {
-                        Write(date2);
-                    }
-                }
+                Debug.Assert(value.IsEmptyValue);
+                Write(Value.DoubleQuotationMark);
             }
         }
     }

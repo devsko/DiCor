@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace DiCor.Values
 {
@@ -30,16 +29,7 @@ namespace DiCor.Values
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCompatible<T>()
-        {
-            if (typeof(T) == typeof(Age))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+            => typeof(T) == typeof(Age);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ASValue Create<T>(T content)

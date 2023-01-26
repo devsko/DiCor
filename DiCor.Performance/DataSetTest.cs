@@ -17,7 +17,7 @@ namespace DiCor
         public void Test()
         {
             DataSet set = new(true);
-            set.Add(Tag.InstanceCreationDate, new DateOnly(2022, 1, 1));
+            set.Set(Tag.InstanceCreationDate, new DateOnly(2022, 1, 1));
             set.TryGet(Tag.InstanceCreationDate, out DateOnly date);
         }
 

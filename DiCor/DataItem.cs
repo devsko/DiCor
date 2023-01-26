@@ -1,35 +1,30 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using DiCor.Values;
 
 namespace DiCor
 {
-    public ref struct DataItem
+    public readonly ref struct DataItem
     {
-        private ref AbstractValue _value;
+        private readonly bool _isQuery;
+        private readonly ref readonly AbstractValue _value;
 
         public Tag Tag { get; }
 
         public VR VR { get; }
 
-        internal DataItem(Tag tag, VR vr, ref AbstractValue value)
+        internal DataItem(Tag tag, VR vr, bool isQuery, in AbstractValue value)
         {
+            Debug.Assert(!Unsafe.IsNullRef(ref Unsafe.AsRef(in value)));
+
+            _isQuery = isQuery;
+            _value = ref value;
             Tag = tag;
             VR = vr;
-            _value = ref value;
         }
 
-        [UnscopedRef]
-        public ref TValue ValueRef<TValue>()
-            where TValue : struct, IValue<TValue>
-        {
-            if (Unsafe.IsNullRef(ref _value))
-            {
-                throw new NullReferenceException();
-            }
-
-            return ref Unsafe.As<AbstractValue, TValue>(ref _value);
-        }
+        public T GetValue<T>()
+            => VR.GetContent<T>(_value, _isQuery);
     }
 }

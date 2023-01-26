@@ -8,7 +8,8 @@ namespace DiCor.Values
     internal interface IValueTable
     {
         ushort Add(AbstractValue value);
-        ref AbstractValue this[ushort index] { get; }
+        ref readonly AbstractValue GetValueRef(ushort index);
+        void SetValue(ushort index, AbstractValue value);
     }
 
     internal sealed class ValueTable<TValue> : IValueTable
@@ -68,8 +69,12 @@ namespace DiCor.Values
             return index;
         }
 
-        ref AbstractValue IValueTable.this[ushort index]
+        ref readonly AbstractValue IValueTable.GetValueRef(ushort index)
             => ref Unsafe.As<TValue, AbstractValue>(ref this[index]);
+
+        void IValueTable.SetValue(ushort index, AbstractValue value)
+            => this[index] = Unsafe.As<AbstractValue, TValue>(ref value);
+
 
         public ref TValue AddDefault(out ushort index)
         {
