@@ -7,10 +7,10 @@ namespace DiCor.Buffers
 {
     public partial struct BufferWriter
     {
-        public void Write<TIsQueryContext>(AEValue<TIsQueryContext> value)
-            where TIsQueryContext : struct, IIsQueryContext
+        public void Write<TIsQuery>(AEValue<TIsQuery> value)
+            where TIsQuery : struct, IIsInQuery
         {
-            if (TIsQueryContext.Value && value.IsEmptyValue)
+            if (TIsQuery.Value && value.IsEmptyValue)
             {
                 Write(Value.DoubleQuotationMark);
             }
@@ -30,10 +30,10 @@ namespace DiCor.Buffers
             Advance(4);
         }
 
-        public void Write<TIsQueryContext>(DAValue<TIsQueryContext> value)
-            where TIsQueryContext : struct, IIsQueryContext
+        public void Write<TIsQuery>(DAValue<TIsQuery> value)
+            where TIsQuery : struct, IIsInQuery
         {
-            if (!TIsQueryContext.Value || value.IsSingleDate)
+            if (!TIsQuery.Value || value.IsSingleDate)
             {
                 Write(value.Date);
             }

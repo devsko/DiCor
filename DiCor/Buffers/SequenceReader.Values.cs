@@ -23,8 +23,8 @@ namespace System.Buffers
             return false;
         }
 
-        public static bool TryReadValue<TIsQueryContext>(ref this SequenceReader<byte> reader, int length, out AEValue<TIsQueryContext> value)
-            where TIsQueryContext : struct, IIsQueryContext
+        public static bool TryReadValue<TIsQuery>(ref this SequenceReader<byte> reader, int length, out AEValue<TIsQuery> value)
+            where TIsQuery : struct, IIsInQuery
         {
             // Short values
             if (reader.Remaining < length)
@@ -33,14 +33,14 @@ namespace System.Buffers
                 return false;
             }
 
-            if (TIsQueryContext.Value && reader.IsEmptyValue(length))
+            if (TIsQuery.Value && reader.IsEmptyValue(length))
             {
-                value = new AEValue<TIsQueryContext>(default(EmptyValue));
+                value = new AEValue<TIsQuery>(default(EmptyValue));
                 return true;
             }
 
             reader.TryRead(Math.Min(16, length), out AsciiString ascii);
-            value = new AEValue<TIsQueryContext>(ascii);
+            value = new AEValue<TIsQuery>(ascii);
             return true;
         }
 
@@ -80,8 +80,8 @@ namespace System.Buffers
             }
         }
 
-        public static bool TryReadValue<TIsQueryContext>(ref this SequenceReader<byte> reader, int length, out DAValue<TIsQueryContext> value)
-            where TIsQueryContext : struct, IIsQueryContext
+        public static bool TryReadValue<TIsQuery>(ref this SequenceReader<byte> reader, int length, out DAValue<TIsQuery> value)
+            where TIsQuery : struct, IIsInQuery
         {
             // Short values
             if (reader.Remaining < length)
@@ -91,7 +91,7 @@ namespace System.Buffers
             }
 
             DateOnly date1;
-            if (!TIsQueryContext.Value)
+            if (!TIsQuery.Value)
             {
                 reader.TryRead(out date1);
             }
@@ -102,14 +102,14 @@ namespace System.Buffers
 
                 if (reader.IsEmptyValue(length))
                 {
-                    value = new DAValue<TIsQueryContext>(new EmptyValue());
+                    value = new DAValue<TIsQuery>(new EmptyValue());
                     return true;
                 }
 
                 if (reader.IsNext((byte)'-', true))
                 {
                     reader.TryRead(out DateOnly date);
-                    value = new DAValue<TIsQueryContext>(DateOnly.MinValue, date);
+                    value = new DAValue<TIsQuery>(DateOnly.MinValue, date);
                     return true;
                 }
 
@@ -121,12 +121,12 @@ namespace System.Buffers
                     {
                         reader.TryRead(out date2);
                     }
-                    value = new DAValue<TIsQueryContext>(date1, date2);
+                    value = new DAValue<TIsQuery>(date1, date2);
                     return true;
                 }
             }
 
-            value = new DAValue<TIsQueryContext>(date1);
+            value = new DAValue<TIsQuery>(date1);
             return true;
         }
     }

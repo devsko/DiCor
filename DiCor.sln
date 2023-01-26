@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{45B7FE2F-D457-4125-A48C-7747D9307ED4}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitignore = .gitignore
 		CodeAnalysis.src.globalconfig = CodeAnalysis.src.globalconfig
 		CodeAnalysis.test.globalconfig = CodeAnalysis.test.globalconfig
 		Directory.Build.props = Directory.Build.props
@@ -21,6 +22,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Performance", "DiCor.Performance\DiCor.Performance.csproj", "{D3F283CF-4D86-4518-ABF5-7A5336499E02}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Generator", "DiCor.Generator\DiCor.Generator.csproj", "{66CD12A9-0D59-4127-B46F-9CE01E8591F6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FO-DICOM.Core", "..\..\fo-dicom\FO-DICOM.Core\FO-DICOM.Core.csproj", "{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +51,10 @@ Global
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

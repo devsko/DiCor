@@ -3,8 +3,8 @@ using System.Runtime.CompilerServices;
 
 namespace DiCor.Values
 {
-    public readonly struct DAValue<TIsQueryContext> : IValue<DAValue<TIsQueryContext>>
-        where TIsQueryContext : struct, IIsQueryContext
+    public readonly struct DAValue<TIsQuery> : IQueryableValue<DAValue<TIsQuery>>
+        where TIsQuery : struct, IIsInQuery
     {
         private readonly (DateOnly Low, DateOnly Hi) _dates;
 
@@ -15,7 +15,7 @@ namespace DiCor.Values
 
         public DAValue(DateOnly lowDate, DateOnly hiDate)
         {
-            if (!TIsQueryContext.Value)
+            if (!TIsQuery.Value)
                 throw new InvalidOperationException("DAValue can only accept 2 dates in context of a query.");
             ArgumentOutOfRangeException.ThrowIfGreaterThan(lowDate, hiDate);
 
@@ -28,7 +28,7 @@ namespace DiCor.Values
 
         public DAValue(EmptyValue emptyValue)
         {
-            if (!TIsQueryContext.Value)
+            if (!TIsQuery.Value)
                 throw new InvalidOperationException("DAValue can only be an empty value in context of a query.");
 
             _dates = (s_InvalidDate, s_InvalidDate);
@@ -53,10 +53,10 @@ namespace DiCor.Values
             => VR.DA;
 
         public static int MaximumLength
-            => TIsQueryContext.Value ? 18 : 8;
+            => TIsQuery.Value ? 18 : 8;
 
         public static bool IsFixedLength
-            => !TIsQueryContext.Value;
+            => !TIsQuery.Value;
 
         public static byte Padding
             => (byte)' ';
@@ -64,36 +64,61 @@ namespace DiCor.Values
         public static int PageSize
             => 10;
 
-        //public static bool IsCompatible<T>()
-        //    => TIsQueryContext.Value
-        //    ? typeof(T) == typeof(ValueTuple<DateOnly, DateOnly>)
-        //    : typeof(T) == typeof(DateOnly);
-
-        public static DAValue<TIsQueryContext> Create<T>(T content)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsCompatible<T>()
         {
             if (typeof(T) == typeof(DateOnly))
-                return new DAValue<TIsQueryContext>(Unsafe.As<T, DateOnly>(ref content));
-
-            if (typeof(T) == typeof((DateOnly, DateOnly)))
-                return new DAValue<TIsQueryContext>(Unsafe.As<T, (DateOnly, DateOnly)>(ref content));
-
-            if (typeof(T) == typeof(EmptyValue))
-                return new DAValue<TIsQueryContext>(default(EmptyValue));
-
-            Value.ThrowIncompatible<T>(nameof(DAValue<TIsQueryContext>));
-            return default;
+            {
+                return true;
+            }
+            else if (typeof(T) == typeof((DateOnly, DateOnly)) || typeof(T) == typeof(EmptyValue))
+            {
+                return TIsQuery.Value;
+            }
+            else
+            {
+                return false;
+            }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DAValue<TIsQuery> Create<T>(T content)
+        {
+            if (typeof(T) == typeof(DateOnly))
+            {
+                return new DAValue<TIsQuery>(Unsafe.As<T, DateOnly>(ref content));
+            }
+            else if (typeof(T) == typeof((DateOnly, DateOnly)))
+            {
+                return new DAValue<TIsQuery>(Unsafe.As<T, (DateOnly, DateOnly)>(ref content));
+            }
+            else if (typeof(T) == typeof(EmptyValue))
+            {
+                return new DAValue<TIsQuery>(default(EmptyValue));
+            }
+            else
+            {
+                Value.ThrowIncompatible<T>(nameof(DAValue<TIsQuery>));
+                return default;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>()
         {
             if (typeof(T) == typeof(DateOnly) && IsSingleDate)
+            {
                 return Unsafe.As<DateOnly, T>(ref Unsafe.AsRef(in _dates.Low));
-
-            if (TIsQueryContext.Value && typeof(T) == typeof((DateOnly, DateOnly)) && IsDateRange)
+            }
+            else if (typeof(T) == typeof((DateOnly, DateOnly)) && TIsQuery.Value && IsDateRange)
+            {
                 return Unsafe.As<(DateOnly, DateOnly), T>(ref Unsafe.AsRef(in _dates));
-
-            Value.ThrowIncompatible<T>(nameof(DAValue<TIsQueryContext>));
-            return default;
+            }
+            else
+            {
+                Value.ThrowIncompatible<T>(nameof(DAValue<TIsQuery>));
+                return default;
+            }
         }
 
         private static readonly DateOnly s_InvalidDate = InvalidDate();

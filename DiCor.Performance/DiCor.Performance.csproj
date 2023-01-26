@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DiCor\DiCor.csproj" />
+    <PackageReference Include="fo-dicom" Version="5.0.3" />
     <PackageReference Include="BenchmarkDotNet" Version="0.13.4" />
     <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.4" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="$(MsCodeAnalysisAnalyzersVersion)">

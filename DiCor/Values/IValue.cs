@@ -14,9 +14,15 @@ namespace DiCor.Values
         static abstract bool IsFixedLength { get; }
         static abstract byte Padding { get; }
         static abstract int PageSize { get; }
+        static abstract bool IsCompatible<T>();
         static abstract TValue Create<T>(T content);
-        bool IsEmptyValue { get; }
         T Get<T>();
+    }
+
+    public interface IQueryableValue<TValue> : IValue<TValue>
+        where TValue : struct, IQueryableValue<TValue>
+    {
+        bool IsEmptyValue { get; }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 8)]
@@ -43,16 +49,16 @@ namespace DiCor.Values
         internal static void ThrowIncompatible<T>(string valueTypeName)
             => throw new ArgumentException($"{nameof(T)} is not compatible with {valueTypeName}.");
     }
-    public interface IIsQueryContext
+    public interface IIsInQuery
     {
         static abstract bool Value { get; }
     }
 
-    public struct IsQueryContext : IIsQueryContext
+    public struct InQuery : IIsInQuery
     {
         public static bool Value => true;
     }
-    public struct IsNotQueryContext : IIsQueryContext
+    public struct NotInQuery : IIsInQuery
     {
         public static bool Value => false;
     }

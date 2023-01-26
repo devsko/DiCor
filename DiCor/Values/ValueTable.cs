@@ -27,7 +27,19 @@ namespace DiCor.Values
         }
 
         public ushort Count
-            => (ushort)((_pages.Count - 1) * s_pageSize + _index);
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+               => (ushort)((_pages.Count - 1) * s_pageSize + _index);
+        }
+
+        [MemberNotNull(nameof(_currentPage))]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void AddPage()
+        {
+            _pages.Add(_currentPage = new TValue[s_pageSize]);
+            _index = 0;
+        }
 
         public ref TValue this[int index]
         {
@@ -43,18 +55,21 @@ namespace DiCor.Values
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ushort IValueTable.Add(AbstractValue value)
         {
-            AddDefault(out ushort index) = Unsafe.As<AbstractValue, TValue>(ref value);
+            ushort index = Count;
+            if (_index >= s_pageSize)
+            {
+                AddPage();
+            }
+            _currentPage[_index++] = Unsafe.As<AbstractValue, TValue>(ref value);
+
             return index;
         }
 
         ref AbstractValue IValueTable.this[ushort index]
             => ref Unsafe.As<TValue, AbstractValue>(ref this[index]);
-
-        [MemberNotNull(nameof(_currentPage))]
-        private void AddPage()
-            => _pages.Add(_currentPage = new TValue[s_pageSize]);
 
         public ref TValue AddDefault(out ushort index)
         {

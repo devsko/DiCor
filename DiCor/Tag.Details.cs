@@ -39,6 +39,29 @@ namespace DiCor
                 MultipleVRs = multipleVRs;
                 IsRetired = isRetired;
             }
+
+            public bool TryGetCompatibleVR<T>(bool isQuery, out VR vr)
+            {
+                if (MultipleVRs is not null)
+                {
+                    foreach (VR test in MultipleVRs)
+                    {
+                        if (test.IsCompatible<T>(isQuery))
+                        {
+                            vr = test;
+                            return true;
+                        }
+                    }
+                }
+                else if (SingleVR.IsCompatible<T>(isQuery))
+                {
+                    vr = SingleVR;
+                    return true;
+                }
+
+                vr = default;
+                return false;
+            }
         }
 
         private readonly struct TemplateTagPart
