@@ -17,20 +17,15 @@ namespace DiCor
             };
 
         internal AbstractValue CreateValue<T>(T content, bool isQueryContext)
-        {
-            return (_value, isQueryContext) switch
+            => (_value, isQueryContext) switch
             {
-                (0x4541, false) => CreateValue<AEValue<IsNotQueryContext>>(content),
-                (0x4541, true) => CreateValue<AEValue<IsQueryContext>>(content),
-                (0x5351, _) => CreateValue<ASValue>(content),
-                (0x4144, false) => CreateValue<DAValue<IsNotQueryContext>>(content),
-                (0x4144, true) => CreateValue<DAValue<IsQueryContext>>(content),
+                (0x4541, false) => AbstractValue.Of(AEValue<IsNotQueryContext>.Create(content)),
+                (0x4541, true) => AbstractValue.Of(AEValue<IsQueryContext>.Create(content)),
+                (0x5351, _) => AbstractValue.Of(ASValue.Create(content)),
+                (0x4144, false) => AbstractValue.Of(DAValue<IsNotQueryContext>.Create(content)),
+                (0x4144, true) => AbstractValue.Of(DAValue<IsQueryContext>.Create(content)),
                 _ => throw new NotImplementedException(),
             };
-
-            static AbstractValue CreateValue<TValue>(T content) where TValue : struct, IValue<TValue>
-                => IValue<TValue>.AsAbstract(TValue.Create(content));
-        }
 
         internal T GetContent<T>(AbstractValue value, bool isQueryContext)
             => (_value, isQueryContext) switch

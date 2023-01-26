@@ -27,9 +27,6 @@ namespace DiCor.Values
         public static int PageSize
             => 5;
 
-        //public static bool IsCompatible<T>()
-        //    => typeof(T) == typeof(Age);
-
         public static ASValue Create<T>(T content)
         {
             if (typeof(T) == typeof(Age))
@@ -38,6 +35,9 @@ namespace DiCor.Values
             Value.ThrowIncompatible<T>(nameof(ASValue));
             return default;
         }
+
+        bool IValue<ASValue>.IsEmptyValue => false;
+
         public T Get<T>()
         {
             if (typeof(T) == typeof(Age))

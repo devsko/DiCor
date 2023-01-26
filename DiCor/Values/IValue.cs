@@ -9,22 +9,14 @@ namespace DiCor.Values
     public interface IValue<TValue>
         where TValue : struct, IValue<TValue>
     {
-        static AbstractValue AsAbstract(TValue value)
-            => Unsafe.As<TValue, AbstractValue>(ref value);
         static abstract VR VR { get; }
         static abstract int MaximumLength { get; }
         static abstract bool IsFixedLength { get; }
         static abstract byte Padding { get; }
         static abstract int PageSize { get; }
         static abstract TValue Create<T>(T content);
-        virtual bool IsEmptyValue => false;
+        bool IsEmptyValue { get; }
         T Get<T>();
-        //AbstractValue AsAbstract()
-        //{
-        //    // BOXING?
-        //    TValue value = (TValue)this;
-        //    return Unsafe.As<TValue, AbstractValue>(ref value);
-        //}
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 8)]
@@ -33,6 +25,10 @@ namespace DiCor.Values
         public TValue As<TValue>()
             where TValue : struct, IValue<TValue>
             => Unsafe.As<AbstractValue, TValue>(ref this);
+
+        public static AbstractValue Of<TValue>(TValue value)
+            where TValue : struct, IValue<TValue>
+            => Unsafe.As<TValue, AbstractValue>(ref value);
     }
 
     public struct EmptyValue
