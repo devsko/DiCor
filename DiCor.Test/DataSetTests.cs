@@ -38,16 +38,5 @@ namespace DiCor.Test
 
             Assert.Equal(new DateOnly(2022, 2, 2), date);
         }
-
-
-        [Fact]
-        public void FoDicom()
-        {
-            DicomDataset set = new();
-            var tagDetails = DicomDictionary.Default[new DicomTag(0x0014, 0x3050)];
-
-            set.Add(tagDetails.Tag, 100);
-        }
-
     }
 }
