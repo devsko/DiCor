@@ -27,7 +27,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.Write(0x4243);
+                    buffer.WriteBE(0x4243);
                     buffer.Commit();
                 });
         }
@@ -39,7 +39,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.Write(0x42434445);
+                    buffer.WriteBE(0x42434445);
                     buffer.Commit();
                 });
         }

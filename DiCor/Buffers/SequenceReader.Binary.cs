@@ -1,10 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
+using DiCor;
 
 namespace System.Buffers
 {
     internal static partial class SequenceReaderExtensions
     {
-        public static bool TryReadBigEndian(ref this SequenceReader<byte> reader, out ushort value)
+        public static bool TryReadBE(ref this SequenceReader<byte> reader, out ushort value)
         {
             if (!reader.TryReadBigEndian(out short val))
             {
@@ -15,7 +16,7 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryReadBigEndian(ref this SequenceReader<byte> reader, out uint value)
+        public static bool TryReadBE(ref this SequenceReader<byte> reader, out uint value)
         {
             if (!reader.TryReadBigEndian(out int val))
             {
@@ -26,7 +27,7 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryRead<TEnum>(ref this SequenceReader<byte> reader, out TEnum value)
+        public static bool TryReadByte<TEnum>(ref this SequenceReader<byte> reader, out TEnum value)
             where TEnum : struct, Enum
         {
             if (!reader.TryRead(out byte b))
@@ -43,15 +44,36 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryReadLength(ref this SequenceReader<byte> reader, out ushort length)
+        public static bool TryReadLengthBE(ref this SequenceReader<byte> reader, out ushort length)
         {
-            if (!reader.TryReadBigEndian(out length))
+            if (!reader.TryReadBE(out length))
                 return false;
 
             if (length > reader.Remaining)
                 // TODO InvalidPduException
                 throw new InvalidOperationException();
 
+            return true;
+        }
+
+        public static bool TryReadTag(ref this SequenceReader<byte> reader, out Tag tag)
+        {
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            if (span.Length < 4)
+            {
+                Span<byte> copy = stackalloc byte[4];
+                span = copy;
+                if (!reader.TryCopyTo(copy))
+                {
+                    tag = default;
+                    return false;
+                }
+            }
+
+            reader.TryReadLittleEndian(out short group);
+            reader.TryReadLittleEndian(out short element);
+
+            tag = new Tag(unchecked((ushort)group), unchecked((ushort)element));
             return true;
         }
 

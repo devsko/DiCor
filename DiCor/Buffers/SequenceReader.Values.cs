@@ -80,6 +80,21 @@ namespace System.Buffers
             }
         }
 
+        public static bool TryReadValue(ref this SequenceReader<byte> reader, int length, out ATValue value)
+        {
+            // Short values
+            if (reader.Remaining < length)
+            {
+                value = default;
+                return false;
+            }
+
+            reader.TryReadTag(out Tag tag);
+
+            value = new ATValue(tag);
+            return true;
+        }
+
         public static bool TryReadValue(ref this SequenceReader<byte> reader, int length, out DAValue value)
         {
             // Short values
@@ -133,6 +148,21 @@ namespace System.Buffers
             }
 
             value = new DAQueryValue(date1);
+            return true;
+        }
+
+        public static bool TryReadValue(ref this SequenceReader<byte> reader, int length, out DSValue value)
+        {
+            // Short values
+            if (reader.Remaining < length)
+            {
+                value = default;
+                return false;
+            }
+
+            reader.TryRead(out decimal @decimal);
+
+            value = new DSValue(@decimal);
             return true;
         }
     }

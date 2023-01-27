@@ -12,7 +12,7 @@ namespace DiCor.Buffers
             ReadOnlySpan<byte> value = ascii.Bytes;
             ushort length = (ushort)value.Length;
             Debug.Assert(length <= ushort.MaxValue);
-            Write(length);
+            WriteBE(length);
 
             if (Span.Length < length)
             {
@@ -61,6 +61,13 @@ namespace DiCor.Buffers
             Advance(2);
             Utf8Formatter.TryFormat(date.Day, Span, out _, new StandardFormat('D', 2));
             Advance(2);
+        }
+
+        public void Write(decimal @decimal)
+        {
+            Ensure(16);
+            Utf8Formatter.TryFormat(@decimal, Span, out _,
+                new StandardFormat('G', (byte)(@decimal < 0 ? 14 : 15))); // Reserve 1 char for the sign and 1 for the decimal
         }
     }
 }

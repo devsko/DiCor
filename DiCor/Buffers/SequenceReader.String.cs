@@ -7,7 +7,7 @@ namespace System.Buffers
     {
         public static bool TryRead(ref this SequenceReader<byte> reader, out AsciiString ascii)
         {
-            if (!TryReadLength(ref reader, out ushort length))
+            if (!TryReadLengthBE(ref reader, out ushort length))
             {
                 ascii = default;
                 return false;
@@ -90,6 +90,30 @@ namespace System.Buffers
             reader.Advance(8);
 
             date = new DateOnly(year, month, day);
+            return true;
+        }
+
+        public static bool TryRead(ref this SequenceReader<byte> reader, out decimal @decimal)
+        {
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            if (span.Length < 8)
+            {
+                Span<byte> copy = stackalloc byte[8];
+                span = copy;
+                if (!reader.TryCopyTo(copy))
+                {
+                    @decimal = default;
+                    return false;
+                }
+            }
+            if (!Utf8Parser.TryParse(span, out @decimal, out int bytesConsumed, 'G'))
+            {
+                // TODO
+                throw new Exception("invalid date format");
+            }
+
+            reader.Advance(bytesConsumed);
+
             return true;
         }
     }

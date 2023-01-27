@@ -31,9 +31,9 @@ namespace DiCor.Net.UpperLayer
 
                 if (buffer.Remaining >= 6)
                 {
-                    buffer.TryRead(out Pdu.Type messageType);
+                    buffer.TryReadByte(out Pdu.Type messageType);
                     buffer.Advance(1);
-                    buffer.TryReadBigEndian(out uint length);
+                    buffer.TryReadBE(out uint length);
 
                     _logger.LogDebug($"<<< {messageType} ({length} bytes)");
 

@@ -23,13 +23,15 @@ namespace DiCor.Buffers
 
         public void Write(ASValue value)
         {
-            Age age = value.Age;
-
             Ensure(4);
+            Age age = value.Age;
             Utf8Formatter.TryFormat(age.Value, Span, out _, new StandardFormat('D', 3));
             Span[3] = (byte)age.Unit;
             Advance(4);
         }
+
+        public unsafe void Write(ATValue value)
+            => Write(value.Tag);
 
         public void Write(DAValue value)
             => Write(value.Date);
@@ -59,5 +61,8 @@ namespace DiCor.Buffers
                 Write(Value.DoubleQuotationMark);
             }
         }
+
+        public void Write(DSValue value)
+            => Write(value.Decimal);
     }
 }

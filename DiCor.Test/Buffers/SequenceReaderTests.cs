@@ -28,14 +28,14 @@ namespace DiCor.Test.Buffers
             void Write()
             {
                 var writer = new BufferWriter(pipe.Writer);
-                writer.Write(value);
+                writer.WriteBE(value);
                 writer.Commit();
             }
 
             void Read()
             {
                 var reader = new SequenceReader<byte>(result.Buffer);
-                reader.TryReadBigEndian(out uint readValue);
+                reader.TryReadBE(out uint readValue);
 
                 Assert.Equal(value, readValue);
             }
@@ -56,14 +56,14 @@ namespace DiCor.Test.Buffers
             void Write()
             {
                 var writer = new BufferWriter(pipe.Writer);
-                writer.Write(value);
+                writer.WriteBE(value);
                 writer.Commit();
             }
 
             void Read()
             {
                 var reader = new SequenceReader<byte>(result.Buffer);
-                reader.TryReadBigEndian(out ushort readValue);
+                reader.TryReadBE(out ushort readValue);
 
                 Assert.Equal(value, readValue);
             }

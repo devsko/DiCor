@@ -18,18 +18,26 @@ namespace DiCor.Buffers
             Advance(count);
         }
 
-        public void Write(ushort value)
+        public void WriteBE(ushort value)
         {
             Ensure(sizeof(ushort));
             BinaryPrimitives.WriteUInt16BigEndian(Span, value);
             Advance(sizeof(ushort));
         }
 
-        public void Write(uint value)
+        public void WriteBE(uint value)
         {
             Ensure(sizeof(uint));
             BinaryPrimitives.WriteUInt32BigEndian(Span, value);
             Advance(sizeof(uint));
+        }
+
+        public unsafe void Write(Tag tag)
+        {
+            Ensure(sizeof(Tag));
+            BinaryPrimitives.WriteUInt16LittleEndian(Span, tag.Group);
+            BinaryPrimitives.WriteUInt16LittleEndian(Span, tag.Element);
+            Advance(sizeof(Tag));
         }
 
         public void Reserved(int count)
@@ -38,6 +46,5 @@ namespace DiCor.Buffers
             Span.Slice(0, count).Clear();
             Advance(count);
         }
-
     }
 }

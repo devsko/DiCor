@@ -17,7 +17,7 @@ namespace DiCor.Net.UpperLayer
         {
             association = new Association();
 
-            _input.TryReadBigEndian(out ushort _); // Protocol-version
+            _input.TryReadBE(out ushort _); // Protocol-version
             _input.Reserved(2);
             _input.TryRead(16, out AsciiString calledAE);
             association.CalledAE = calledAE;
@@ -29,7 +29,7 @@ namespace DiCor.Net.UpperLayer
             {
                 _input.TryRead(out byte type); // Item-type
                 _input.Reserved(1);
-                _input.TryReadLength(out ushort length); // Item-length
+                _input.TryReadLengthBE(out ushort length); // Item-length
                 long end = _input.Remaining - length;
 
                 switch (type)
@@ -42,7 +42,7 @@ namespace DiCor.Net.UpperLayer
                     case Pdu.ItemTypePresentationContextRq:
                         {
                             _input.Reserved(1);
-                            _input.TryReadLength(out _); // itemLength
+                            _input.TryReadLengthBE(out _); // itemLength
 
                             _input.TryRead(out _); // presentationContextid
                             _input.Reserved(3);
@@ -74,13 +74,13 @@ namespace DiCor.Net.UpperLayer
                             {
                                 userInformation.TryRead(out byte itemType); // Item-type
                                 userInformation.Reserved(1);
-                                userInformation.TryReadLength(out ushort itemLength); // Item-length
+                                userInformation.TryReadLengthBE(out ushort itemLength); // Item-length
                                 long itemEnd = userInformation.Remaining - itemLength;
 
                                 switch (itemType)
                                 {
                                     case Pdu.SubItemTypeMaximumLength:
-                                        userInformation.TryReadBigEndian(out uint maxLength); // Maximum-length-received
+                                        userInformation.TryReadBE(out uint maxLength); // Maximum-length-received
                                         association.MaxRequestDataLength = maxLength;
                                         break;
 
@@ -90,8 +90,8 @@ namespace DiCor.Net.UpperLayer
                                         break;
 
                                     case Pdu.SubItemTypeAsynchronousOperations:
-                                        userInformation.TryReadBigEndian(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
-                                        userInformation.TryReadBigEndian(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
+                                        userInformation.TryReadBE(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
+                                        userInformation.TryReadBE(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
                                         association.MaxOperationsInvoked = maxOperationsInvoked;
                                         association.MaxOperationsPerformed = maxOperationsPerformed;
                                         break;
@@ -134,7 +134,7 @@ namespace DiCor.Net.UpperLayer
             association.MaxOperationsInvoked = 1;
             association.MaxOperationsPerformed = 1;
 
-            _input.TryReadBigEndian(out ushort _); // Protocol-version
+            _input.TryReadBE(out ushort _); // Protocol-version
             _input.Reserved(2);
             _input.Reserved(16);
             _input.Reserved(16);
@@ -144,7 +144,7 @@ namespace DiCor.Net.UpperLayer
             {
                 _input.TryRead(out byte type); // Item-type
                 _input.Reserved(1);
-                _input.TryReadLength(out ushort length); // Item-length
+                _input.TryReadLengthBE(out ushort length); // Item-length
                 long end = _input.Remaining - length;
 
                 switch (type)
@@ -156,7 +156,7 @@ namespace DiCor.Net.UpperLayer
                     case Pdu.ItemTypePresentationContextAc:
                         _input.TryRead(out byte id);  // Presentation-context-ID
                         _input.Reserved(1);
-                        _input.TryRead(out Pdu.PresentationContextItemResult result); // Result/Reason
+                        _input.TryReadByte(out Pdu.PresentationContextItemResult result); // Result/Reason
                         _input.Reserved(1);
 
                         // TODO InvalidPduException
@@ -187,13 +187,13 @@ namespace DiCor.Net.UpperLayer
                         {
                             userInformation.TryRead(out byte itemType); // Item-type
                             userInformation.Reserved(1);
-                            userInformation.TryReadLength(out ushort itemLength); // Item-length
+                            userInformation.TryReadLengthBE(out ushort itemLength); // Item-length
                             long itemEnd = userInformation.Remaining - itemLength;
 
                             switch (itemType)
                             {
                                 case Pdu.SubItemTypeMaximumLength:
-                                    userInformation.TryReadBigEndian(out uint maxLength); // Maximum-length-received
+                                    userInformation.TryReadBE(out uint maxLength); // Maximum-length-received
                                     association.MaxRequestDataLength = maxLength;
                                     break;
 
@@ -203,8 +203,8 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.SubItemTypeAsynchronousOperations:
-                                    userInformation.TryReadBigEndian(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
-                                    userInformation.TryReadBigEndian(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
+                                    userInformation.TryReadBE(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
+                                    userInformation.TryReadBE(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
                                     association.MaxOperationsInvoked = maxOperationsInvoked;
                                     association.MaxOperationsPerformed = maxOperationsPerformed;
                                     break;
@@ -244,9 +244,9 @@ namespace DiCor.Net.UpperLayer
         public void ReadAAssociateRj(AAssociateRjData data)
         {
             _input.Reserved(1);
-            _input.TryRead(out data.Result);
-            _input.TryRead(out data.Source);
-            _input.TryRead(out data.Reason);
+            _input.TryReadByte(out data.Result);
+            _input.TryReadByte(out data.Source);
+            _input.TryReadByte(out data.Reason);
         }
 
         public void ReadPDataTf(PDataTfData data)
@@ -306,8 +306,8 @@ namespace DiCor.Net.UpperLayer
         public void ReadAAbort(AAbortData data)
         {
             _input.Reserved(2);
-            _input.TryRead(out data.Source);
-            _input.TryRead(out data.Reason);
+            _input.TryReadByte(out data.Source);
+            _input.TryReadByte(out data.Reason);
         }
 
     }
