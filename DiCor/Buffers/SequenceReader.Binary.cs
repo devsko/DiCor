@@ -2,7 +2,7 @@
 
 namespace System.Buffers
 {
-    public static partial class SequenceReaderExtensions
+    internal static partial class SequenceReaderExtensions
     {
         public static bool TryReadBigEndian(ref this SequenceReader<byte> reader, out ushort value)
         {

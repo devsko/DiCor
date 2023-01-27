@@ -7,90 +7,129 @@ using System.Text;
 
 namespace DiCor
 {
+    internal enum VRCode : ushort
+    {
+        AE = 0x4541,
+        AS = 0x5341,
+        AT = 0x5441,
+        CS = 0x5343,
+        DA = 0x4144,
+        DS = 0x0000,
+        DT = 0x0000,
+        FL = 0x0000,
+        FD = 0x0000,
+        IS = 0x0000,
+        LO = 0x0000,
+        LT = 0x0000,
+        OB = 0x0000,
+        OD = 0x0000,
+        OF = 0x0000,
+        OL = 0x0000,
+        OV = 0x0000,
+        OW = 0x0000,
+        PN = 0x0000,
+        SH = 0x0000,
+        SL = 0x0000,
+        SQ = 0x0000,
+        SS = 0x0000,
+        ST = 0x0000,
+        SV = 0x0000,
+        TM = 0x0000,
+        UC = 0x0000,
+        UI = 0x0000,
+        UL = 0x0000,
+        UN = 0x0000,
+        UR = 0x0000,
+        US = 0x0000,
+        UT = 0x0000,
+        UV = 0x0000,
+    }
+
     public readonly partial struct VR : IEquatable<VR>
     {
         ///<summary>Application Entity</summary>
-        public static readonly VR AE = new("AE"u8);
+        public static readonly VR AE = new(VRCode.AE);
         ///<summary>Age String</summary>
-        public static readonly VR AS = new("AS"u8);
+        public static readonly VR AS = new(VRCode.AS);
         ///<summary>Attribute Tag</summary>
-        public static readonly VR AT = new("AT"u8);
+        public static readonly VR AT = new(VRCode.AT);
         ///<summary>Code String</summary>
-        public static readonly VR CS = new("CS"u8);
+        public static readonly VR CS = new(VRCode.CS);
         ///<summary>Date</summary>
-        public static readonly VR DA = new("DA"u8);
+        public static readonly VR DA = new(VRCode.DA);
         ///<summary>Decimal String</summary>
-        public static readonly VR DS = new("DS"u8);
+        public static readonly VR DS = new(VRCode.DS);
         ///<summary>Date Time</summary>
-        public static readonly VR DT = new("DT"u8);
+        public static readonly VR DT = new(VRCode.DT);
         ///<summary>Floating Point Single</summary>
-        public static readonly VR FL = new("FL"u8);
+        public static readonly VR FL = new(VRCode.FL);
         ///<summary>Floating Point Double</summary>
-        public static readonly VR FD = new("FD"u8);
+        public static readonly VR FD = new(VRCode.FD);
         ///<summary>Integer String</summary>
-        public static readonly VR IS = new("IS"u8);
+        public static readonly VR IS = new(VRCode.IS);
         ///<summary>Long String</summary>
-        public static readonly VR LO = new("LO"u8);
+        public static readonly VR LO = new(VRCode.LO);
         ///<summary>Long Text</summary>
-        public static readonly VR LT = new("LT"u8);
+        public static readonly VR LT = new(VRCode.LT);
         ///<summary>Other Byte String</summary>
-        public static readonly VR OB = new("OB"u8);
+        public static readonly VR OB = new(VRCode.OB);
         ///<summary>Other Double String</summary>
-        public static readonly VR OD = new("OD"u8);
+        public static readonly VR OD = new(VRCode.OD);
         ///<summary>Other Float String</summary>
-        public static readonly VR OF = new("OF"u8);
+        public static readonly VR OF = new(VRCode.OF);
         ///<summary>Other Long</summary>
-        public static readonly VR OL = new("OL"u8);
+        public static readonly VR OL = new(VRCode.OL);
         ///<summary>Other 64-bit Very Long</summary>
-        public static readonly VR OV = new("OV"u8);
+        public static readonly VR OV = new(VRCode.OV);
         ///<summary>Other Word String</summary>
-        public static readonly VR OW = new("OW"u8);
+        public static readonly VR OW = new(VRCode.OW);
         ///<summary>Person Name</summary>
-        public static readonly VR PN = new("PN"u8);
+        public static readonly VR PN = new(VRCode.PN);
         ///<summary>Short String</summary>
-        public static readonly VR SH = new("SH"u8);
+        public static readonly VR SH = new(VRCode.SH);
         ///<summary>Signed Long</summary>
-        public static readonly VR SL = new("SL"u8);
+        public static readonly VR SL = new(VRCode.SL);
         ///<summary>Sequence of Items</summary>
-        public static readonly VR SQ = new("SQ"u8);
+        public static readonly VR SQ = new(VRCode.SQ);
         ///<summary>Signed Short</summary>
-        public static readonly VR SS = new("SS"u8);
+        public static readonly VR SS = new(VRCode.SS);
         ///<summary>Short Text</summary>
-        public static readonly VR ST = new("ST"u8);
+        public static readonly VR ST = new(VRCode.ST);
         ///<summary>Signed 64-bit Very Long</summary>
-        public static readonly VR SV = new("SV"u8);
+        public static readonly VR SV = new(VRCode.SV);
         ///<summary>Time</summary>
-        public static readonly VR TM = new("TM"u8);
+        public static readonly VR TM = new(VRCode.TM);
         ///<summary>Unlimited Characters</summary>
-        public static readonly VR UC = new("UC"u8);
+        public static readonly VR UC = new(VRCode.UC);
         ///<summary>Unique Identifier (UID)</summary>
-        public static readonly VR UI = new("UI"u8);
+        public static readonly VR UI = new(VRCode.UI);
         ///<summary>Unsigned Long</summary>
-        public static readonly VR UL = new("UL"u8);
+        public static readonly VR UL = new(VRCode.UL);
         ///<summary>Unknown</summary>
-        public static readonly VR UN = new("UN"u8);
+        public static readonly VR UN = new(VRCode.UN);
         ///<summary>Universal Resource Identifier or Universal Resource Locator (URI/URL)</summary>
-        public static readonly VR UR = new("UR"u8);
+        public static readonly VR UR = new(VRCode.UR);
         ///<summary>Unsigned Short</summary>
-        public static readonly VR US = new("US"u8);
+        public static readonly VR US = new(VRCode.US);
         ///<summary>Unlimited Text</summary>
-        public static readonly VR UT = new("UT"u8);
+        public static readonly VR UT = new(VRCode.UT);
         ///<summary>Unsigned 64-bit Very Long</summary>
-        public static readonly VR UV = new("UV"u8);
+        public static readonly VR UV = new(VRCode.UV);
 
-        private readonly ushort _value;
+        private readonly VRCode _value;
 
-        public VR(ReadOnlySpan<byte> value)
+        internal VR(VRCode code)
         {
-            if (value.Length != sizeof(short))
-                Throw();
+            Debug.Assert(Enum.IsDefined(code));
 
-            _value = Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetReference(value));
+            _value = code;
+        }
 
-            [DoesNotReturn]
-            [StackTraceHidden]
-            static void Throw()
-                => throw new ArgumentOutOfRangeException(nameof(value), "The given value must have a length of 2.");
+        internal VR(ReadOnlySpan<byte> value)
+        {
+            Debug.Assert(value.Length == 2);
+
+            _value = (VRCode)Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetReference(value));
         }
 
         public bool Equals(VR other)
@@ -100,7 +139,7 @@ namespace DiCor
             => obj is VR other && Equals(other);
 
         public override int GetHashCode()
-            => _value;
+            => (ushort)_value;
 
         public static bool operator ==(VR left, VR right)
             => left.Equals(right);

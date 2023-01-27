@@ -3,7 +3,7 @@ using DiCor;
 
 namespace System.Buffers
 {
-    public static partial class SequenceReaderExtensions
+    internal static partial class SequenceReaderExtensions
     {
         public static bool TryRead(ref this SequenceReader<byte> reader, out AsciiString ascii)
         {

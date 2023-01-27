@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace DiCor.Values
 {
-    public interface IValue<TValue>
+    internal interface IValue<TValue>
         where TValue : struct, IValue<TValue>
     {
         static abstract VR VR { get; }
@@ -19,14 +19,14 @@ namespace DiCor.Values
         T Get<T>();
     }
 
-    public interface IQueryableValue<TValue> : IValue<TValue>
+    internal interface IQueryableValue<TValue> : IValue<TValue>
         where TValue : struct, IQueryableValue<TValue>
     {
         bool IsEmptyValue { get; }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 8)]
-    public struct AbstractValue
+    internal struct AbstractValue
     {
         public TValue As<TValue>()
             where TValue : struct, IValue<TValue>
@@ -40,25 +40,28 @@ namespace DiCor.Values
     public struct EmptyValue
     { }
 
-    public static class Value
+    internal static class Value
     {
         public static ReadOnlySpan<byte> DoubleQuotationMark => "\"\""u8;
+
+        public static EmptyValue Empty => default;
 
         [DoesNotReturn]
         [StackTraceHidden]
         internal static void ThrowIncompatible<T>(string valueTypeName)
             => throw new ArgumentException($"{nameof(T)} is not compatible with {valueTypeName}.");
     }
-    public interface IIsInQuery
+    internal interface IIsInQuery
     {
         static abstract bool Value { get; }
     }
 
-    public struct InQuery : IIsInQuery
+    internal struct InQuery : IIsInQuery
     {
         public static bool Value => true;
     }
-    public struct NotInQuery : IIsInQuery
+
+    internal struct NotInQuery : IIsInQuery
     {
         public static bool Value => false;
     }

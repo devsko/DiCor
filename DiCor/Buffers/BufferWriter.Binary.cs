@@ -2,7 +2,7 @@
 
 namespace DiCor.Buffers
 {
-    public partial struct BufferWriter
+    internal partial struct BufferWriter
     {
         public void Write(byte value)
         {

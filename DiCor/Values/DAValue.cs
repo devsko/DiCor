@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace DiCor.Values
 {
-    public readonly struct DAValue : IValue<DAValue>
+    internal readonly struct DAValue : IValue<DAValue>
     {
         private readonly DateOnly _date;
 

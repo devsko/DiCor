@@ -2,18 +2,18 @@
 
 namespace DiCor.Values
 {
-    internal readonly struct ASValue : IValue<ASValue>
+    internal readonly struct ATValue : IValue<ATValue>
     {
-        private readonly Age _age;
+        private readonly Tag _tag;
 
-        public ASValue(Age age)
-            => _age = age;
+        public ATValue(Tag tag)
+            => _tag = tag;
 
-        public Age Age
-            => _age;
+        public Tag Tag
+            => _tag;
 
         public static VR VR
-            => VR.AS;
+            => VR.AT;
 
         public static int MaximumLength
             => 4;
@@ -29,18 +29,18 @@ namespace DiCor.Values
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCompatible<T>()
-            => typeof(T) == typeof(Age);
+            => typeof(T) == typeof(Tag);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ASValue Create<T>(T content)
+        public static ATValue Create<T>(T content)
         {
-            if (typeof(T) == typeof(Age))
+            if (typeof(T) == typeof(Tag))
             {
-                return new ASValue(Unsafe.As<T, Age>(ref content));
+                return new ATValue(Unsafe.As<T, Tag>(ref content));
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(ASValue));
+                Value.ThrowIncompatible<T>(nameof(ATValue));
                 return default;
             }
         }
@@ -48,13 +48,13 @@ namespace DiCor.Values
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>()
         {
-            if (typeof(T) == typeof(Age))
+            if (typeof(T) == typeof(Tag))
             {
-                return Unsafe.As<Age, T>(ref Unsafe.AsRef(in _age));
+                return Unsafe.As<Tag, T>(ref Unsafe.AsRef(in _tag));
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(ASValue));
+                Value.ThrowIncompatible<T>(nameof(ATValue));
                 return default;
             }
         }

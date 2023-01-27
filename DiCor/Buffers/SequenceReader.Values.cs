@@ -4,7 +4,7 @@ using DiCor.Values;
 
 namespace System.Buffers
 {
-    public static partial class SequenceReaderExtensions
+    internal static partial class SequenceReaderExtensions
     {
         private static bool IsEmptyValue(ref this SequenceReader<byte> reader, int length)
         {
@@ -35,7 +35,7 @@ namespace System.Buffers
 
             if (TIsQuery.Value && reader.IsEmptyValue(length))
             {
-                value = new AEValue<TIsQuery>(default(EmptyValue));
+                value = new AEValue<TIsQuery>(Value.Empty);
                 return true;
             }
 
@@ -109,7 +109,7 @@ namespace System.Buffers
 
             if (reader.IsEmptyValue(length))
             {
-                value = new DAQueryValue(new EmptyValue());
+                value = new DAQueryValue(Value.Empty);
                 return true;
             }
 

@@ -4,19 +4,19 @@ using System.Runtime.CompilerServices;
 
 namespace DiCor.Values
 {
-    internal readonly struct AEValue<TIsQuery> : IQueryableValue<AEValue<TIsQuery>>
+    internal readonly struct CSValue<TIsQuery> : IQueryableValue<CSValue<TIsQuery>>
         where TIsQuery : struct, IIsInQuery
     {
-        private static readonly IndexOfAnyValues<byte> s_invalidChars = IndexOfAnyValues.Create("\0\x1\x2\x3\x4\x5\x6\x7\x8\x9\xA\xB\xC\xD\xE\xF\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\\"u8);
+        private static readonly IndexOfAnyValues<byte> s_validChars = IndexOfAnyValues.Create(" _0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"u8);
 
         private readonly AsciiString _ascii;
         private readonly bool _isEmpty;
 
-        public AEValue(AsciiString ascii)
+        public CSValue(AsciiString ascii)
         {
             if (ascii.Length > 16)
                 throw new InvalidOperationException($"'{ascii}' is too long.");
-            if (ascii.Bytes.IndexOfAny(s_invalidChars) != -1)
+            if (ascii.Bytes.IndexOfAnyExcept(s_validChars) != -1)
                 throw new InvalidOperationException($"'{ascii}' contains invalid characters.");
 
             ReadOnlySpan<byte> trimmed = ascii.Bytes.Trim((byte)' ');
@@ -31,10 +31,10 @@ namespace DiCor.Values
             _ascii = ascii;
         }
 
-        public AEValue(EmptyValue _)
+        public CSValue(EmptyValue _)
         {
             if (!TIsQuery.Value)
-                throw new InvalidOperationException("AEValue can only be an empty value in context of a query.");
+                throw new InvalidOperationException("CSValue can only be an empty value in context of a query.");
 
             _isEmpty = true;
         }
@@ -46,7 +46,7 @@ namespace DiCor.Values
             => !_isEmpty ? _ascii : throw new InvalidOperationException("The AEValue is empty.");
 
         public static VR VR
-            => VR.AE;
+            => VR.CS;
 
         public static int MaximumLength
             => 16;
@@ -66,19 +66,19 @@ namespace DiCor.Values
                 (typeof(T) == typeof(EmptyValue) && TIsQuery.Value));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static AEValue<TIsQuery> Create<T>(T content)
+        public static CSValue<TIsQuery> Create<T>(T content)
         {
             if (typeof(T) == typeof(AsciiString))
             {
-                return new AEValue<TIsQuery>(Unsafe.As<T, AsciiString>(ref content));
+                return new CSValue<TIsQuery>(Unsafe.As<T, AsciiString>(ref content));
             }
             else if (typeof(T) == typeof(EmptyValue))
             {
-                return new AEValue<TIsQuery>(Value.Empty);
+                return new CSValue<TIsQuery>(Value.Empty);
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(AEValue<TIsQuery>));
+                Value.ThrowIncompatible<T>(nameof(CSValue<TIsQuery>));
                 return default;
             }
         }

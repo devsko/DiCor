@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace DiCor.Values
 {
-    public readonly struct DAQueryValue : IQueryableValue<DAQueryValue>
+    internal readonly struct DAQueryValue : IQueryableValue<DAQueryValue>
     {
         private readonly (DateOnly Low, DateOnly Hi) _dates;
 
@@ -21,7 +21,7 @@ namespace DiCor.Values
             : this(dates.LowDate, dates.HiDate)
         { }
 
-        public DAQueryValue(EmptyValue emptyValue)
+        public DAQueryValue(EmptyValue _)
             => _dates = (s_InvalidDate, s_InvalidDate);
 
         public bool IsEmptyValue
@@ -73,7 +73,7 @@ namespace DiCor.Values
             }
             else if (typeof(T) == typeof(EmptyValue))
             {
-                return new DAQueryValue(default(EmptyValue));
+                return new DAQueryValue(Value.Empty);
             }
             else
             {

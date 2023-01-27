@@ -23,8 +23,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Performance", "DiCor.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiCor.Generator", "DiCor.Generator\DiCor.Generator.csproj", "{66CD12A9-0D59-4127-B46F-9CE01E8591F6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FO-DICOM.Core", "..\..\fo-dicom\FO-DICOM.Core\FO-DICOM.Core.csproj", "{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,10 +49,6 @@ Global
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66CD12A9-0D59-4127-B46F-9CE01E8591F6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F3AFF661-36D3-4FE2-972B-56E7ABDBF3E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace DiCor.Buffers
 {
-    public ref partial struct BufferWriter
+    internal ref partial struct BufferWriter
     {
         private struct State
         {

@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace DiCor.Buffers
 {
-    public partial struct BufferWriter
+    internal partial struct BufferWriter
     {
         public void Write<TIsQuery>(AEValue<TIsQuery> value)
             where TIsQuery : struct, IIsInQuery

@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DiCor.Buffers
 {
-    public partial struct BufferWriter
+    internal partial struct BufferWriter
     {
         [UnscopedRef]
         public LengthPrefix BeginLengthPrefix(int length = sizeof(ushort))
