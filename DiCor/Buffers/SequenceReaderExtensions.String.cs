@@ -16,13 +16,18 @@ namespace System.Buffers
             return TryRead(ref reader, length, out ascii);
         }
 
-        public static bool TryRead(ref this SequenceReader<byte> reader, int length, out AsciiString ascii)
+        public static bool TryRead(ref this SequenceReader<byte> reader, int length, out AsciiString ascii, char trim = ' ')
         {
+            if (length == -1)
+            {
+                length = (int)reader.Remaining;
+            }
+
             ReadOnlySpan<byte> span = reader.UnreadSpan;
             if (span.Length < length)
                 return TryReadMultiSegment(ref reader, length, out ascii);
 
-            ascii = new AsciiString(span.Slice(0, length).TrimEnd((byte)' '), false);
+            ascii = new AsciiString(span.Slice(0, length).TrimEnd((byte)trim), false);
             reader.Advance(length);
 
             return true;
@@ -43,6 +48,8 @@ namespace System.Buffers
 
         public static bool TryRead(ref this SequenceReader<byte> reader, out Uid uid)
         {
+            // TODO 0x0 padding
+
             if (TryRead(ref reader, out AsciiString value))
             {
                 uid = new Uid(value, false);

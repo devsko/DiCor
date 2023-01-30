@@ -35,7 +35,7 @@ namespace DiCor.Test.Buffers
             void Read()
             {
                 var reader = new SequenceReader<byte>(result.Buffer);
-                reader.TryReadBE(out uint readValue);
+                reader.TryReadBigEndian(out uint readValue);
 
                 Assert.Equal(value, readValue);
             }
@@ -63,7 +63,7 @@ namespace DiCor.Test.Buffers
             void Read()
             {
                 var reader = new SequenceReader<byte>(result.Buffer);
-                reader.TryReadBE(out ushort readValue);
+                reader.TryReadBigEndian(out ushort readValue);
 
                 Assert.Equal(value, readValue);
             }

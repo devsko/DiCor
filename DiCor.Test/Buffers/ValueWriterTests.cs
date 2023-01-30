@@ -35,7 +35,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.Write(new DAQueryValue(default(EmptyValue)));
+                    buffer.Write(new DAQueryValue(default(QueryEmptyValue)));
                     buffer.Commit();
                 });
             Assert.Produces("20220508"u8.ToArray(),
@@ -54,7 +54,7 @@ namespace DiCor.Test.Buffers
                 writer =>
                 {
                     var buffer = new BufferWriter(writer);
-                    buffer.Write(new AEValue<InQuery>(default(EmptyValue)));
+                    buffer.Write(new AEValue<InQuery>(default(QueryEmptyValue)));
                     buffer.Commit();
                 });
             Assert.Produces("Hallo"u8.ToArray(),

@@ -17,7 +17,7 @@ namespace DiCor.Net.UpperLayer
         {
             association = new Association();
 
-            _input.TryReadBE(out ushort _); // Protocol-version
+            _input.TryReadBigEndian(out ushort _); // Protocol-version
             _input.Reserved(2);
             _input.TryRead(16, out AsciiString calledAE);
             association.CalledAE = calledAE;
@@ -80,7 +80,7 @@ namespace DiCor.Net.UpperLayer
                                 switch (itemType)
                                 {
                                     case Pdu.SubItemTypeMaximumLength:
-                                        userInformation.TryReadBE(out uint maxLength); // Maximum-length-received
+                                        userInformation.TryReadBigEndian(out uint maxLength); // Maximum-length-received
                                         association.MaxRequestDataLength = maxLength;
                                         break;
 
@@ -90,8 +90,8 @@ namespace DiCor.Net.UpperLayer
                                         break;
 
                                     case Pdu.SubItemTypeAsynchronousOperations:
-                                        userInformation.TryReadBE(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
-                                        userInformation.TryReadBE(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
+                                        userInformation.TryReadBigEndian(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
+                                        userInformation.TryReadBigEndian(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
                                         association.MaxOperationsInvoked = maxOperationsInvoked;
                                         association.MaxOperationsPerformed = maxOperationsPerformed;
                                         break;
@@ -134,7 +134,7 @@ namespace DiCor.Net.UpperLayer
             association.MaxOperationsInvoked = 1;
             association.MaxOperationsPerformed = 1;
 
-            _input.TryReadBE(out ushort _); // Protocol-version
+            _input.TryReadBigEndian(out ushort _); // Protocol-version
             _input.Reserved(2);
             _input.Reserved(16);
             _input.Reserved(16);
@@ -193,7 +193,7 @@ namespace DiCor.Net.UpperLayer
                             switch (itemType)
                             {
                                 case Pdu.SubItemTypeMaximumLength:
-                                    userInformation.TryReadBE(out uint maxLength); // Maximum-length-received
+                                    userInformation.TryReadBigEndian(out uint maxLength); // Maximum-length-received
                                     association.MaxRequestDataLength = maxLength;
                                     break;
 
@@ -203,8 +203,8 @@ namespace DiCor.Net.UpperLayer
                                     break;
 
                                 case Pdu.SubItemTypeAsynchronousOperations:
-                                    userInformation.TryReadBE(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
-                                    userInformation.TryReadBE(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
+                                    userInformation.TryReadBigEndian(out ushort maxOperationsInvoked); // Maximum-number-operations-invoked
+                                    userInformation.TryReadBigEndian(out ushort maxOperationsPerformed); // Maximum-number-operations-performed
                                     association.MaxOperationsInvoked = maxOperationsInvoked;
                                     association.MaxOperationsPerformed = maxOperationsPerformed;
                                     break;

@@ -31,7 +31,7 @@ namespace DiCor.Values
             _ascii = ascii;
         }
 
-        public CSValue(EmptyValue _)
+        public CSValue(QueryEmptyValue _)
         {
             if (!TIsQuery.Value)
                 throw new InvalidOperationException("CSValue can only be an empty value in context of a query.");
@@ -63,7 +63,7 @@ namespace DiCor.Values
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCompatible<T>()
             => (typeof(T) == typeof(AsciiString) ||
-                (typeof(T) == typeof(EmptyValue) && TIsQuery.Value));
+                (typeof(T) == typeof(QueryEmptyValue) && TIsQuery.Value));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static CSValue<TIsQuery> Create<T>(T content)
@@ -72,9 +72,9 @@ namespace DiCor.Values
             {
                 return new CSValue<TIsQuery>(Unsafe.As<T, AsciiString>(ref content));
             }
-            else if (typeof(T) == typeof(EmptyValue))
+            else if (typeof(T) == typeof(QueryEmptyValue))
             {
-                return new CSValue<TIsQuery>(Value.Empty);
+                return new CSValue<TIsQuery>(Value.QueryEmpty);
             }
             else
             {

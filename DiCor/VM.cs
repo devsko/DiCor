@@ -14,6 +14,9 @@ namespace DiCor
 
         public byte Step { get; }
 
+        public bool IsSingleValue
+            => Max == 1;
+
         public bool IsUnbounded
             => Max == 0;
 

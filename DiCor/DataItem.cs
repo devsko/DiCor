@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using DiCor.Values;
 
 namespace DiCor
@@ -7,23 +6,23 @@ namespace DiCor
     public readonly ref struct DataItem
     {
         private readonly bool _isQuery;
-        private readonly ref readonly AbstractValue _value;
+        private readonly ValueRef _valueRef;
 
         public Tag Tag { get; }
 
         public VR VR { get; }
 
-        internal DataItem(Tag tag, VR vr, bool isQuery, in AbstractValue value)
+        internal DataItem(Tag tag, VR vr, bool isQuery, ValueRef valueRef)
         {
-            Debug.Assert(!Unsafe.IsNullRef(ref Unsafe.AsRef(in value)));
+            Debug.Assert(!valueRef.IsNullRef());
 
             _isQuery = isQuery;
-            _value = ref value;
+            _valueRef = valueRef;
             Tag = tag;
             VR = vr;
         }
 
         public T GetValue<T>()
-            => VR.GetContent<T>(_value, _isQuery);
+            => VR.GetContent<T>(_valueRef, _isQuery);
     }
 }

@@ -16,12 +16,12 @@ namespace DiCor
         DA = 0x4144,
         DS = 0x5344,
         DT = 0x5444,
-        FL = 0x0000,
         FD = 0x0000,
+        FL = 0x0000,
         IS = 0x0000,
         LO = 0x0000,
         LT = 0x0000,
-        OB = 0x0000,
+        OB = 0x424F,
         OD = 0x0000,
         OF = 0x0000,
         OL = 0x0000,
@@ -36,8 +36,8 @@ namespace DiCor
         SV = 0x0000,
         TM = 0x0000,
         UC = 0x0000,
-        UI = 0x0000,
-        UL = 0x0000,
+        UI = 0x4955,
+        UL = 0x4C55,
         UN = 0x0000,
         UR = 0x0000,
         US = 0x0000,
@@ -61,27 +61,27 @@ namespace DiCor
         public static readonly VR DS = new(VRCode.DS);
         ///<summary>Date Time</summary>
         public static readonly VR DT = new(VRCode.DT);
-        ///<summary>Floating Point Single</summary>
-        public static readonly VR FL = new(VRCode.FL);
         ///<summary>Floating Point Double</summary>
         public static readonly VR FD = new(VRCode.FD);
+        ///<summary>Floating Point Single</summary>
+        public static readonly VR FL = new(VRCode.FL);
         ///<summary>Integer String</summary>
         public static readonly VR IS = new(VRCode.IS);
         ///<summary>Long String</summary>
         public static readonly VR LO = new(VRCode.LO);
         ///<summary>Long Text</summary>
         public static readonly VR LT = new(VRCode.LT);
-        ///<summary>Other Byte String</summary>
+        ///<summary>Other Byte</summary>
         public static readonly VR OB = new(VRCode.OB);
-        ///<summary>Other Double String</summary>
+        ///<summary>Other Double</summary>
         public static readonly VR OD = new(VRCode.OD);
-        ///<summary>Other Float String</summary>
+        ///<summary>Other Float</summary>
         public static readonly VR OF = new(VRCode.OF);
         ///<summary>Other Long</summary>
         public static readonly VR OL = new(VRCode.OL);
         ///<summary>Other 64-bit Very Long</summary>
         public static readonly VR OV = new(VRCode.OV);
-        ///<summary>Other Word String</summary>
+        ///<summary>Other Word</summary>
         public static readonly VR OW = new(VRCode.OW);
         ///<summary>Person Name</summary>
         public static readonly VR PN = new(VRCode.PN);
@@ -116,30 +116,33 @@ namespace DiCor
         ///<summary>Unsigned 64-bit Very Long</summary>
         public static readonly VR UV = new(VRCode.UV);
 
-        private readonly VRCode _value;
+        private readonly VRCode _code;
 
         internal VR(VRCode code)
         {
             Debug.Assert(Enum.IsDefined(code));
 
-            _value = code;
+            _code = code;
         }
 
         internal VR(ReadOnlySpan<byte> value)
         {
             Debug.Assert(value.Length == 2);
 
-            _value = (VRCode)Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetReference(value));
+            _code = (VRCode)Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetReference(value));
         }
 
+        internal VRCode Code
+            => _code;
+
         public bool Equals(VR other)
-            => _value == other._value;
+            => _code == other._code;
 
         public override bool Equals([NotNullWhen(true)] object? obj)
             => obj is VR other && Equals(other);
 
         public override int GetHashCode()
-            => (ushort)_value;
+            => (ushort)_code;
 
         public static bool operator ==(VR left, VR right)
             => left.Equals(right);
@@ -148,7 +151,7 @@ namespace DiCor
             => !left.Equals(right);
 
         public override string ToString()
-            => string.Create(2, _value,
+            => string.Create(2, _code,
                 static (span, value) => Ascii.ToUtf16(MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref value, 1)), span, out _));
     }
 }

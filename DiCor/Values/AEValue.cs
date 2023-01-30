@@ -21,7 +21,7 @@ namespace DiCor.Values
 
             ReadOnlySpan<byte> trimmed = ascii.Bytes.Trim((byte)' ');
 
-            if (trimmed.Length == 0)
+            if (!TIsQuery.Value && trimmed.Length == 0)
                 throw new InvalidOperationException($"'{ascii}' contains only white space characters.");
 
             if (trimmed.Length != ascii.Length)
@@ -31,7 +31,7 @@ namespace DiCor.Values
             _ascii = ascii;
         }
 
-        public AEValue(EmptyValue _)
+        public AEValue(QueryEmptyValue _)
         {
             if (!TIsQuery.Value)
                 throw new InvalidOperationException("AEValue can only be an empty value in context of a query.");
@@ -63,7 +63,7 @@ namespace DiCor.Values
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCompatible<T>()
             => (typeof(T) == typeof(AsciiString) ||
-                (typeof(T) == typeof(EmptyValue) && TIsQuery.Value));
+                (typeof(T) == typeof(QueryEmptyValue) && TIsQuery.Value));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static AEValue<TIsQuery> Create<T>(T content)
@@ -72,9 +72,9 @@ namespace DiCor.Values
             {
                 return new AEValue<TIsQuery>(Unsafe.As<T, AsciiString>(ref content));
             }
-            else if (typeof(T) == typeof(EmptyValue))
+            else if (typeof(T) == typeof(QueryEmptyValue))
             {
-                return new AEValue<TIsQuery>(Value.Empty);
+                return new AEValue<TIsQuery>(Value.QueryEmpty);
             }
             else
             {

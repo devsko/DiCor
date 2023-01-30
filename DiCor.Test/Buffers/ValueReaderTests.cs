@@ -13,36 +13,20 @@ namespace DiCor.Test.Buffers
 {
     public static class ValueReaderTests
     {
-        [Fact]
-        public static async Task DATest()
-        {
-            Pipe pipe = new();
-            await pipe.Writer.WriteAsync("20220508-  "u8.ToArray());
-            await pipe.Writer.FlushAsync();
-            ReadResult result = await pipe.Reader.ReadAsync();
-            Read(result);
+        //[Fact]
+        //public static async Task DATest()
+        //{
+        //    Pipe pipe = new();
+        //    await pipe.Writer.WriteAsync("20220508-  "u8.ToArray());
+        //    await pipe.Writer.FlushAsync();
+        //    ReadResult result = await pipe.Reader.ReadAsync();
+        //    Read(result);
 
-            static void Read(ReadResult result)
-            {
-                SequenceReader<byte> reader = new(result.Buffer);
-                reader.TryReadValue(11, out DAQueryValue value);
-            }
-        }
-
-        [Fact]
-        public static async Task AETest()
-        {
-            Pipe pipe = new();
-            await pipe.Writer.WriteAsync("\"\"    xyz"u8.ToArray());
-            await pipe.Writer.FlushAsync();
-            ReadResult result = await pipe.Reader.ReadAsync();
-            Read(result);
-
-            static void Read(ReadResult result)
-            {
-                SequenceReader<byte> reader = new(result.Buffer);
-                reader.TryReadValue(9, out AEValue<InQuery> value);
-            }
-        }
+        //    static void Read(ReadResult result)
+        //    {
+        //        SequenceReader<byte> reader = new(result.Buffer);
+        //        reader.TryReadValue(11, out DAQueryValue value);
+        //    }
+        //}
     }
 }

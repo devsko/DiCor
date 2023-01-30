@@ -5,7 +5,29 @@ namespace System.Buffers
 {
     internal static partial class SequenceReaderExtensions
     {
-        public static bool TryReadBE(ref this SequenceReader<byte> reader, out ushort value)
+        public static bool TryReadLittleEndian(ref this SequenceReader<byte> reader, out ushort value)
+        {
+            if (!reader.TryReadLittleEndian(out short val))
+            {
+                value = default;
+                return false;
+            }
+            value = unchecked((ushort)val);
+            return true;
+        }
+
+        public static bool TryReadLittleEndian(ref this SequenceReader<byte> reader, out uint value)
+        {
+            if (!reader.TryReadLittleEndian(out int val))
+            {
+                value = default;
+                return false;
+            }
+            value = unchecked((uint)val);
+            return true;
+        }
+
+        public static bool TryReadBigEndian(ref this SequenceReader<byte> reader, out ushort value)
         {
             if (!reader.TryReadBigEndian(out short val))
             {
@@ -16,7 +38,7 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryReadBE(ref this SequenceReader<byte> reader, out uint value)
+        public static bool TryReadBigEndian(ref this SequenceReader<byte> reader, out uint value)
         {
             if (!reader.TryReadBigEndian(out int val))
             {
@@ -46,7 +68,7 @@ namespace System.Buffers
 
         public static bool TryReadLengthBE(ref this SequenceReader<byte> reader, out ushort length)
         {
-            if (!reader.TryReadBE(out length))
+            if (!reader.TryReadBigEndian(out length))
                 return false;
 
             if (length > reader.Remaining)
@@ -56,7 +78,7 @@ namespace System.Buffers
             return true;
         }
 
-        public static bool TryReadTag(ref this SequenceReader<byte> reader, out Tag tag)
+        public static bool TryRead(ref this SequenceReader<byte> reader, out Tag tag)
         {
             scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
             if (span.Length < 4)
@@ -74,6 +96,26 @@ namespace System.Buffers
             reader.TryReadLittleEndian(out short element);
 
             tag = new Tag(unchecked((ushort)group), unchecked((ushort)element));
+            return true;
+        }
+
+        public static bool TryRead(ref this SequenceReader<byte> reader, out VR vr)
+        {
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            if (span.Length < 2)
+            {
+                Span<byte> copy = stackalloc byte[2];
+                span = copy;
+                if (!reader.TryCopyTo(copy))
+                {
+                    vr = default;
+                    return false;
+                }
+            }
+
+            vr = new VR(span.Slice(0, 2));
+            reader.Advance(2);
+
             return true;
         }
 

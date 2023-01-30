@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace DiCor.Net.UpperLayer
 {
+    // TODO readonly?
     public struct ULMessage
     {
         private Pdu.Type _type;

@@ -21,7 +21,7 @@ namespace DiCor.Values
             : this(dates.LowDate, dates.HiDate)
         { }
 
-        public DAQueryValue(EmptyValue _)
+        public DAQueryValue(QueryEmptyValue _)
             => _dates = (s_InvalidDate, s_InvalidDate);
 
         public bool IsEmptyValue
@@ -58,7 +58,7 @@ namespace DiCor.Values
         public static bool IsCompatible<T>()
             => (typeof(T) == typeof(DateOnly) ||
                 typeof(T) == typeof((DateOnly, DateOnly)) ||
-                typeof(T) == typeof(EmptyValue));
+                typeof(T) == typeof(QueryEmptyValue));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DAQueryValue Create<T>(T content)
@@ -71,9 +71,9 @@ namespace DiCor.Values
             {
                 return new DAQueryValue(Unsafe.As<T, (DateOnly, DateOnly)>(ref content));
             }
-            else if (typeof(T) == typeof(EmptyValue))
+            else if (typeof(T) == typeof(QueryEmptyValue))
             {
-                return new DAQueryValue(Value.Empty);
+                return new DAQueryValue(Value.QueryEmpty);
             }
             else
             {

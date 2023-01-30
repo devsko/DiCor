@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace DiCor.Values
 {
@@ -25,26 +24,47 @@ namespace DiCor.Values
         bool IsEmptyValue { get; }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 8)]
-    internal struct AbstractValue
+    internal readonly ref struct ValueRef
     {
-        public TValue As<TValue>()
-            where TValue : struct, IValue<TValue>
-            => Unsafe.As<AbstractValue, TValue>(ref this);
+        private struct AbstractValue
+        { }
 
-        public static AbstractValue Of<TValue>(TValue value)
+        private readonly ref AbstractValue _value;
+
+        private ValueRef(ref AbstractValue value)
+        {
+            _value = ref value;
+        }
+
+        public bool IsNullRef()
+            => Unsafe.IsNullRef(ref Unsafe.AsRef(in _value));
+
+        public ref TValue As<TValue>()
             where TValue : struct, IValue<TValue>
-            => Unsafe.As<TValue, AbstractValue>(ref value);
+            => ref Unsafe.As<AbstractValue, TValue>(ref _value);
+
+        public bool Set<TValue>(TValue value)
+            where TValue : struct, IValue<TValue>
+        {
+            ref TValue valueRef = ref Unsafe.As<AbstractValue, TValue>(ref _value);
+            valueRef = value;
+            return true;
+        }
+
+        public static ValueRef Of<TValue>(ref TValue value)
+            where TValue : struct, IValue<TValue>
+            => new ValueRef(ref Unsafe.As<TValue, AbstractValue>(ref value));
     }
 
-    public struct EmptyValue
+    public readonly struct QueryEmptyValue
     { }
 
     internal static class Value
     {
+        public const byte Backslash = (byte)'\\';
         public static ReadOnlySpan<byte> DoubleQuotationMark => "\"\""u8;
 
-        public static EmptyValue Empty => default;
+        public static QueryEmptyValue QueryEmpty => default;
 
         [DoesNotReturn]
         [StackTraceHidden]

@@ -40,7 +40,7 @@ namespace DiCor.Test.Values
             Assert.Equal((d1, d2), range.DateRange);
             Assert.Throws<InvalidOperationException>(() => range.Date);
 
-            var empty = new DAQueryValue(default(EmptyValue));
+            var empty = new DAQueryValue(default(QueryEmptyValue));
             Assert.False(empty.IsSingleDate);
             Assert.False(empty.IsDateRange);
             Assert.True(empty.IsEmptyValue);

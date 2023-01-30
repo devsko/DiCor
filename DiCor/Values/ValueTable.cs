@@ -7,9 +7,8 @@ namespace DiCor.Values
 {
     internal interface IValueTable
     {
-        ushort Add(AbstractValue value);
-        ref readonly AbstractValue GetValueRef(ushort index);
-        void SetValue(ushort index, AbstractValue value);
+        ValueRef AddDefault(out ushort index);
+        ValueRef GetRef(ushort index);
     }
 
     internal sealed class ValueTable<TValue> : IValueTable
@@ -57,34 +56,18 @@ namespace DiCor.Values
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ushort IValueTable.Add(AbstractValue value)
+        ValueRef IValueTable.AddDefault(out ushort index)
         {
-            ushort index = Count;
+            index = Count;
             if (_index >= s_pageSize)
             {
                 AddPage();
             }
-            _currentPage[_index++] = Unsafe.As<AbstractValue, TValue>(ref value);
 
-            return index;
+            return ValueRef.Of(ref _currentPage[_index++]);
         }
 
-        ref readonly AbstractValue IValueTable.GetValueRef(ushort index)
-            => ref Unsafe.As<TValue, AbstractValue>(ref this[index]);
-
-        void IValueTable.SetValue(ushort index, AbstractValue value)
-            => this[index] = Unsafe.As<AbstractValue, TValue>(ref value);
-
-
-        public ref TValue AddDefault(out ushort index)
-        {
-            if (_index == s_pageSize)
-            {
-                AddPage();
-            }
-            index = Count;
-
-            return ref _currentPage[_index++];
-        }
+        ValueRef IValueTable.GetRef(ushort index)
+            => ValueRef.Of(ref this[index]);
     }
 }

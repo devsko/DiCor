@@ -27,13 +27,13 @@ namespace DiCor.Net.UpperLayer
 
             public bool TryParseMessage(in ReadOnlySequence<byte> input, ref SequencePosition consumed, ref SequencePosition examined, out ULMessage message)
             {
-                var buffer = new SequenceReader<byte>(input);
+                SequenceReader<byte> buffer = new(input);
 
                 if (buffer.Remaining >= 6)
                 {
                     buffer.TryReadByte(out Pdu.Type messageType);
                     buffer.Advance(1);
-                    buffer.TryReadBE(out uint length);
+                    buffer.TryReadBigEndian(out uint length);
 
                     _logger.LogDebug($"<<< {messageType} ({length} bytes)");
 

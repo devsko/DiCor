@@ -13,6 +13,9 @@ namespace DiCor
             _store = new ValueStore(isQuery);
         }
 
+        internal ValueStore Store
+            => _store;
+
         public void Set<T>(Tag tag, T content)
         {
             if (!tag.IsKnown(out Tag.Details? details))

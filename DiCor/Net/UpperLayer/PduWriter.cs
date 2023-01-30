@@ -29,7 +29,7 @@ namespace DiCor.Net.UpperLayer
 
             using (BeginPdu(Pdu.Type.AAssociateRq))
             {
-                _buffer.WriteBE((ushort)0x0001); // Protocol-version
+                _buffer.WriteBE(0x0001); // Protocol-version
                 _buffer.Reserved(2);
                 _buffer.Write(association.CalledAE, 16); // Called-AE-title
                 _buffer.Write(association.CallingAE, 16); // Calling-AE-title
@@ -84,7 +84,7 @@ namespace DiCor.Net.UpperLayer
 
                     _buffer.Write(Pdu.SubItemTypeMaximumLength); // Item-type
                     _buffer.Reserved(1);
-                    _buffer.WriteBE((ushort)0x0004); // Item-length
+                    _buffer.WriteBE(0x0004); // Item-length
                     _buffer.WriteBE(association.MaxResponseDataLength); // Maximum-length-received
 
                     // PS3.7 - D.3.3.2.1 Implementation Class UID
@@ -99,7 +99,7 @@ namespace DiCor.Net.UpperLayer
                     {
                         _buffer.Write(Pdu.SubItemTypeAsynchronousOperations); // Item-type
                         _buffer.Reserved(1);
-                        _buffer.WriteBE((ushort)0x0004); // Item-length
+                        _buffer.WriteBE(0x0004); // Item-length
                         _buffer.WriteBE(association.MaxOperationsInvoked); // Maximum-number-operations-invoked
                         _buffer.WriteBE(association.MaxOperationsPerformed); // Maximum-number-operations-performed
                     }
