@@ -10,9 +10,6 @@ namespace DiCor.Values
         public DSValue(decimal @decimal)
             => _decimal = @decimal;
 
-        public decimal Decimal
-            => _decimal;
-
         public static int PageSize
             => 5;
 

@@ -10,9 +10,6 @@ namespace DiCor.Values
         public DateTimeValue(TDateTime value)
             => _value = value;
 
-        public TDateTime Value
-            => _value;
-
         public static int PageSize
             => 10;
 

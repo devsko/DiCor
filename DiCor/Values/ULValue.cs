@@ -9,9 +9,6 @@ namespace DiCor.Values
         public ULValue(uint integer)
             => _integer = integer;
 
-        public uint Integer
-            => _integer;
-
         public static int PageSize
             => 5;
 

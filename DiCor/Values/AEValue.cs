@@ -42,9 +42,6 @@ namespace DiCor.Values
         public bool IsEmptyValue
             => _isEmpty;
 
-        public AsciiString Ascii
-            => !_isEmpty ? _ascii : throw new InvalidOperationException("The AEValue is empty.");
-
         public static int PageSize
             => 5;
 

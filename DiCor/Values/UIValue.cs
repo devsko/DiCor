@@ -9,9 +9,6 @@ namespace DiCor.Values
         public UIValue(Uid uid)
             => _uid = uid;
 
-        public Uid Uid
-            => _uid;
-
         public static int PageSize
             => 5;
 

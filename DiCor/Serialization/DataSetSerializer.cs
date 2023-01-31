@@ -144,9 +144,17 @@ namespace DiCor.Serialization
                 (VRCode.CS, true)  => destination.Set(ReadCSValue<InQuery>(ref reader)),
                 (VRCode.DA, false) => destination.Set(ReadDateTimeValue<DateOnly>(ref reader)),
                 (VRCode.DA, true)  => destination.Set(ReadDateTimeQueryValue<DateOnly>(ref reader)),
-                (VRCode.OB, _)     => destination.Set(ReadOxValue<byte>(ref reader)),
-                (VRCode.SH, false) => destination.Set(ReadSHValue<NotInQuery>(ref reader)),
-                (VRCode.SH, true)  => destination.Set(ReadSHValue<InQuery>(ref reader)),
+                (VRCode.LO, false) => destination.Set(ReadStringValue<LongString, NotInQuery>(ref reader)),
+                (VRCode.LO, true)  => destination.Set(ReadStringValue<LongString, InQuery>(ref reader)),
+                (VRCode.LT, false) => destination.Set(ReadTextValue<LongText, NotInQuery>(ref reader)),
+                (VRCode.LT, true)  => destination.Set(ReadTextValue<LongText, InQuery>(ref reader)),
+                (VRCode.OB, _)     => destination.Set(ReadOtherBinaryValue<byte>(ref reader)),
+                (VRCode.PN, false) => destination.Set(ReadPNValue<NotInQuery>(ref reader)),
+                (VRCode.PN, true)  => destination.Set(ReadPNValue<InQuery>(ref reader)),
+                (VRCode.SH, false) => destination.Set(ReadStringValue<ShortString, NotInQuery>(ref reader)),
+                (VRCode.SH, true)  => destination.Set(ReadStringValue<ShortString, InQuery>(ref reader)),
+                (VRCode.ST, false) => destination.Set(ReadTextValue<ShortText, NotInQuery>(ref reader)),
+                (VRCode.ST, true)  => destination.Set(ReadTextValue<ShortText, InQuery>(ref reader)),
                 (VRCode.TM, false) => destination.Set(ReadDateTimeValue<PartialTimeOnly>(ref reader)),
                 (VRCode.TM, true)  => destination.Set(ReadDateTimeQueryValue<PartialTimeOnly>(ref reader)),
                 (VRCode.UI, _)     => destination.Set(ReadUIValue(ref reader)),
@@ -235,7 +243,7 @@ namespace DiCor.Serialization
                 : new DateTimeQueryValue<TDateTime>(QueryDateTime<TDateTime>.FromSingle(value1));
         }
 
-        private static OxValue<TBinary> ReadOxValue<TBinary>(ref SequenceReader<byte> reader)
+        private static OtherBinaryValue<TBinary> ReadOtherBinaryValue<TBinary>(ref SequenceReader<byte> reader)
             where TBinary : unmanaged
         {
             // TODO Undefined Length
@@ -244,18 +252,43 @@ namespace DiCor.Serialization
             reader.TryCopyTo(MemoryMarshal.AsBytes<TBinary>(array));
             reader.AdvanceToEnd();
 
-            return new OxValue<TBinary>(array);
+            return new OtherBinaryValue<TBinary>(array);
         }
 
-        private static SHValue<TIsInQuery> ReadSHValue<TIsInQuery>(ref SequenceReader<byte> reader)
+        private static PNValue<TIsInQuery> ReadPNValue<TIsInQuery>(ref SequenceReader<byte> reader)
             where TIsInQuery : struct, IIsInQuery
         {
             if (TIsInQuery.Value && IsQueryEmptyValue(reader))
-                return new SHValue<TIsInQuery>(Value.QueryEmpty);
+                return new PNValue<TIsInQuery>(Value.QueryEmpty);
 
             // TODO Encoding
             reader.TryRead(-1, out AsciiString ascii);
-            return new SHValue<TIsInQuery>(ascii.ToString());
+            return new PNValue<TIsInQuery>(ascii.ToString());
+        }
+
+        private static StringValue<TStringMaxLength, TIsInQuery> ReadStringValue<TStringMaxLength, TIsInQuery>(ref SequenceReader<byte> reader)
+            where TStringMaxLength : struct, IStringMaxLength
+            where TIsInQuery : struct, IIsInQuery
+        {
+            if (TIsInQuery.Value && IsQueryEmptyValue(reader))
+                return new StringValue<TStringMaxLength, TIsInQuery>(Value.QueryEmpty);
+
+            // TODO Encoding
+            reader.TryRead(-1, out AsciiString ascii);
+            return new StringValue<TStringMaxLength, TIsInQuery>(ascii.ToString());
+        }
+
+        private static TextValue<TTextMaxLength, TIsInQuery> ReadTextValue<TTextMaxLength, TIsInQuery>(ref SequenceReader<byte> reader)
+            where TTextMaxLength : struct, ITextMaxLength
+            where TIsInQuery : struct, IIsInQuery
+        {
+            if (TIsInQuery.Value && IsQueryEmptyValue(reader))
+                return new TextValue<TTextMaxLength, TIsInQuery>(Value.QueryEmpty);
+
+            // TODO Encoding
+            // TODO encode from SR directly
+            reader.TryRead(-1, out AsciiString ascii);
+            return new TextValue<TTextMaxLength, TIsInQuery>(ascii.ToString());
         }
 
         private static UIValue ReadUIValue(ref SequenceReader<byte> reader)

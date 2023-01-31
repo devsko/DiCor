@@ -9,9 +9,6 @@ namespace DiCor.Values
         public ASValue(Age age)
             => _age = age;
 
-        public Age Age
-            => _age;
-
         public static int PageSize
             => 5;
 

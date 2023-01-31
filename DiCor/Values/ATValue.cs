@@ -9,9 +9,6 @@ namespace DiCor.Values
         public ATValue(Tag tag)
             => _tag = tag;
 
-        public Tag Tag
-            => _tag;
-
         public static int PageSize
             => 5;
 

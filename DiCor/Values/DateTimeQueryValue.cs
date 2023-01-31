@@ -17,9 +17,6 @@ namespace DiCor.Values
         public bool IsEmptyValue
             => _queryDT.IsQueryEmpty;
 
-        public QueryDateTime<TDateTime> QueryRange
-            => _queryDT;
-
         public static int PageSize
             => 10;
 

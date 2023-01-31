@@ -7,7 +7,11 @@ namespace DiCor.Values
     internal readonly struct CSValue<TIsInQuery> : IQueryableValue<CSValue<TIsInQuery>>
         where TIsInQuery : struct, IIsInQuery
     {
-        private static readonly IndexOfAnyValues<byte> s_validChars = IndexOfAnyValues.Create(" _0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"u8);
+        private static readonly IndexOfAnyValues<byte> s_validChars =
+            TIsInQuery.Value
+            ? IndexOfAnyValues.Create(" _0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"u8)
+            : IndexOfAnyValues.Create("*? _0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"u8);
+
 
         private readonly AsciiString _ascii;
         private readonly bool _isEmpty;
@@ -21,7 +25,7 @@ namespace DiCor.Values
 
             ReadOnlySpan<byte> trimmed = ascii.Bytes.Trim((byte)' ');
 
-            if (trimmed.Length == 0)
+            if (!TIsInQuery.Value && trimmed.Length == 0)
                 throw new InvalidOperationException($"'{ascii}' contains only white space characters.");
 
             if (trimmed.Length != ascii.Length)
@@ -41,9 +45,6 @@ namespace DiCor.Values
 
         public bool IsEmptyValue
             => _isEmpty;
-
-        public AsciiString Ascii
-            => !_isEmpty ? _ascii : throw new InvalidOperationException("The AEValue is empty.");
 
         public static int PageSize
             => 5;
