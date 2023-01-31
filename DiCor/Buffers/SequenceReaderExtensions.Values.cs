@@ -2,22 +2,6 @@
 {
     internal static partial class SequenceReaderExtensions
     {
-        //private static bool IsEmptyValue(ref this SequenceReader<byte> reader, int length)
-        //{
-        //    if (reader.IsNext(Value.DoubleQuotationMark, true))
-        //    {
-        //        int i = length - 2;
-        //        while (i > 0 && reader.TryRead(out byte b) && b == (byte)' ')
-        //            i--;
-
-        //        if (i == 0)
-        //            return true;
-
-        //        reader.Rewind(length - i + 1);
-        //    }
-
-        //    return false;
-        //}
 
 
         //public static bool TryReadValue(ref this SequenceReader<byte> reader, int length, out ASValue value)
@@ -68,62 +52,6 @@
         //    reader.TryRead(out Tag tag);
 
         //    value = new ATValue(tag);
-        //    return true;
-        //}
-
-        //public static bool TryReadValue(ref this SequenceReader<byte> reader, int length, out DAValue value)
-        //{
-        //    // Short values
-        //    if (reader.Remaining < length)
-        //    {
-        //        value = default;
-        //        return false;
-        //    }
-
-        //    reader.TryRead(out DateOnly date);
-
-        //    value = new DAValue(date);
-        //    return true;
-        //}
-
-        //public static bool TryReadValue(ref this SequenceReader<byte> reader, int length, out DAQueryValue value)
-        //{
-        //    // Short values
-        //    if (reader.Remaining < length)
-        //    {
-        //        value = default;
-        //        return false;
-        //    }
-
-        //    // PS3.4 - C.2.2.2.5.1 Range Matching of Attributes of VR of DA
-        //    // https://dicom.nema.org/medical/dicom/current/output/html/part04.html#sect_C.2.2.2.5.1
-
-        //    if (reader.IsEmptyValue(length))
-        //    {
-        //        value = new DAQueryValue(Value.QueryEmpty);
-        //        return true;
-        //    }
-
-        //    if (reader.IsNext((byte)'-', true))
-        //    {
-        //        reader.TryRead(out DateOnly date);
-        //        value = new DAQueryValue(DateOnly.MinValue, date);
-        //        return true;
-        //    }
-
-        //    reader.TryRead(out DateOnly date1);
-        //    if (reader.IsNext((byte)'-', true))
-        //    {
-        //        DateOnly date2 = DateOnly.MaxValue;
-        //        if (reader.Remaining >= 8 && !reader.IsNext((byte)' '))
-        //        {
-        //            reader.TryRead(out date2);
-        //        }
-        //        value = new DAQueryValue(date1, date2);
-        //        return true;
-        //    }
-
-        //    value = new DAQueryValue(date1);
         //    return true;
         //}
 

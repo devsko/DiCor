@@ -18,6 +18,7 @@ namespace DiCor
         UpToFraction5 = 10,
         UpToFraction6 = 11,
     }
+
     public readonly struct PartialDateTime
     {
         private readonly struct Union
@@ -120,7 +121,10 @@ namespace DiCor
                                     if (fractions > 0)
                                     {
                                         span[14] = '.';
-                                        (dateTime.Millisecond * 1000 + dateTime.Microsecond).TryFormat(span.Slice(15), out _, "000000".AsSpan(0, fractions), invariant);
+                                        Span<char> format = stackalloc char[2];
+                                        format[0] = 'D';
+                                        format[1] = (char)('0' + fractions);
+                                        (dateTime.Millisecond * 1000 + dateTime.Microsecond).TryFormat(span.Slice(15), out _, format, invariant);
                                     }
                                 }
                             }

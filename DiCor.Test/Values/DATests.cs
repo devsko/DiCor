@@ -16,8 +16,8 @@ namespace DiCor.Test.Values
             var d1 = new DateOnly(2021, 1, 1);
             var d2 = new DateOnly(2022, 2, 2);
 
-            var single = new DAValue(d1);
-            Assert.Equal(d1, single.Date);
+            var single = new DateTimeValue<DateOnly>(d1);
+            Assert.Equal(d1, single.Value);
         }
 
         [Fact]
@@ -26,26 +26,27 @@ namespace DiCor.Test.Values
             var d1 = new DateOnly(2021, 1, 1);
             var d2 = new DateOnly(2022, 2, 2);
 
-            var single = new DAQueryValue(d1);
-            Assert.True(single.IsSingleDate);
-            Assert.False(single.IsDateRange);
+            var single = new DateTimeQueryValue<DateOnly>(QueryDateTime<DateOnly>.FromSingle(d1));
+            Assert.True(single.QueryRange.IsSingle);
+            Assert.False(single.QueryRange.IsRange);
             Assert.False(single.IsEmptyValue);
-            Assert.Equal(d1, single.Date);
-            Assert.Throws<InvalidOperationException>(() => single.DateRange);
+            Assert.Equal(d1, single.QueryRange.Single);
+            Assert.Throws<InvalidOperationException>(() => single.QueryRange.Range);
 
-            var range = new DAQueryValue(d1, d2);
-            Assert.False(range.IsSingleDate);
-            Assert.True(range.IsDateRange);
+            var range = new DateTimeQueryValue<DateOnly>(QueryDateTime<DateOnly>.FromRange(d1, d2));
+            Assert.False(range.QueryRange.IsSingle);
+            Assert.True(range.QueryRange.IsRange);
             Assert.False(range.IsEmptyValue);
-            Assert.Equal((d1, d2), range.DateRange);
-            Assert.Throws<InvalidOperationException>(() => range.Date);
+            Assert.Equal(d1, range.QueryRange.Range.Lo);
+            Assert.Equal(d2, range.QueryRange.Range.Hi);
+            Assert.Throws<InvalidOperationException>(() => range.QueryRange.Single);
 
-            var empty = new DAQueryValue(default(QueryEmptyValue));
-            Assert.False(empty.IsSingleDate);
-            Assert.False(empty.IsDateRange);
+            var empty = new DateTimeQueryValue<DateOnly>(default(QueryEmpty));
+            Assert.False(empty.QueryRange.IsSingle);
+            Assert.False(empty.QueryRange.IsRange);
             Assert.True(empty.IsEmptyValue);
-            Assert.Throws<InvalidOperationException>(() => empty.Date);
-            Assert.Throws<InvalidOperationException>(() => empty.DateRange);
+            Assert.Throws<InvalidOperationException>(() => empty.QueryRange.Single);
+            Assert.Throws<InvalidOperationException>(() => empty.QueryRange.Range);
         }
     }
 }

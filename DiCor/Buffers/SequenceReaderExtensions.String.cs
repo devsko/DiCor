@@ -16,7 +16,7 @@ namespace System.Buffers
             return TryRead(ref reader, length, out ascii);
         }
 
-        public static bool TryRead(ref this SequenceReader<byte> reader, int length, out AsciiString ascii, char trim = ' ')
+        public static bool TryRead(ref this SequenceReader<byte> reader, int length, out AsciiString ascii, char? trim = ' ')
         {
             if (length == -1)
             {
@@ -25,14 +25,19 @@ namespace System.Buffers
 
             ReadOnlySpan<byte> span = reader.UnreadSpan;
             if (span.Length < length)
-                return TryReadMultiSegment(ref reader, length, out ascii);
+                return TryReadMultiSegment(ref reader, length, trim, out ascii);
 
-            ascii = new AsciiString(span.Slice(0, length).TrimEnd((byte)trim), false);
+            span = span.Slice(0, length);
+            if (trim is not null)
+            {
+                span = span.TrimEnd((byte)trim);
+            }
             reader.Advance(length);
 
+            ascii = new AsciiString(span, false);
             return true;
 
-            static bool TryReadMultiSegment(ref SequenceReader<byte> reader, int length, out AsciiString ascii)
+            static bool TryReadMultiSegment(ref SequenceReader<byte> reader, int length, char? trim, out AsciiString ascii)
             {
                 Span<byte> buffer = stackalloc byte[length];
                 if (!reader.TryCopyTo(buffer))
@@ -40,8 +45,14 @@ namespace System.Buffers
                     ascii = default;
                     return false;
                 }
-                ascii = new AsciiString(buffer.TrimEnd((byte)' '), false);
+
+                if (trim is not null)
+                {
+                    buffer = buffer.TrimEnd((byte)trim);
+                }
                 reader.Advance(length);
+
+                ascii = new AsciiString(buffer, false);
                 return true;
             }
         }
@@ -98,6 +109,69 @@ namespace System.Buffers
 
             date = new DateOnly(year, month, day);
             return true;
+        }
+
+        public static bool TryRead(ref this SequenceReader<byte> reader, out PartialDateTime time)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool TryRead(ref this SequenceReader<byte> reader, out PartialTimeOnly time)
+        {
+            // TODO .NET x Utf8Parser.TryParse(TimeOnly)
+
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            int maxLength = Math.Min(13, (int)reader.Remaining);
+            if (span.Length < maxLength)
+            {
+                Span<byte> copy = stackalloc byte[maxLength];
+                span = copy;
+                if (!reader.TryCopyTo(copy))
+                {
+                    time = default;
+                    return false;
+                }
+            }
+
+            if (Utf8Parser.TryParse(span.Slice(0, 2), out int hour, out int bytesConsumed) && bytesConsumed == 2)
+            {
+                TimeOnlyParts parts;
+                int minute, second = 0, millisecond = 0, microsecond = 0;
+                int totalConsumed = 2;
+                if (Utf8Parser.TryParse(span.Slice(2, 2), out minute, out bytesConsumed) && bytesConsumed == 2)
+                {
+                    totalConsumed += 2;
+                    if (Utf8Parser.TryParse(span.Slice(4, 2), out second, out bytesConsumed) && bytesConsumed == 2)
+                    {
+                        totalConsumed += 2;
+                        if (span.Length > 6 && span[6] == '.' && Utf8Parser.TryParse(span.Slice(7, 6), out int fraction, out bytesConsumed))
+                        {
+                            totalConsumed += bytesConsumed + 1;
+                            (millisecond, microsecond) = Math.DivRem(fraction, 1_000);
+                            parts = TimeOnlyParts.UpToSecond + bytesConsumed;
+                        }
+                        else
+                        {
+                            parts = TimeOnlyParts.UpToSecond;
+                        }
+                    }
+                    else
+                    {
+                        parts = TimeOnlyParts.UpToMinute;
+                    }
+                }
+                else
+                {
+                    parts = TimeOnlyParts.OnlyHour;
+                }
+
+                reader.Advance(totalConsumed);
+
+                time = new PartialTimeOnly(new TimeOnly(hour, minute, second, millisecond, microsecond), parts);
+                return true;
+            }
+            // TODO
+            throw new Exception("invalid time format");
         }
 
         public static bool TryRead(ref this SequenceReader<byte> reader, out decimal @decimal)

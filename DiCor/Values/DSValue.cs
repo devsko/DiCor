@@ -13,18 +13,6 @@ namespace DiCor.Values
         public decimal Decimal
             => _decimal;
 
-        public static VR VR
-            => VR.DS;
-
-        public static int MaximumLength
-            => 16;
-
-        public static bool IsFixedLength
-            => false;
-
-        public static byte Padding
-            => (byte)' ';
-
         public static int PageSize
             => 5;
 

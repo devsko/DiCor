@@ -12,18 +12,6 @@ namespace DiCor.Values
         public Age Age
             => _age;
 
-        public static VR VR
-            => VR.AS;
-
-        public static int MaximumLength
-            => 4;
-
-        public static bool IsFixedLength
-            => true;
-
-        public static byte Padding
-            => 0;
-
         public static int PageSize
             => 5;
 

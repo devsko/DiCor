@@ -8,10 +8,6 @@ namespace DiCor.Values
     internal interface IValue<TValue>
         where TValue : struct, IValue<TValue>
     {
-        static abstract VR VR { get; }
-        static abstract int MaximumLength { get; }
-        static abstract bool IsFixedLength { get; }
-        static abstract byte Padding { get; }
         static abstract int PageSize { get; }
         static abstract bool IsCompatible<T>();
         static abstract TValue Create<T>(T content);
@@ -56,7 +52,7 @@ namespace DiCor.Values
             => new ValueRef(ref Unsafe.As<TValue, AbstractValue>(ref value));
     }
 
-    public readonly struct QueryEmptyValue
+    public readonly struct QueryEmpty
     { }
 
     internal static class Value
@@ -64,7 +60,7 @@ namespace DiCor.Values
         public const byte Backslash = (byte)'\\';
         public static ReadOnlySpan<byte> DoubleQuotationMark => "\"\""u8;
 
-        public static QueryEmptyValue QueryEmpty => default;
+        public static QueryEmpty QueryEmpty => default;
 
         [DoesNotReturn]
         [StackTraceHidden]

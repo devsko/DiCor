@@ -4,8 +4,8 @@ using System.Runtime.CompilerServices;
 
 namespace DiCor.Values
 {
-    internal readonly struct CSValue<TIsQuery> : IQueryableValue<CSValue<TIsQuery>>
-        where TIsQuery : struct, IIsInQuery
+    internal readonly struct CSValue<TIsInQuery> : IQueryableValue<CSValue<TIsInQuery>>
+        where TIsInQuery : struct, IIsInQuery
     {
         private static readonly IndexOfAnyValues<byte> s_validChars = IndexOfAnyValues.Create(" _0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"u8);
 
@@ -31,9 +31,9 @@ namespace DiCor.Values
             _ascii = ascii;
         }
 
-        public CSValue(QueryEmptyValue _)
+        public CSValue(QueryEmpty _)
         {
-            if (!TIsQuery.Value)
+            if (!TIsInQuery.Value)
                 throw new InvalidOperationException("CSValue can only be an empty value in context of a query.");
 
             _isEmpty = true;
@@ -45,40 +45,28 @@ namespace DiCor.Values
         public AsciiString Ascii
             => !_isEmpty ? _ascii : throw new InvalidOperationException("The AEValue is empty.");
 
-        public static VR VR
-            => VR.CS;
-
-        public static int MaximumLength
-            => 16;
-
-        public static bool IsFixedLength
-            => false;
-
-        public static byte Padding
-            => (byte)' ';
-
         public static int PageSize
             => 5;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCompatible<T>()
             => (typeof(T) == typeof(AsciiString) ||
-                (typeof(T) == typeof(QueryEmptyValue) && TIsQuery.Value));
+                (typeof(T) == typeof(QueryEmpty) && TIsInQuery.Value));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CSValue<TIsQuery> Create<T>(T content)
+        public static CSValue<TIsInQuery> Create<T>(T content)
         {
             if (typeof(T) == typeof(AsciiString))
             {
-                return new CSValue<TIsQuery>(Unsafe.As<T, AsciiString>(ref content));
+                return new CSValue<TIsInQuery>(Unsafe.As<T, AsciiString>(ref content));
             }
-            else if (typeof(T) == typeof(QueryEmptyValue))
+            else if (typeof(T) == typeof(QueryEmpty))
             {
-                return new CSValue<TIsQuery>(Value.QueryEmpty);
+                return new CSValue<TIsInQuery>(Value.QueryEmpty);
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(CSValue<TIsQuery>));
+                Value.ThrowIncompatible<T>(nameof(CSValue<TIsInQuery>));
                 return default;
             }
         }
@@ -92,7 +80,7 @@ namespace DiCor.Values
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(AEValue<TIsQuery>));
+                Value.ThrowIncompatible<T>(nameof(AEValue<TIsInQuery>));
                 return default;
             }
         }

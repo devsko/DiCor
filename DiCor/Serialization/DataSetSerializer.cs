@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,7 +52,7 @@ namespace DiCor.Serialization
                 if (!vr.IsKnown(out VR.Details? vrDetails))
                 {
                     // TODO
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException($"Unknown VR {vr} in item {tag}.");
                 }
                 bool isSingleValue = vrDetails.AlwaysSingleValue ||
                     (tag.IsKnown(out Tag.Details? tagDetails) && tagDetails.VM.IsSingleValue);
@@ -71,27 +72,24 @@ namespace DiCor.Serialization
                         // PS3.5 - 6.4 Value Multiplicity (VM) and Delimitation
                         // https://dicom.nema.org/medical/dicom/current/output/html/part05.html#sect_6.4
 
-                        bool hasMore = true;
                         ushort i = 0;
-                        while (hasMore)
+                        bool separatorFound = false;
+                        SequenceReader<byte> singleReader;
+                        do
                         {
-                            SequenceReader<byte> singleReader = valueReader;
-                            bool separatorFound = false;
-                            if (!vrDetails.BinaryValue &&
-                                valueReader.TryReadTo(out ReadOnlySequence<byte> singleSequence, Value.Backslash))
-                            {
-                                separatorFound = true;
-                                singleReader = new SequenceReader<byte>(singleSequence);
-                            }
+                            singleReader = !vrDetails.BinaryValue &&
+                                (separatorFound = valueReader.TryReadTo(out ReadOnlySequence<byte> singleSequence, Value.Backslash))
+                                ? new SequenceReader<byte>(singleSequence)
+                                : valueReader;
 
                             ValueRef valueRef = _store.Add(tag, i++, vr);
                             ReadValue(ref singleReader, valueRef, vr);
-
-                            hasMore = vrDetails.BinaryValue ? valueReader.Remaining > 0 : separatorFound;
                         }
+                        while (vrDetails.BinaryValue ? valueReader.Remaining > 0 : separatorFound);
+                        valueReader = singleReader;
                     }
 
-                    Debug.Assert(valueReader.End);
+                    Debug.Assert(valueReader.End, $"Item {tag} VR {vr}: {valueReader.Remaining} remaining bytes");
 
                     message = tag;
                     consumed = valueReader.Position;
@@ -144,9 +142,13 @@ namespace DiCor.Serialization
                 (VRCode.AT, _)     => destination.Set(ReadATValue(ref reader)),
                 (VRCode.CS, false) => destination.Set(ReadCSValue<NotInQuery>(ref reader)),
                 (VRCode.CS, true)  => destination.Set(ReadCSValue<InQuery>(ref reader)),
-                (VRCode.DA, false) => destination.Set(ReadDAValue(ref reader)),
-                (VRCode.DA, true)  => destination.Set(ReadDAQueryValue(ref reader)),
-                (VRCode.OB, _)     => destination.Set(ReadOValue<byte>(ref reader)),
+                (VRCode.DA, false) => destination.Set(ReadDateTimeValue<DateOnly>(ref reader)),
+                (VRCode.DA, true)  => destination.Set(ReadDateTimeQueryValue<DateOnly>(ref reader)),
+                (VRCode.OB, _)     => destination.Set(ReadOxValue<byte>(ref reader)),
+                (VRCode.SH, false) => destination.Set(ReadSHValue<NotInQuery>(ref reader)),
+                (VRCode.SH, true)  => destination.Set(ReadSHValue<InQuery>(ref reader)),
+                (VRCode.TM, false) => destination.Set(ReadDateTimeValue<PartialTimeOnly>(ref reader)),
+                (VRCode.TM, true)  => destination.Set(ReadDateTimeQueryValue<PartialTimeOnly>(ref reader)),
                 (VRCode.UI, _)     => destination.Set(ReadUIValue(ref reader)),
                 (VRCode.UL, _)     => destination.Set(ReadULValue(ref reader)),
                 _ => throw new NotImplementedException(),
@@ -154,14 +156,14 @@ namespace DiCor.Serialization
 #pragma warning restore format
         }
 
-        private static AEValue<TIsQuery> ReadAEValue<TIsQuery>(ref SequenceReader<byte> reader)
-            where TIsQuery : struct, IIsInQuery
+        private static AEValue<TIsInQuery> ReadAEValue<TIsInQuery>(ref SequenceReader<byte> reader)
+            where TIsInQuery : struct, IIsInQuery
         {
-            if (TIsQuery.Value && IsQueryEmptyValue(reader))
-                return new AEValue<TIsQuery>(Value.QueryEmpty);
+            if (TIsInQuery.Value && IsQueryEmptyValue(reader))
+                return new AEValue<TIsInQuery>(Value.QueryEmpty);
 
             reader.TryRead(-1, out AsciiString ascii);
-            return new AEValue<TIsQuery>(ascii);
+            return new AEValue<TIsInQuery>(ascii);
         }
 
         private static ASValue ReadASValue(ref SequenceReader<byte> reader)
@@ -174,23 +176,66 @@ namespace DiCor.Serialization
             return default;
         }
 
-        private static CSValue<TIsQuery> ReadCSValue<TIsQuery>(ref SequenceReader<byte> reader)
-            where TIsQuery : struct, IIsInQuery
+        private static CSValue<TIsInQuery> ReadCSValue<TIsInQuery>(ref SequenceReader<byte> reader)
+            where TIsInQuery : struct, IIsInQuery
         {
-            return default;
+            if (TIsInQuery.Value && IsQueryEmptyValue(reader))
+                return new CSValue<TIsInQuery>(Value.QueryEmpty);
+
+            reader.TryRead(-1, out AsciiString ascii);
+            return new CSValue<TIsInQuery>(ascii);
         }
 
-        private static DAValue ReadDAValue(ref SequenceReader<byte> reader)
+        private static TDateTime ReadDateTime<TDateTime>(ref SequenceReader<byte> reader)
+            where TDateTime : struct
         {
-            return default;
+            if (typeof(TDateTime) == typeof(DateOnly))
+            {
+                reader.TryRead(out DateOnly value);
+                return Unsafe.As<DateOnly, TDateTime>(ref value);
+            }
+            if (typeof(TDateTime) == typeof(PartialTimeOnly))
+            {
+                reader.TryRead(out PartialTimeOnly value);
+                return Unsafe.As<PartialTimeOnly, TDateTime>(ref value);
+            }
+            if (typeof(TDateTime) == typeof(PartialDateTime))
+            {
+                reader.TryRead(out PartialDateTime value);
+                return Unsafe.As<PartialDateTime, TDateTime>(ref value);
+            }
+
+            throw new InvalidOperationException();
         }
 
-        private static DAQueryValue ReadDAQueryValue(ref SequenceReader<byte> reader)
+        private static DateTimeValue<TDateTime> ReadDateTimeValue<TDateTime>(ref SequenceReader<byte> reader)
+            where TDateTime : struct
+            => new DateTimeValue<TDateTime>(ReadDateTime<TDateTime>(ref reader));
+
+        private static DateTimeQueryValue<TDateTime> ReadDateTimeQueryValue<TDateTime>(ref SequenceReader<byte> reader)
+            where TDateTime : struct, IComparable<TDateTime>, IEquatable<TDateTime>
         {
-            return default;
+            if (IsQueryEmptyValue(reader))
+                return new DateTimeQueryValue<TDateTime>(Value.QueryEmpty);
+
+            // PS3.4 - C.2.2.2.5.1 Range Matching of Attributes of VR of DA
+            // https://dicom.nema.org/medical/dicom/current/output/html/part04.html#sect_C.2.2.2.5.1
+            // PS3.4 - C.2.2.2.5.2 Range Matching of Attributes of VR of TM
+            // https://dicom.nema.org/medical/dicom/current/output/html/part04.html#sect_C.2.2.2.5.2
+
+            if (reader.IsNext((byte)'-', true))
+                return new DateTimeQueryValue<TDateTime>(QueryDateTime<TDateTime>.FromHi(ReadDateTime<TDateTime>(ref reader)));
+
+            TDateTime value1 = ReadDateTime<TDateTime>(ref reader);
+
+            return reader.IsNext((byte)'-', true)
+                ? reader.Remaining >= 1 && !reader.IsNext((byte)' ')
+                    ? new DateTimeQueryValue<TDateTime>(QueryDateTime<TDateTime>.FromRange(value1, ReadDateTime<TDateTime>(ref reader)))
+                    : new DateTimeQueryValue<TDateTime>(QueryDateTime<TDateTime>.FromLo(value1))
+                : new DateTimeQueryValue<TDateTime>(QueryDateTime<TDateTime>.FromSingle(value1));
         }
 
-        private static OValue<TBinary> ReadOValue<TBinary>(ref SequenceReader<byte> reader)
+        private static OxValue<TBinary> ReadOxValue<TBinary>(ref SequenceReader<byte> reader)
             where TBinary : unmanaged
         {
             // TODO Undefined Length
@@ -199,7 +244,18 @@ namespace DiCor.Serialization
             reader.TryCopyTo(MemoryMarshal.AsBytes<TBinary>(array));
             reader.AdvanceToEnd();
 
-            return new OValue<TBinary>(array);
+            return new OxValue<TBinary>(array);
+        }
+
+        private static SHValue<TIsInQuery> ReadSHValue<TIsInQuery>(ref SequenceReader<byte> reader)
+            where TIsInQuery : struct, IIsInQuery
+        {
+            if (TIsInQuery.Value && IsQueryEmptyValue(reader))
+                return new SHValue<TIsInQuery>(Value.QueryEmpty);
+
+            // TODO Encoding
+            reader.TryRead(-1, out AsciiString ascii);
+            return new SHValue<TIsInQuery>(ascii.ToString());
         }
 
         private static UIValue ReadUIValue(ref SequenceReader<byte> reader)

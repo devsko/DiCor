@@ -12,18 +12,6 @@ namespace DiCor.Values
         public Uid Uid
             => _uid;
 
-        public static VR VR
-            => VR.UI;
-
-        public static int MaximumLength
-            => 64;
-
-        public static bool IsFixedLength
-            => false;
-
-        public static byte Padding
-            => 0;
-
         public static int PageSize
             => 5;
 

@@ -12,18 +12,6 @@ namespace DiCor.Values
         public Tag Tag
             => _tag;
 
-        public static VR VR
-            => VR.AT;
-
-        public static int MaximumLength
-            => 4;
-
-        public static bool IsFixedLength
-            => true;
-
-        public static byte Padding
-            => 0;
-
         public static int PageSize
             => 5;
 
