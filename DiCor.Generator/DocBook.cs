@@ -11,14 +11,17 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace DiCor.Generator
 {
     [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035:Do not use APIs banned for analyzers", Justification = "<Pending>")]
     internal class DocBook : IDisposable
     {
-        private sealed record XmlAndTitle(XmlReader Xml, string Title) : IDisposable
+        private sealed record XmlAndTitle(XmlReader Xml, string Title, (int, int) Start, (int, int) End) : IDisposable
         {
+            public LinePositionSpan Span => new(new LinePosition(Start.Item1, Start.Item2), new LinePosition(End.Item1, End.Item2));
+
             public void Dispose() => Xml.Dispose();
         }
 
@@ -90,6 +93,7 @@ namespace DiCor.Generator
             if (checkForUpdates)
             {
                 Logger.Log($"{Name} checking for updates");
+                Stopwatch checkForUpdatesWatch = Stopwatch.StartNew();
 
                 string uri = Uri;
                 FileSaveStream saveStream = await DownloadAsync(uri, path).ConfigureAwait(false);
@@ -100,7 +104,7 @@ namespace DiCor.Generator
                 {
                     Logger.Log($"{Name} update found");
 
-                    _context.ReportDiagnostic(Diag.ResourceOutdated(path, uri));
+                    _context.ReportDiagnostic(Diag.ResourceOutdated(Location.Create(path, default, downloadXml.Span), Path.GetFileName(path), uri));
 
                     _xml?.Dispose();
                     await saveStream.StopBufferingAsync().ConfigureAwait(false);
@@ -109,6 +113,8 @@ namespace DiCor.Generator
                 else
                 {
                     Logger.Log($"{Name} is up to date");
+
+                    _context.ReportDiagnostic(Diag.ResourceChecked(Location.Create(path, default, _xml.Span), Path.GetFileName(path), checkForUpdatesWatch.ElapsedMilliseconds));
 
                     downloadXml.Dispose();
                 }
@@ -147,12 +153,14 @@ namespace DiCor.Generator
 
                 if (xml.NodeType == XmlNodeType.Element && xml.LocalName == "subtitle")
                 {
+                    (int, int) start = (((IXmlLineInfo)xml).LineNumber - 1, ((IXmlLineInfo)xml).LinePosition);
                     string title = await xml.ReadElementContentAsStringAsync().ConfigureAwait(false);
-                    return new XmlAndTitle(xml, title);
+                    (int, int) end = (((IXmlLineInfo)xml).LineNumber - 1, ((IXmlLineInfo)xml).LinePosition);
+                    return new XmlAndTitle(xml, title, start, end);
                 }
             }
 
-            return new XmlAndTitle(xml, string.Empty);
+            return new XmlAndTitle(xml, string.Empty, default, default);
         }
 
         protected virtual void Dispose(bool disposing)

@@ -5,6 +5,7 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
+GEN001 | Usage | Warning | Diag
 GEN002 | Usage | Warning | Diag
 GEN003 | Usage | Warning | Diag
 GEN004 | Usage | Error | Diag

@@ -7,6 +7,14 @@ namespace DiCor.Generator
     {
         private const string DiagnosticCategory = "Usage";
 
+        private static readonly DiagnosticDescriptor s_resourceChecked = new(
+            "GEN001",
+            "Resource checked",
+            "Resource '{0}' checked for updates ({1}ms)",
+            DiagnosticCategory,
+            DiagnosticSeverity.Warning,
+            true);
+
         private static readonly DiagnosticDescriptor s_resourceOutdated = new(
             "GEN002",
             "Resource outdated",
@@ -31,8 +39,11 @@ namespace DiCor.Generator
             DiagnosticSeverity.Error,
             true);
 
-        public static Diagnostic ResourceOutdated(string resourceKey, string downloadUri)
-            => Diagnostic.Create(s_resourceOutdated, default, resourceKey, downloadUri);
+        public static Diagnostic ResourceChecked(Location location, string resourceKey, long milliseconds)
+            => Diagnostic.Create(s_resourceChecked, location, resourceKey, milliseconds);
+
+        public static Diagnostic ResourceOutdated(Location location, string resourceKey, string downloadUri)
+            => Diagnostic.Create(s_resourceOutdated, location, resourceKey, downloadUri);
 
         public static Diagnostic InvalidXml(string resourceKey, object error)
             => Diagnostic.Create(s_invalidResourceXml, default, resourceKey, error);
