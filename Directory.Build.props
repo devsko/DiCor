@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NetVersion>8.0.0-alpha.1.23079.4</NetVersion>
+    <NetVersion>8.0.0-preview.2.23081.5</NetVersion>
     <MsCodeAnalysisVersion>4.5.0-2.final</MsCodeAnalysisVersion>
-    <MsCodeAnalysisAnalyzersVersion>3.3.5-beta1.23076.2</MsCodeAnalysisAnalyzersVersion>
+    <MsCodeAnalysisAnalyzersVersion>3.3.5-beta1.23081.3</MsCodeAnalysisAnalyzersVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace DiCor.Values
@@ -32,6 +33,9 @@ namespace DiCor.Values
 
             return valueRef;
         }
+
+        internal void SetSequence(Tag tag, SQValue sequence)
+            => _tables[VR.SQ].GetRef(_indices[new TagIndex(tag, SingleItemIndex)].Index).Set(sequence);
 
         public void Set<T>(Tag tag, ushort itemIndex, VR vr, T content)
         {
@@ -89,17 +93,36 @@ namespace DiCor.Values
             return false;
         }
 
-        public bool TryGet(Tag tag, ushort itemIndex, out DataItem item)
+        internal T Get<T>(Tag tag, ushort itemIndex = SingleItemIndex)
         {
-            if (_indices.TryGetValue(new TagIndex(tag, itemIndex), out ValueIndex valueIndex) &&
-                _tables.TryGetValue(valueIndex.VR, out IValueTable? table))
-            {
-                item = new DataItem(tag, valueIndex.VR, _isQuery, table.GetRef(valueIndex.Index));
-                return true;
-            }
+            ValueIndex valueIndex = _indices[new TagIndex(tag, itemIndex)];
+            return valueIndex.VR.GetContent<T>(_tables[valueIndex.VR].GetRef(valueIndex.Index), _isQuery);
+        }
 
-            item = default;
-            return false;
+        public override string ToString()
+            => $"({_indices.Count} elements)";
+
+        internal IEnumerable<(Tag, object)> EnumerateValuesForDebugger()
+        {
+            IEnumerable<IGrouping<Tag, TagIndex>> tags = _indices.Keys.GroupBy(tagIndex => tagIndex.Tag);
+
+            foreach (IGrouping<Tag, TagIndex> tag in tags)
+            {
+                if (!tag.Skip(1).Any())
+                {
+                    ValueIndex valueIndex = _indices[tag.Single()];
+                    yield return (tag.Key, _tables[valueIndex.VR].GetValueForDebugger(valueIndex.Index));
+                }
+                else
+                {
+                    IValueTable table = _tables[_indices[tag.First()].VR];
+                    yield return (tag.Key, tag.Select(tagIndex =>
+                    {
+                        ValueIndex valueIndex = _indices[tagIndex];
+                        return table.GetValueForDebugger(valueIndex.Index);
+                    }).ToArray());
+                }
+            }
         }
     }
 }

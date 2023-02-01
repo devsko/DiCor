@@ -37,7 +37,7 @@ namespace DiCor.IO
         {
             CheckPreamble();
 
-            await new DataSetSerializer().DeserializeAsync(_stream).ConfigureAwait(false);
+            await new DataSetSerializer().DeserializeFileAsync(_stream).ConfigureAwait(false);
 
             void ThrowInvalid()
             {

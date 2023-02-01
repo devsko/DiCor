@@ -28,7 +28,7 @@ namespace DiCor
                 yield return new((ushort)FD._code, new("Floating Point Double", false, true, false));
                 yield return new((ushort)FL._code, new("Floating Point Single", false, true, false));
                 yield return new((ushort)IS._code, new("Integer String", false, false, false));
-                yield return new((ushort)LO._code, new("Long String", false, true, false));
+                yield return new((ushort)LO._code, new("Long String", false, false, false));
                 yield return new((ushort)LT._code, new("Long Text", false, false, true));
                 yield return new((ushort)OB._code, new("Other Byte", true, true, true));
                 yield return new((ushort)OD._code, new("Other Double", true, true, true));

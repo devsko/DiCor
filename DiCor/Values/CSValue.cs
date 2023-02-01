@@ -85,5 +85,8 @@ namespace DiCor.Values
                 return default;
             }
         }
+
+        public override string ToString()
+            => IsEmptyValue ? Value.QueryEmptyDisplay : _ascii.ToString();
     }
 }

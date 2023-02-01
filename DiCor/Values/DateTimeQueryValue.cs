@@ -76,5 +76,8 @@ namespace DiCor.Values
                 return default;
             }
         }
+
+        public override string? ToString()
+            => _queryDT.ToString();
     }
 }

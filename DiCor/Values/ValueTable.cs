@@ -9,6 +9,7 @@ namespace DiCor.Values
     {
         ValueRef AddDefault(out ushort index);
         ValueRef GetRef(ushort index);
+        object GetValueForDebugger(ushort index);
     }
 
     internal sealed class ValueTable<TValue> : IValueTable
@@ -69,5 +70,8 @@ namespace DiCor.Values
 
         ValueRef IValueTable.GetRef(ushort index)
             => ValueRef.Of(ref this[index]);
+
+        object IValueTable.GetValueForDebugger(ushort index)
+            => this[index];
     }
 }

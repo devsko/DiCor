@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using DiCor.Values;
 
 namespace DiCor
 {
@@ -82,6 +83,22 @@ namespace DiCor
             }
 
             throw new NotImplementedException();
+        }
+
+        public override string? ToString()
+        {
+            if (IsQueryEmpty)
+                return Value.QueryEmptyDisplay;
+
+            if (IsSingle)
+                return DateTimeValue<T>.ToString(Single);
+
+            if (Range.Hi.Equals(s_valuesOfT.Max))
+                return $"{DateTimeValue<T>.ToString(Range.Lo)}-";
+            if (Range.Lo.Equals(s_valuesOfT.Min))
+                return $"-{DateTimeValue<T>.ToString(Range.Hi)}";
+
+            return $"{DateTimeValue<T>.ToString(Range.Lo)}-{DateTimeValue<T>.ToString(Range.Hi)}";
         }
     }
 }

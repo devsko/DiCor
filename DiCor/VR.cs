@@ -30,7 +30,7 @@ namespace DiCor
         PN = 0x4E50,
         SH = 0x4853,
         SL = 0x0000,
-        SQ = 0x0000,
+        SQ = 0x5153,
         SS = 0x0000,
         ST = 0x5453,
         SV = 0x0000,

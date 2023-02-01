@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace DiCor.Values
 {
@@ -43,6 +44,24 @@ namespace DiCor.Values
                 Values.Value.ThrowIncompatible<T>(nameof(DateTimeValue<TDateTime>));
                 return default;
             }
+        }
+
+        public override string? ToString()
+        {
+            if (typeof(TDateTime) == typeof(PartialTimeOnly))
+                return $"Time {_value}";
+
+            if (typeof(TDateTime) == typeof(DateOnly))
+                return $"Date {_value:yyyyMMdd}";
+
+            return $"Date/Time {_value}";
+        }
+
+        internal static string ToString(TDateTime dateTime)
+        {
+            return typeof(TDateTime) == typeof(DateOnly)
+                    ? Unsafe.As<TDateTime, DateOnly>(ref dateTime).ToString("yyyyMMdd")
+                    : dateTime.ToString()!;
         }
     }
 }

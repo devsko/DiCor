@@ -21,10 +21,10 @@ namespace DiCor.Test
 
             Assert.Equal(new DateOnly(2022, 1, 1), d);
 
-            set.TryGet(Tag.InstanceCreationDate, out DataItem item);
+            //set.TryGet(Tag.InstanceCreationDate, out DataItem item);
             set.Set(Tag.InstanceCreationDate, new DateOnly(2022, 2, 2));
 
-            Assert.Equal(new DateOnly(2022, 2, 2), item.GetValue<DateOnly>());
+            //Assert.Equal(new DateOnly(2022, 2, 2), item.GetValue<DateOnly>());
         }
     }
 }

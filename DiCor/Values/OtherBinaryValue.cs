@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace DiCor.Values
 {
@@ -43,6 +44,33 @@ namespace DiCor.Values
                 Value.ThrowIncompatible<T>(nameof(OtherBinaryValue<TBinary>));
                 return default;
             }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.Append(typeof(TBinary).Name).Append(' ');
+            if (_array.Length <= 10)
+            {
+                sb.Append('{');
+                bool first = true;
+                foreach (TBinary binary in _array)
+                {
+                    if (!first)
+                    {
+                        sb.Append(", ");
+                    }
+                    first = false;
+                    sb.Append(binary);
+                }
+                sb.Append('}');
+            }
+            else
+            {
+                sb.Append($"({_array.Length} items)");
+            }
+
+            return sb.ToString();
         }
     }
 }

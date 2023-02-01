@@ -60,6 +60,8 @@ namespace DiCor.Values
         public const byte Backslash = (byte)'\\';
         public static ReadOnlySpan<byte> DoubleQuotationMark => "\"\""u8;
 
+        public const string QueryEmptyDisplay = "<query empty>";
+
         public static QueryEmpty QueryEmpty => default;
 
         [DoesNotReturn]

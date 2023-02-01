@@ -1,4 +1,6 @@
-﻿namespace System.Buffers
+﻿using DiCor.Values;
+
+namespace System.Buffers
 {
     internal static partial class SequenceReaderExtensions
     {
@@ -11,5 +13,8 @@
 
             return true;
         }
+
+        public static bool IsQueryEmptyValue(this ref SequenceReader<byte> reader)
+            => reader.Remaining == 2 && reader.IsNext(Value.DoubleQuotationMark, true);
     }
 }
