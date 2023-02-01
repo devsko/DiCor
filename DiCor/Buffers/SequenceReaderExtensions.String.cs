@@ -136,9 +136,9 @@ namespace System.Buffers
             if (Utf8Parser.TryParse(span.Slice(0, 2), out int hour, out int bytesConsumed) && bytesConsumed == 2)
             {
                 TimeOnlyParts parts;
-                int minute, second = 0, millisecond = 0, microsecond = 0;
+                int second = 0, millisecond = 0, microsecond = 0;
                 int totalConsumed = 2;
-                if (Utf8Parser.TryParse(span.Slice(2, 2), out minute, out bytesConsumed) && bytesConsumed == 2)
+                if (Utf8Parser.TryParse(span.Slice(2, 2), out int minute, out bytesConsumed) && bytesConsumed == 2)
                 {
                     totalConsumed += 2;
                     if (Utf8Parser.TryParse(span.Slice(4, 2), out second, out bytesConsumed) && bytesConsumed == 2)

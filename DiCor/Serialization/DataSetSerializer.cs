@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -68,24 +67,15 @@ namespace DiCor.Serialization
             return (fileMetaInfoSet, dataSet);
         }
 
-        private long GetCurrentIndex()
-        {
-            SequencePosition position = (SequencePosition)typeof(ProtocolReader).GetField("_consumed", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(_reader)!;
-            var o = (ReadOnlySequenceSegment<byte>?)position.GetObject();
-            var i = position.GetInteger();
-
-            return ((o?.RunningIndex) ?? 0) + i;
-        }
-
         private long CalculateEnd(uint length)
-            => length == UndefinedLength ? long.MaxValue : GetCurrentIndex() + length;
+            => length == UndefinedLength ? long.MaxValue : _reader.GetConsumedIndex() + length;
 
         private async ValueTask<State> DeserializeAsync(State state, Func<(Tag Tag, VR VR, uint Length), ValueTask> onElementAsync)
         {
             State parent = _state;
             _state = state;
 
-            while (GetCurrentIndex() < _state.EndIndex)
+            while (_reader.GetConsumedIndex() < _state.EndIndex)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
 

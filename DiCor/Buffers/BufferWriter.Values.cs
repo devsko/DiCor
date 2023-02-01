@@ -1,10 +1,4 @@
-﻿using System;
-using System.Buffers.Text;
-using System.Buffers;
-using DiCor.Values;
-using System.Diagnostics;
-
-namespace DiCor.Buffers
+﻿namespace DiCor.Buffers
 {
     internal partial struct BufferWriter
     {

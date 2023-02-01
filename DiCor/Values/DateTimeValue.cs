@@ -27,7 +27,7 @@ namespace DiCor.Values
             }
             else
             {
-                Values.Value.ThrowIncompatible<T>(nameof(DateTimeValue<TDateTime>));
+                Value.ThrowIncompatible<T>(nameof(DateTimeValue<TDateTime>));
                 return default;
             }
         }
@@ -41,7 +41,7 @@ namespace DiCor.Values
             }
             else
             {
-                Values.Value.ThrowIncompatible<T>(nameof(DateTimeValue<TDateTime>));
+                Value.ThrowIncompatible<T>(nameof(DateTimeValue<TDateTime>));
                 return default;
             }
         }
