@@ -197,5 +197,34 @@ namespace System.Buffers
 
             return true;
         }
+
+        public static bool TryRead(ref this SequenceReader<byte> reader, out Age age)
+        {
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            if (span.Length < 4)
+            {
+                Span<byte> copy = stackalloc byte[4];
+                span = copy;
+                reader.TryCopyTo(copy);
+            }
+
+            AgeUnit unit;
+            if (!Utf8Parser.TryParse(span.Slice(0, 3), out short number, out int bytesConsumed) || bytesConsumed != 3 ||
+                (unit = ParseAgeUnit(span[3])) == default)
+            {
+                throw new Exception("invalid format");
+            }
+
+            reader.Advance(4);
+
+            age = new Age(number, unit);
+            return true;
+
+            static AgeUnit ParseAgeUnit(byte b)
+            {
+                AgeUnit unit = (AgeUnit)b;
+                return Enum.IsDefined(unit) ? unit : default;
+            }
+        }
     }
 }

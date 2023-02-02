@@ -11,7 +11,7 @@ namespace DiCor
 
         private static FrozenDictionary<ushort, Details> InitializeDictionary()
         {
-            return EnumerateDetails().ToFrozenDictionary();
+            return EnumerateDetails().ToFrozenDictionary(optimizeForReading: true);
 
             // PS3.5 - 6.2 Value Representation
             // https://dicom.nema.org/medical/dicom/current/output/html/part05.html#sect_6.2
@@ -67,15 +67,15 @@ namespace DiCor
 
             public bool Length32bit { get; }
 
-            public bool BinaryValue { get; }
+            public bool IsBinary { get; }
 
             public bool AlwaysSingleValue { get; }
 
-            internal Details(string name, bool length32bit, bool binaryValue, bool alwaysSingleValue)
+            internal Details(string name, bool length32bit, bool isBinary, bool alwaysSingleValue)
             {
                 Name = name;
                 Length32bit = length32bit;
-                BinaryValue = binaryValue;
+                IsBinary = isBinary;
                 AlwaysSingleValue = alwaysSingleValue;
             }
         }

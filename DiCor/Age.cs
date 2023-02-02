@@ -31,6 +31,6 @@ namespace DiCor
         }
 
         public override string ToString()
-            => string.Create(CultureInfo.InvariantCulture, stackalloc char[4], $"{_value:D3}{_unit,1}");
+            => string.Create(CultureInfo.InvariantCulture, stackalloc char[4], $"Age {_value:D3}{(char)_unit}");
     }
 }

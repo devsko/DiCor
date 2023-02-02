@@ -35,7 +35,7 @@ namespace DiCor.Performance
             var field = typeof(Uid).GetField("s_dictionary", BindingFlags.Static | BindingFlags.NonPublic)!;
 
             _uidDictionary = (FrozenDictionary<Uid, Uid.Details>)field.GetValue(null)!;
-            _dictionary = _uidDictionary.Keys.ToDictionary(uid => uid.Value.Bytes.ToArray(), comparer).ToFrozenDictionary(comparer);
+            _dictionary = _uidDictionary.Keys.ToDictionary(uid => uid.Value.Bytes.ToArray(), comparer).ToFrozenDictionary(comparer, true);
 
             _uidValues = _uidDictionary.Keys.Select(uid => uid.Value.Bytes.ToArray()).ToArray();
             _uids = _uidValues.Select(value => new Uid(new AsciiString(value), false)).ToArray();

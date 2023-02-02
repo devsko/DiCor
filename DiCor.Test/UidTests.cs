@@ -124,7 +124,7 @@ namespace DiCor.Test
             var stringDictionary = uids
                 .Zip(uids.Select(uid => dictionary[uid]))
                 .Select(tuple => new KeyValuePair<string, Uid.Details>(tuple.First.ToString()!, tuple.Second))
-                .ToFrozenDictionary(StringComparer.Ordinal);
+                .ToFrozenDictionary(StringComparer.Ordinal, true);
             var stringUids = uids.Select(uid => uid.ToString()!).ToArray();
 
             foreach (var uid in uids)

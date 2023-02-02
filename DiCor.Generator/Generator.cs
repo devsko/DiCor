@@ -134,7 +134,7 @@ namespace DiCor.Generator
 
                             private static FrozenDictionary<Uid, Details> InitializeDictionary()
                             {
-                                return EnumerateDetails().ToFrozenDictionary();
+                                return EnumerateDetails().ToFrozenDictionary(optimizeForReading: true);
 
                                 static IEnumerable<KeyValuePair<Uid, Details>> EnumerateDetails()
                                 {
@@ -229,7 +229,7 @@ namespace DiCor.Generator
 
                             private static FrozenDictionary<int, Details> InitializeDictionary()
                             {
-                                return EnumerateDetails().ToFrozenDictionary();
+                                return EnumerateDetails().ToFrozenDictionary(optimizeForReading: true);
 
                                 static IEnumerable<KeyValuePair<int, Details>> EnumerateDetails()
                                 {

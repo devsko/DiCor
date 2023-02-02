@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -68,7 +69,7 @@ namespace DiCor.Test
 
             await ULConnection.RunScuAsync(
                 client,
-                new DnsEndPoint("dicomserver.co.uk", 11112),
+                new DnsEndPoint("dicomserver.co.uk", 11112, AddressFamily.InterNetwork),
                 AssociationType.Find,
                 new MyULScu(OnAssociationAccepted, null, null, null, null),
                 serviceProvider.GetService<ILoggerFactory>()).ConfigureAwait(false);

@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <!-- BEDROCK -->
-    <!--<RestoreAdditionalProjectSources>https://f.feedz.io/davidfowl/bedrockframework/nuget/index.json ;$(RestoreAdditionalProjectSources)</RestoreAdditionalProjectSources>-->
-
     <!--<DiCorGenerator_LogFilePath>C:\repos\Logs\Dicor.Generator\log.txt</DiCorGenerator_LogFilePath>-->
   </PropertyGroup>
 
@@ -12,7 +9,6 @@
     <ProjectReference Include="..\..\BedrockFramework\src\Bedrock.Framework\Bedrock.Framework.csproj" />
     <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <PackageReference Include="System.Collections.Immutable" Version="$(NetVersion)" />
-    <PackageReference Include="Bedrock.Framework" Version="0.1.63-alpha.gf69fa1b135" />
     <PackageReference Include="DotNext.Threading" Version="4.9.0" />
   </ItemGroup>
 
