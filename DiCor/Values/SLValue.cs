@@ -37,6 +37,11 @@ namespace DiCor.Values
             {
                 return Unsafe.As<int, T>(ref Unsafe.AsRef(in _integer));
             }
+            else if (typeof(T) == typeof(object))
+            {
+                object boxed = _integer;
+                return Unsafe.As<object, T>(ref boxed);
+            }
             else
             {
                 Value.ThrowIncompatible<T>(nameof(SLValue));

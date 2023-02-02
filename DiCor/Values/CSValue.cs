@@ -25,9 +25,6 @@ namespace DiCor.Values
 
             ReadOnlySpan<byte> trimmed = ascii.Bytes.Trim((byte)' ');
 
-            if (!TIsInQuery.Value && trimmed.Length == 0)
-                throw new InvalidOperationException($"'{ascii}' contains only white space characters.");
-
             if (trimmed.Length != ascii.Length)
             {
                 ascii = new AsciiString(trimmed, false);
@@ -78,6 +75,11 @@ namespace DiCor.Values
             if (typeof(T) == typeof(AsciiString) && !IsEmptyValue)
             {
                 return Unsafe.As<AsciiString, T>(ref Unsafe.AsRef(in _ascii));
+            }
+            else if (typeof(T) == typeof(object))
+            {
+                object boxed = IsEmptyValue ? Value.QueryEmpty : _ascii;
+                return Unsafe.As<object, T>(ref boxed);
             }
             else
             {

@@ -1,10 +1,51 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
 using DiCor;
 
 namespace System.Buffers
 {
     internal static partial class SequenceReaderExtensions
     {
+        public static bool TryReadLittleEndian(ref this SequenceReader<byte> reader, out float value)
+        {
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            if (span.Length < 4)
+            {
+                Span<byte> copy = stackalloc byte[4];
+                span = copy;
+                if (!reader.TryCopyTo(copy))
+                {
+                    value = default;
+                    return false;
+                }
+            }
+
+            BinaryPrimitives.TryReadSingleLittleEndian(span, out value);
+            reader.Advance(4);
+
+            return true;
+        }
+
+        public static bool TryReadLittleEndian(ref this SequenceReader<byte> reader, out double value)
+        {
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            if (span.Length < 8)
+            {
+                Span<byte> copy = stackalloc byte[8];
+                span = copy;
+                if (!reader.TryCopyTo(copy))
+                {
+                    value = default;
+                    return false;
+                }
+            }
+
+            BinaryPrimitives.TryReadDoubleLittleEndian(span, out value);
+            reader.Advance(8);
+
+            return true;
+        }
+
         public static bool TryReadLittleEndian(ref this SequenceReader<byte> reader, out ushort value)
         {
             if (!reader.TryReadLittleEndian(out short val))

@@ -37,6 +37,11 @@ namespace DiCor.Values
             {
                 return Unsafe.As<Tag, T>(ref Unsafe.AsRef(in _tag));
             }
+            else if (typeof(T) == typeof(object))
+            {
+                object boxed = _tag;
+                return Unsafe.As<object, T>(ref boxed);
+            }
             else
             {
                 Value.ThrowIncompatible<T>(nameof(ATValue));

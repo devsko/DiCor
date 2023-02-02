@@ -1,17 +1,22 @@
 ﻿using System.Diagnostics;
 using System.Linq;
+using DiCor.Values;
 
 namespace DiCor
 {
     internal class DataSetDebugView
     {
-        private readonly DataSet _set;
+        private readonly ValueStore _store;
 
         public DataSetDebugView(DataSet set)
-            => _set = set;
+            : this(set.Store)
+        { }
+
+        public DataSetDebugView(ValueStore store)
+            => _store = store;
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         public (Tag Tag, object Value)[] Items
-            => _set.Store.EnumerateValuesForDebugger().ToArray();
+            => _store.EnumerateValuesForDebugger().ToArray();
     }
 }

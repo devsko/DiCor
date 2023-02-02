@@ -174,12 +174,38 @@ namespace System.Buffers
             throw new Exception("invalid time format");
         }
 
+        public static bool TryRead(ref this SequenceReader<byte> reader, out int @int)
+        {
+            scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
+            int maxLength = Math.Min(12, (int)reader.Remaining);
+            if (span.Length < maxLength)
+            {
+                Span<byte> copy = stackalloc byte[maxLength];
+                span = copy;
+                if (!reader.TryCopyTo(copy))
+                {
+                    @int = default;
+                    return false;
+                }
+            }
+            if (!Utf8Parser.TryParse(span, out @int, out int bytesConsumed, 'G'))
+            {
+                // TODO
+                throw new Exception("invalid int format");
+            }
+
+            reader.Advance(bytesConsumed);
+
+            return true;
+        }
+
         public static bool TryRead(ref this SequenceReader<byte> reader, out decimal @decimal)
         {
             scoped ReadOnlySpan<byte> span = reader.UnreadSpan;
-            if (span.Length < 8)
+            int maxLength = Math.Min(16, (int)reader.Remaining);
+            if (span.Length < maxLength)
             {
-                Span<byte> copy = stackalloc byte[8];
+                Span<byte> copy = stackalloc byte[maxLength];
                 span = copy;
                 if (!reader.TryCopyTo(copy))
                 {
@@ -190,7 +216,7 @@ namespace System.Buffers
             if (!Utf8Parser.TryParse(span, out @decimal, out int bytesConsumed, 'G'))
             {
                 // TODO
-                throw new Exception("invalid date format");
+                throw new Exception("invalid decimal format");
             }
 
             reader.Advance(bytesConsumed);

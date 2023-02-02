@@ -10,6 +10,7 @@ namespace DiCor.Values
         ValueRef AddDefault(out ushort index);
         ValueRef GetRef(ushort index);
         object GetValueForDebugger(ushort index);
+        Array CreateValueArray(int length);
     }
 
     internal sealed class ValueTable<TValue> : IValueTable
@@ -73,5 +74,8 @@ namespace DiCor.Values
 
         object IValueTable.GetValueForDebugger(ushort index)
             => this[index];
+
+        Array IValueTable.CreateValueArray(int length)
+            => new TValue[length];
     }
 }

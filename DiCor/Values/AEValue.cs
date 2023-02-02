@@ -75,6 +75,11 @@ namespace DiCor.Values
             {
                 return Unsafe.As<AsciiString, T>(ref Unsafe.AsRef(in _ascii));
             }
+            else if (typeof(T) == typeof(object))
+            {
+                object boxed = IsEmptyValue ? Value.QueryEmpty : _ascii;
+                return Unsafe.As<object, T>(ref boxed);
+            }
             else
             {
                 Value.ThrowIncompatible<T>(nameof(AEValue<TIsInQuery>));

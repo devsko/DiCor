@@ -17,15 +17,7 @@ namespace DiCor.IO
         private readonly FileStream _stream;
         private readonly PipeReader _reader;
 
-        public static async Task ReadAsync(FileStream stream)
-        {
-            ArgumentNullException.ThrowIfNull(stream);
-
-            FileReader reader = new(stream);
-            await reader.ReadMetaInformation().ConfigureAwait(false);
-        }
-
-        private FileReader(FileStream stream)
+        public FileReader(FileStream stream)
         {
             Debug.Assert(stream is not null);
 
@@ -33,11 +25,13 @@ namespace DiCor.IO
             _reader = PipeReader.Create(_stream);
         }
 
-        private async Task ReadMetaInformation()
+        public async Task<DataSet> ReadAsync()
         {
             CheckPreamble();
 
-            await new DataSetSerializer().DeserializeFileAsync(_stream).ConfigureAwait(false);
+            (DataSet fileMetaInfoSet, DataSet dataSet) = await new DataSetSerializer().DeserializeFileAsync(_stream).ConfigureAwait(false);
+
+            return dataSet;
 
             void ThrowInvalid()
             {

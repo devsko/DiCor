@@ -40,15 +40,20 @@ namespace DiCor.Values
 
         public T Get<T>()
         {
-            if (ItemCount == 0)
+            if (typeof(T) == typeof(DataSet) && _items is null or DataSet)
             {
-                DataSet[] empty = Array.Empty<DataSet>();
-                return Unsafe.As<DataSet[], T>(ref empty);
+                DataSet? set = _items as DataSet;
+                return Unsafe.As<DataSet?, T>(ref set);
             }
-
-            if (typeof(T) == typeof(DataSet) && ItemCount == 1 ||
-                typeof(T) == typeof(DataSet[]))
+            else if (typeof(T) == typeof(DataSet[]) && _items is null or DataSet[])
+            {
+                DataSet[] sets = _items as DataSet[] ?? Array.Empty<DataSet>();
+                return Unsafe.As<DataSet[], T>(ref sets);
+            }
+            else if (typeof(T) == typeof(object))
+            {
                 return Unsafe.As<object, T>(ref Unsafe.AsRef(in _items));
+            }
 
             Value.ThrowIncompatible<T>(nameof(SQValue));
             return default;

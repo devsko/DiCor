@@ -1,32 +1,31 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace DiCor.Values
 {
-    internal readonly struct ASValue : IValue<ASValue>
+    internal readonly struct SSValue : IValue<SSValue>
     {
-        private readonly Age _age;
+        private readonly short _integer;
 
-        public ASValue(Age age)
-            => _age = age;
+        public SSValue(short integer)
+            => _integer = integer;
 
         public static int PageSize
             => 5;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCompatible<T>()
-            => typeof(T) == typeof(Age);
+            => typeof(T) == typeof(short);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ASValue Create<T>(T content)
+        public static SSValue Create<T>(T content)
         {
-            if (typeof(T) == typeof(Age))
+            if (typeof(T) == typeof(short))
             {
-                return new ASValue(Unsafe.As<T, Age>(ref content));
+                return new SSValue(Unsafe.As<T, short>(ref content));
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(ASValue));
+                Value.ThrowIncompatible<T>(nameof(SSValue));
                 return default;
             }
         }
@@ -34,23 +33,23 @@ namespace DiCor.Values
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>()
         {
-            if (typeof(T) == typeof(Age))
+            if (typeof(T) == typeof(short))
             {
-                return Unsafe.As<Age, T>(ref Unsafe.AsRef(in _age));
+                return Unsafe.As<short, T>(ref Unsafe.AsRef(in _integer));
             }
             else if (typeof(T) == typeof(object))
             {
-                object boxed = _age;
+                object boxed = _integer;
                 return Unsafe.As<object, T>(ref boxed);
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(ASValue));
+                Value.ThrowIncompatible<T>(nameof(SSValue));
                 return default;
             }
         }
 
         public override string ToString()
-            => _age.ToString();
+            => _integer.ToString();
     }
 }

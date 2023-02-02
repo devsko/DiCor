@@ -49,7 +49,7 @@ namespace DiCor
                 yield return new((ushort)UL._code, new("Unsigned Long", false, true, false));
                 yield return new((ushort)UN._code, new("Unknown", true, true, true));
                 yield return new((ushort)UR._code, new("Universal Resource Identifier or Universal Resource Locator (URI/URL)", true, false, true));
-                yield return new((ushort)US._code, new("Unsigned Short", false, false, false));
+                yield return new((ushort)US._code, new("Unsigned Short", false, true, false));
                 yield return new((ushort)UT._code, new("Unlimited Text", true, false, true));
                 yield return new((ushort)UV._code, new("Unsigned 64-bit Very Long", true, true, false));
             }

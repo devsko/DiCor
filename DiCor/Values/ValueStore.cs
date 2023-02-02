@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace DiCor.Values
 {
+    [DebuggerTypeProxy(typeof(DataSetDebugView))]
     internal sealed class ValueStore
     {
         private readonly record struct TagIndex(Tag Tag, ushort Index);
@@ -99,6 +101,57 @@ namespace DiCor.Values
             return valueIndex.VR.GetContent<T>(_tables[valueIndex.VR].GetRef(valueIndex.Index), _isQuery);
         }
 
+        /// <summary>
+        /// This kills performance. Don't use it.
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public IEnumerable<(Tag Tag, VR VR, object? BoxedValue)> EnumerateBoxed()
+        {
+            // TODO _indices must be sorted by Tag/Index
+
+            Dictionary<TagIndex, ValueIndex>.Enumerator enumerator = _indices.GetEnumerator();
+            if (!enumerator.MoveNext())
+                yield break;
+
+            KeyValuePair<TagIndex, ValueIndex> previousPair = enumerator.Current;
+            Tag previousTag = default;
+            bool hasMore;
+            do
+            {
+                hasMore = enumerator.MoveNext();
+                KeyValuePair<TagIndex, ValueIndex> currentPair = hasMore ? enumerator.Current : default;
+                Tag currentTag = currentPair.Key.Tag;
+                if (currentTag != previousTag)
+                {
+                    yield return (previousTag, previousPair.Value.VR, CreateContentObject(previousPair.Key, previousPair.Value));
+                    previousTag = currentTag;
+                }
+                previousPair = currentPair;
+            }
+            while (hasMore);
+
+            object? CreateContentObject(TagIndex tagIndex, ValueIndex valueIndex)
+            {
+                VR vr = valueIndex.VR;
+                IValueTable table = _tables[vr];
+                if (tagIndex.Index == SingleItemIndex)
+                {
+                    return vr.GetContent<object?>(table.GetRef(valueIndex.Index), _isQuery);
+                }
+                else
+                {
+                    object?[] values = new object?[tagIndex.Index + 1]; // Array.CreateInstance(item.Value.VR.ContentType, item.Key.Index + 1);
+                    for (ushort i = 0; i < values.Length; i++)
+                    {
+                        values[i] = vr.GetContent<object?>(table.GetRef(_indices[new TagIndex(tagIndex.Tag, i)].Index), _isQuery);
+                    }
+                    return values;
+                }
+            }
+        }
+
         public override string ToString()
             => $"({_indices.Count} elements)";
 
@@ -108,19 +161,23 @@ namespace DiCor.Values
 
             foreach (IGrouping<Tag, TagIndex> tag in tags)
             {
-                if (!tag.Skip(1).Any())
+                TagIndex[] tagIndices = tag.ToArray();
+                int count = tagIndices.Length;
+                if (count == 1)
                 {
-                    ValueIndex valueIndex = _indices[tag.Single()];
+                    ValueIndex valueIndex = _indices[tagIndices[0]];
                     yield return (tag.Key, _tables[valueIndex.VR].GetValueForDebugger(valueIndex.Index));
                 }
                 else
                 {
-                    IValueTable table = _tables[_indices[tag.First()].VR];
-                    yield return (tag.Key, tag.Select(tagIndex =>
+                    IValueTable table = _tables[_indices[tagIndices[0]].VR];
+                    Array values = table.CreateValueArray(count);
+                    for (int i = 0; i < count; i++)
                     {
-                        ValueIndex valueIndex = _indices[tagIndex];
-                        return table.GetValueForDebugger(valueIndex.Index);
-                    }).ToArray());
+                        ValueIndex valueIndex = _indices[tagIndices[i]];
+                        values.SetValue(table.GetValueForDebugger(valueIndex.Index), i);
+                    }
+                    yield return (tag.Key, values);
                 }
             }
         }

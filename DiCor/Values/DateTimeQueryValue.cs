@@ -70,6 +70,11 @@ namespace DiCor.Values
             {
                 return Unsafe.As<QueryDateTime<TDateTime>, T>(ref Unsafe.AsRef(in _queryDT));
             }
+            else if (typeof(T) == typeof(object))
+            {
+                object boxed = IsEmptyValue ? Value.QueryEmpty : _queryDT.IsSingle ? _queryDT.Single : _queryDT.Range;
+                return Unsafe.As<object, T>(ref boxed);
+            }
             else
             {
                 Value.ThrowIncompatible<T>(nameof(DateTimeQueryValue<TDateTime>));

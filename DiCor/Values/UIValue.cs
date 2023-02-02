@@ -37,6 +37,11 @@ namespace DiCor.Values
             {
                 return Unsafe.As<Uid, T>(ref Unsafe.AsRef(in _uid));
             }
+            else if (typeof(T) == typeof(object))
+            {
+                object boxed = _uid;
+                return Unsafe.As<object, T>(ref boxed);
+            }
             else
             {
                 Value.ThrowIncompatible<T>(nameof(UIValue));

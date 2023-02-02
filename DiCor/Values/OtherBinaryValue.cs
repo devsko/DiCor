@@ -39,6 +39,11 @@ namespace DiCor.Values
             {
                 return Unsafe.As<TBinary[], T>(ref Unsafe.AsRef(in _array));
             }
+            else if (typeof(T) == typeof(object))
+            {
+                object boxed = _array;
+                return Unsafe.As<object, T>(ref boxed);
+            }
             else
             {
                 Value.ThrowIncompatible<T>(nameof(OtherBinaryValue<TBinary>));

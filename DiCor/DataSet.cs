@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using DiCor.Values;
@@ -92,6 +93,9 @@ namespace DiCor
 
         public bool TryGet<T>(Tag tag, ushort itemIndex, out T? content)
             => _store.TryGet(tag, itemIndex, out content);
+
+        public IEnumerable<(Tag Tag, VR VR, object? BoxedValue)> EnumerateBoxed()
+            => _store.EnumerateBoxed();
 
         public override string ToString()
             => $"Dataset {_store}";

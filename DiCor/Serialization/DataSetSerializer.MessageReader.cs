@@ -9,6 +9,9 @@ namespace DiCor.Serialization
 {
     internal partial class DataSetSerializer
     {
+        // TODO Endianess
+        private static ReadOnlySpan<byte> SequenceDelimitationItem => new byte[] { 0xFE, 0xFF, 0xDD, 0xE0, 0x00, 0x00, 0x00, 0x00 };
+
         // PS3.5 - 7.1 Data Elements
         // https://dicom.nema.org/medical/dicom/current/output/html/part05.html#sect_7.1
 
@@ -40,18 +43,43 @@ namespace DiCor.Serialization
                     bool isSingleValue = vrDetails.AlwaysSingleValue ||
                         (tag.IsKnown(out Tag.Details? tagDetails) && tagDetails.VM.IsSingleValue);
 
-                    if (TryReadLength(ref reader, vrDetails.Length32bit, out uint length) &&
-                        length == UndefinedLength || reader.Remaining >= length) // TODO always? Very large values?
+                    if (TryReadLength(ref reader, vrDetails.Length32bit, out uint length))
                     {
-                        if (length != UndefinedLength)
+                        // for VRs of OB, OD, OF, OL, OV, OW, SQ and UN, if the Value Field has an Explicit
+                        // Length, then the Value Length Field shall contain a value equal to the length
+                        // (in bytes) of the Value Field, otherwise, the Value Field has an Undefined Length
+                        // and a Sequence Delimitation Item marks the end of the Value Field.
+                        // https://dicom.nema.org/medical/dicom/current/output/html/part05.html#sect_7.1.2
+                        // https://dicom.nema.org/medical/dicom/current/output/html/part05.html#sect_7.1.3
+
+                        bool isUndefinedLength = length == UndefinedLength;
+                        SequenceReader<byte> valueReader = default;
+                        if (isUndefinedLength)
                         {
-                            reader = new(reader.UnreadSequence.Slice(0, length));
+                            // VR SQ is handled outside TryParseMessage
+                            if (vr != VR.SQ)
+                            {
+                                if (!reader.TryReadTo(out ReadOnlySequence<byte> valueSequence, SequenceDelimitationItem))
+                                {
+                                    goto NeedMoreData;
+                                }
+                                valueReader = new SequenceReader<byte>(valueSequence);
+                            }
+                        }
+                        else
+                        {
+                            if (reader.Remaining < length)
+                            {
+                                goto NeedMoreData;
+                            }
+                            valueReader = new SequenceReader<byte>(reader.UnreadSequence.Slice(0, length));
+                            reader.Advance(length);
                         }
 
                         if (isSingleValue)
                         {
                             ValueRef valueRef = _state.Store.Add(tag, ValueStore.SingleItemIndex, vr);
-                            ReadValue(ref reader, valueRef, vr);
+                            ReadValue(ref valueReader, valueRef, vr);
                         }
                         else
                         {
@@ -64,28 +92,33 @@ namespace DiCor.Serialization
                                 do
                                 {
                                     ValueRef valueRef = _state.Store.Add(tag, i++, vr);
-                                    ReadValue(ref reader, valueRef, vr);
+                                    ReadValue(ref valueReader, valueRef, vr);
                                 }
-                                while (!reader.End);
+                                while (!valueReader.End);
                             }
                             else
                             {
-                                SequenceReader<byte> singleReader = reader;
+                                SequenceReader<byte> singleReader = valueReader;
                                 bool separatorFound;
                                 do
                                 {
-                                    separatorFound = reader.TryReadTo(out ReadOnlySequence<byte> singleSequence, Value.Backslash);
-                                    singleReader = separatorFound ? new SequenceReader<byte>(singleSequence) : reader;
+                                    separatorFound = valueReader.TryReadTo(out ReadOnlySequence<byte> singleSequence, Value.Backslash);
+                                    singleReader = separatorFound ? new SequenceReader<byte>(singleSequence) : valueReader;
 
                                     ValueRef valueRef = _state.Store.Add(tag, i++, vr);
                                     ReadValue(ref singleReader, valueRef, vr);
                                 }
                                 while (separatorFound);
-                                reader = singleReader;
+                                valueReader = singleReader;
                             }
                         }
 
-                        Debug.Assert(vr == VR.SQ || reader.End, $"Item {tag} VR {vr}: {reader.Remaining} remaining bytes");
+                        if (!vrDetails.IsBinary && !valueReader.End && valueReader.UnreadSpan.TrimEnd((byte)' ').Length == 0)
+                        {
+                            valueReader.AdvanceToEnd();
+                        }
+
+                        Debug.Assert(vr == VR.SQ || valueReader.End, $"Item {tag} VR {vr}: {valueReader.Remaining} remaining bytes");
 
                         message = new(tag, vr, length);
                         goto Success;
@@ -93,7 +126,7 @@ namespace DiCor.Serialization
                 }
             }
 
-            // Need more data
+        NeedMoreData:
             message = default;
             consumed = input.Start;
             examined = input.End;
@@ -146,6 +179,9 @@ namespace DiCor.Serialization
                 (VRCode.DA, false) => destination.Set(ReadDateTimeValue<DateOnly>(ref reader)),
                 (VRCode.DA, true)  => destination.Set(ReadDateTimeQueryValue<DateOnly>(ref reader)),
                 (VRCode.DS, _)     => destination.Set(ReadDSValue(ref reader)),
+                (VRCode.FD, _)     => destination.Set(ReadFDValue(ref reader)),
+                (VRCode.FL, _)     => destination.Set(ReadFLValue(ref reader)),
+                (VRCode.IS, _)     => destination.Set(ReadISValue(ref reader)),
                 (VRCode.LO, false) => destination.Set(ReadStringValue<LongString, NotInQuery>(ref reader)),
                 (VRCode.LO, true)  => destination.Set(ReadStringValue<LongString, InQuery>(ref reader)),
                 (VRCode.LT, false) => destination.Set(ReadTextValue<LongText, NotInQuery>(ref reader)),
@@ -157,12 +193,14 @@ namespace DiCor.Serialization
                 (VRCode.SH, true)  => destination.Set(ReadStringValue<ShortString, InQuery>(ref reader)),
                 (VRCode.SL, _)     => destination.Set(ReadSLValue(ref reader)),
                 (VRCode.SQ, _)     => destination.Set(default(SQValue)), // Gets replaced afterwards
+                (VRCode.SS, _)     => destination.Set(ReadSSValue(ref reader)),
                 (VRCode.ST, false) => destination.Set(ReadTextValue<ShortText, NotInQuery>(ref reader)),
                 (VRCode.ST, true)  => destination.Set(ReadTextValue<ShortText, InQuery>(ref reader)),
                 (VRCode.TM, false) => destination.Set(ReadDateTimeValue<PartialTimeOnly>(ref reader)),
                 (VRCode.TM, true)  => destination.Set(ReadDateTimeQueryValue<PartialTimeOnly>(ref reader)),
                 (VRCode.UI, _)     => destination.Set(ReadUIValue(ref reader)),
                 (VRCode.UL, _)     => destination.Set(ReadULValue(ref reader)),
+                (VRCode.US, _)     => destination.Set(ReadUSValue(ref reader)),
                 _ => throw new NotImplementedException(),
             };
 #pragma warning restore format
@@ -309,16 +347,46 @@ namespace DiCor.Serialization
             return new ULValue(integer);
         }
 
+        private static USValue ReadUSValue(ref SequenceReader<byte> reader)
+        {
+            reader.TryReadLittleEndian(out ushort integer);
+            return new USValue(integer);
+        }
+
         private static SLValue ReadSLValue(ref SequenceReader<byte> reader)
         {
             reader.TryReadLittleEndian(out int integer);
             return new SLValue(integer);
         }
 
+        private static SSValue ReadSSValue(ref SequenceReader<byte> reader)
+        {
+            reader.TryReadLittleEndian(out short integer);
+            return new SSValue(integer);
+        }
+
         private static DSValue ReadDSValue(ref SequenceReader<byte> reader)
         {
             reader.TryRead(out decimal @decimal);
             return new DSValue(@decimal);
+        }
+
+        private static ISValue ReadISValue(ref SequenceReader<byte> reader)
+        {
+            reader.TryRead(out int @int);
+            return new ISValue(@int);
+        }
+
+        private static FLValue ReadFLValue(ref SequenceReader<byte> reader)
+        {
+            reader.TryReadLittleEndian(out float @float);
+            return new FLValue(@float);
+        }
+
+        private static FDValue ReadFDValue(ref SequenceReader<byte> reader)
+        {
+            reader.TryReadLittleEndian(out double @double);
+            return new FDValue(@double);
         }
     }
 }

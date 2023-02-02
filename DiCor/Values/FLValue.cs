@@ -1,32 +1,31 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace DiCor.Values
 {
-    internal readonly struct ASValue : IValue<ASValue>
+    internal readonly struct FLValue : IValue<FLValue>
     {
-        private readonly Age _age;
+        private readonly float _float;
 
-        public ASValue(Age age)
-            => _age = age;
+        public FLValue(float @float)
+            => _float = @float;
 
         public static int PageSize
             => 5;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCompatible<T>()
-            => typeof(T) == typeof(Age);
+            => typeof(T) == typeof(float);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ASValue Create<T>(T content)
+        public static FLValue Create<T>(T content)
         {
-            if (typeof(T) == typeof(Age))
+            if (typeof(T) == typeof(float))
             {
-                return new ASValue(Unsafe.As<T, Age>(ref content));
+                return new FLValue(Unsafe.As<T, float>(ref content));
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(ASValue));
+                Value.ThrowIncompatible<T>(nameof(FLValue));
                 return default;
             }
         }
@@ -34,23 +33,23 @@ namespace DiCor.Values
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>()
         {
-            if (typeof(T) == typeof(Age))
+            if (typeof(T) == typeof(float))
             {
-                return Unsafe.As<Age, T>(ref Unsafe.AsRef(in _age));
+                return Unsafe.As<float, T>(ref Unsafe.AsRef(in _float));
             }
             else if (typeof(T) == typeof(object))
             {
-                object boxed = _age;
+                object boxed = _float;
                 return Unsafe.As<object, T>(ref boxed);
             }
             else
             {
-                Value.ThrowIncompatible<T>(nameof(ASValue));
+                Value.ThrowIncompatible<T>(nameof(FLValue));
                 return default;
             }
         }
 
         public override string ToString()
-            => _age.ToString();
+            => _float.ToString();
     }
 }
