@@ -12,17 +12,17 @@ using DiCor.IO;
 namespace DiCor.Performance
 {
     [MemoryDiagnoser]
-    public class FileTest
+    public class FileCompareFoDicom
     {
+        public string FileName => @"C:\Users\stefa\OneDrive\Dokumente\DICOM\CT1_J2KI";
+
         [Benchmark]
         public async Task TestAsync()
         {
             using FileStream stream = new FileStream(
-                @"C:\Users\stefa\OneDrive\Dokumente\DICOM\CT1_J2KI",
-                FileMode.Open, FileAccess.Read, FileShare.Read,
-                4096, FileOptions.SequentialScan | FileOptions.Asynchronous);
+                FileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            DataSet dataSet = await new FileReader(stream).ReadAsync().ConfigureAwait(false);
+            DataSet dataSet = await new FileReader().ReadAsync(stream).ConfigureAwait(false);
             EnumerateDataSet(dataSet);
 
             void EnumerateDataSet(DataSet set)
@@ -47,8 +47,8 @@ namespace DiCor.Performance
         [Benchmark(Baseline = true)]
         public void FoDicom()
         {
-            var file = DicomFile.Open(@"C:\Users\stefa\OneDrive\Dokumente\DICOM\CT1_J2KI");
-
+            var file = DicomFile.Open(FileName);
+            EnumerateDataSet(file.Dataset);
 
             void EnumerateDataSet(DicomDataset set)
             {

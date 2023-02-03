@@ -26,7 +26,9 @@ namespace DiCor.Performance
                         targetFrameworkMoniker: "net8.0",
                         displayName: "pr")));
 
-            BenchmarkRunner.Run<FileTest>();
+            
+            //BenchmarkRunner.Run<FileStreamTest>();
+            BenchmarkRunner.Run<FileCompareFoDicom>();
             //BenchmarkRunner.Run<DataSetTest>();
             //BenchmarkRunner.Run<UidFrozenDictionary>();
             //BenchmarkRunner.Run<TagTests>();

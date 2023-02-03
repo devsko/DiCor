@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using DiCor.Values;
 
-namespace DiCor.Serialization
+namespace DiCor.IO
 {
     internal partial class DataSetSerializer
     {

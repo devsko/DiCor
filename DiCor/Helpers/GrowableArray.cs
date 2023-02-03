@@ -2,7 +2,7 @@
 
 namespace DiCor
 {
-    internal struct GrowingArray<T>
+    internal struct GrowableArray<T>
         where T : class
     {
         private object? _value;

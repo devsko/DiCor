@@ -94,6 +94,10 @@ namespace DiCor
         public bool TryGet<T>(Tag tag, ushort itemIndex, out T? content)
             => _store.TryGet(tag, itemIndex, out content);
 
+        /// <summary>
+        /// This kills performance. Don't use it.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<(Tag Tag, VR VR, object? BoxedValue)> EnumerateBoxed()
             => _store.EnumerateBoxed();
 

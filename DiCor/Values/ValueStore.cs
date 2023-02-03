@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace DiCor.Values
@@ -101,12 +100,6 @@ namespace DiCor.Values
             return valueIndex.VR.GetContent<T>(_tables[valueIndex.VR].GetRef(valueIndex.Index), _isQuery);
         }
 
-        /// <summary>
-        /// This kills performance. Don't use it.
-        /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
         public IEnumerable<(Tag Tag, VR VR, object? BoxedValue)> EnumerateBoxed()
         {
             // TODO _indices must be sorted by Tag/Index
@@ -116,7 +109,7 @@ namespace DiCor.Values
                 yield break;
 
             KeyValuePair<TagIndex, ValueIndex> previousPair = enumerator.Current;
-            Tag previousTag = default;
+            Tag previousTag = previousPair.Key.Tag;
             bool hasMore;
             do
             {
@@ -142,7 +135,7 @@ namespace DiCor.Values
                 }
                 else
                 {
-                    object?[] values = new object?[tagIndex.Index + 1]; // Array.CreateInstance(item.Value.VR.ContentType, item.Key.Index + 1);
+                    object?[] values = new object?[tagIndex.Index + 1];
                     for (ushort i = 0; i < values.Length; i++)
                     {
                         values[i] = vr.GetContent<object?>(table.GetRef(_indices[new TagIndex(tagIndex.Tag, i)].Index), _isQuery);
@@ -155,29 +148,45 @@ namespace DiCor.Values
         public override string ToString()
             => $"({_indices.Count} elements)";
 
-        internal IEnumerable<(Tag, object)> EnumerateValuesForDebugger()
+        internal IEnumerable<(Tag, VR, object)> EnumerateValuesForDebugger()
         {
-            IEnumerable<IGrouping<Tag, TagIndex>> tags = _indices.Keys.GroupBy(tagIndex => tagIndex.Tag);
+            Dictionary<TagIndex, ValueIndex>.Enumerator enumerator = _indices.GetEnumerator();
+            if (!enumerator.MoveNext())
+                yield break;
 
-            foreach (IGrouping<Tag, TagIndex> tag in tags)
+            KeyValuePair<TagIndex, ValueIndex> previousPair = enumerator.Current;
+            Tag previousTag = default;
+            bool hasMore;
+            do
             {
-                TagIndex[] tagIndices = tag.ToArray();
-                int count = tagIndices.Length;
-                if (count == 1)
+                hasMore = enumerator.MoveNext();
+                KeyValuePair<TagIndex, ValueIndex> currentPair = hasMore ? enumerator.Current : default;
+                Tag currentTag = currentPair.Key.Tag;
+                if (currentTag != previousTag)
                 {
-                    ValueIndex valueIndex = _indices[tagIndices[0]];
-                    yield return (tag.Key, _tables[valueIndex.VR].GetValueForDebugger(valueIndex.Index));
+                    yield return (previousTag, previousPair.Value.VR, CreateContentObject(previousPair.Key, previousPair.Value));
+                    previousTag = currentTag;
+                }
+                previousPair = currentPair;
+            }
+            while (hasMore);
+
+            object CreateContentObject(TagIndex tagIndex, ValueIndex valueIndex)
+            {
+                VR vr = valueIndex.VR;
+                IValueTable table = _tables[vr];
+                if (tagIndex.Index is SingleItemIndex or 0)
+                {
+                    return table.GetValueForDebugger(valueIndex.Index);
                 }
                 else
                 {
-                    IValueTable table = _tables[_indices[tagIndices[0]].VR];
-                    Array values = table.CreateValueArray(count);
-                    for (int i = 0; i < count; i++)
+                    object[] values = new object[tagIndex.Index + 1];
+                    for (ushort i = 0; i < values.Length; i++)
                     {
-                        ValueIndex valueIndex = _indices[tagIndices[i]];
-                        values.SetValue(table.GetValueForDebugger(valueIndex.Index), i);
+                        values[i] = table.GetValueForDebugger(_indices[new TagIndex(tagIndex.Tag, i)].Index);
                     }
-                    yield return (tag.Key, values);
+                    return values;
                 }
             }
         }
