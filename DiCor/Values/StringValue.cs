@@ -9,7 +9,7 @@ namespace DiCor.Values
         where TStringMaxLength : struct, IStringMaxLength
         where TIsInQuery : struct, IIsInQuery
     {
-        private static readonly IndexOfAnyValues<char> s_invalidChars = IndexOfAnyValues.Create("\0\x1\x2\x3\x4\x5\x6\x7\x8\x9\xA\xB\xC\xD\xE\xF\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\\");
+        private static readonly IndexOfAnyValues<char> s_invalidChars = IndexOfAnyValues.Create("\0\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\\");
 
         // A query empty value ("") is encode as null.
         private readonly string? _string;

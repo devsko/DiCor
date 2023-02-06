@@ -5,35 +5,41 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bedrock.Framework.Protocols;
 using DiCor.Values;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DiCor.IO
 {
-    internal record struct ElementMessage(Tag Tag, VR VR, uint Length);
+    public record struct ElementMessage(Tag Tag, VR VR, uint Length);
 
-    internal partial class DataSetSerializer : IMessageReader<ElementMessage>, IAsyncDisposable
+    public partial class DataSetSerializer : IMessageReader<ElementMessage>, IAsyncDisposable
     {
         private struct State
         {
-            public State(DataSet set, long endIndex = long.MaxValue)
+            public ValueStore Store;
+            public GrowableArray<CharacterEncoding.Details> CharacterEncodings;
+            public long EndIndex;
+
+            public State(DataSet set, GrowableArray<CharacterEncoding.Details> characterEncodings, long endIndex = long.MaxValue)
             {
                 Store = set.Store;
+                CharacterEncodings = characterEncodings;
                 EndIndex = endIndex;
             }
-
-            public ValueStore Store;
-            public long EndIndex;
         }
 
         private const uint UndefinedLength = unchecked((uint)-1);
 
         private readonly ProtocolReader _reader;
         private readonly CancellationToken _cancellationToken;
+        private readonly ILogger _logger;
         private State _state;
 
-        public DataSetSerializer(Stream stream, CancellationToken cancellationToken)
+        public DataSetSerializer(Stream stream, CancellationToken cancellationToken, ILogger? logger = null)
         {
             Debug.Assert(stream is not null);
 
+            _logger = logger ?? NullLogger.Instance;
             _reader = new ProtocolReader(stream);
             _cancellationToken = cancellationToken;
         }
@@ -41,13 +47,22 @@ namespace DiCor.IO
         internal ValueStore Store
             => _state.Store;
 
+        internal GrowableArray<CharacterEncoding.Details> CharacterEncodings
+        {
+            get => _state.CharacterEncodings;
+            set => _state.CharacterEncodings = value;
+        }
+
+        internal long CalculateEndIndex(uint length)
+            => length == UndefinedLength ? long.MaxValue : _reader.GetConsumedIndex() + length;
+
         internal void SetEndIndex(uint length)
-            => _state.EndIndex = length == UndefinedLength ? long.MaxValue : _reader.GetConsumedIndex() + length;
+            => _state.EndIndex = CalculateEndIndex(length);
 
         public async ValueTask<DataSet> DeserializeAsync(Func<ElementMessage, ValueTask>? messageHandler)
         {
             DataSet set = new(false);
-            await DeserializeAsync(new State(set), messageHandler).ConfigureAwait(false);
+            await DeserializeAsync(new State(set, CharacterEncodings), messageHandler).ConfigureAwait(false);
 
             return set;
         }
@@ -77,7 +92,20 @@ namespace DiCor.IO
                 if (message.VR == VR.SQ)
                 {
                     SQValue sequence = await DeserializeSequenceAsync(message.Length).ConfigureAwait(false);
-                    _state.Store.SetSequence(message.Tag, sequence);
+                    Store.SetSequence(message.Tag, sequence);
+                }
+                else if (message.Tag == Tag.SpecificCharacterSet)
+                {
+                    GrowableArray<CharacterEncoding.Details> characterEncodings = default;
+                    ushort i = 0;
+                    while (Store.TryGet(Tag.SpecificCharacterSet, i++, out AsciiString characterSet))
+                    {
+                        if (new CharacterEncoding(characterSet).IsKnown(out CharacterEncoding.Details? characterEncoding))
+                        {
+                            characterEncodings.Add(characterEncoding);
+                        }
+                    }
+                    CharacterEncodings = characterEncodings;
                 }
             }
 
@@ -86,13 +114,12 @@ namespace DiCor.IO
 
         private async ValueTask<SQValue> DeserializeSequenceAsync(uint sequenceLength)
         {
+            // The sequenceSet contains the Item and ItemDelimitationItem tags after deserialization and gets discarded.
             DataSet sequenceSet = new(false);
             GrowableArray<DataSet> sequenceItems = default;
-            await DeserializeAsync(new State(sequenceSet, sequenceLength), HandleSequenceElement).ConfigureAwait(false);
+            await DeserializeAsync(new State(sequenceSet, CharacterEncodings, CalculateEndIndex(sequenceLength)), HandleSequenceElement).ConfigureAwait(false);
 
-            return sequenceItems.Length == 1
-                ? new SQValue(sequenceItems.SingleValue)
-                : new SQValue(sequenceItems.MultipleValues);
+            return new SQValue(sequenceItems);
 
             async ValueTask HandleSequenceElement(ElementMessage message)
             {
@@ -110,7 +137,7 @@ namespace DiCor.IO
         private async ValueTask<DataSet> DeserializeSequenceItemAsync(uint itemLength)
         {
             DataSet itemSet = new(false);
-            await DeserializeAsync(new State(itemSet, itemLength), HandleSequenceItemElement).ConfigureAwait(false);
+            await DeserializeAsync(new State(itemSet, CharacterEncodings, CalculateEndIndex(itemLength)), HandleSequenceItemElement).ConfigureAwait(false);
 
             return itemSet;
 

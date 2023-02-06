@@ -14,10 +14,12 @@ namespace DiCor.IO
     {
         private static ReadOnlySpan<byte> Prefix => "DICM"u8;
 
+        private readonly DataSetSerializerFactory _dataSetSerializerFactory;
         private readonly ILoggerFactory _loggerFactory;
 
-        public FileReader(ILoggerFactory? loggerFactory = default)
+        public FileReader(DataSetSerializerFactory dataSetSerializerFactory, ILoggerFactory? loggerFactory = default)
         {
+            _dataSetSerializerFactory = dataSetSerializerFactory;
             _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
         }
 
@@ -28,7 +30,7 @@ namespace DiCor.IO
             CheckPreamble();
 
             DataSetSerializer serializer;
-            await using ((serializer = new DataSetSerializer(stream, cancellationToken)).ConfigureAwait(false))
+            await using ((serializer = _dataSetSerializerFactory.Create(stream, cancellationToken)).ConfigureAwait(false))
             {
                 DataSet fileMetaInfoSet = await serializer.DeserializeAsync(HandleFileMetaInfo).ConfigureAwait(false);
                 DataSet dataSet = await serializer.DeserializeAsync(null).ConfigureAwait(false);

@@ -28,7 +28,7 @@ namespace DiCor.Performance
                 FileMode.Open, FileAccess.Read, FileShare.Read,
                 BufferSize, (Sequential ? FileOptions.SequentialScan : 0) | (Async ? FileOptions.Asynchronous : 0));
 
-            DataSet dataSet = await new FileReader().ReadAsync(stream).ConfigureAwait(false);
+            DataSet dataSet = await new FileReader(new DataSetSerializerFactory()).ReadAsync(stream).ConfigureAwait(false);
 
         }
     }

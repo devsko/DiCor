@@ -22,7 +22,7 @@ namespace DiCor.Performance
             using FileStream stream = new FileStream(
                 FileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            DataSet dataSet = await new FileReader().ReadAsync(stream).ConfigureAwait(false);
+            DataSet dataSet = await new FileReader(new DataSetSerializerFactory()).ReadAsync(stream).ConfigureAwait(false);
             EnumerateDataSet(dataSet);
 
             void EnumerateDataSet(DataSet set)

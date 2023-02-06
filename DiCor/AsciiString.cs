@@ -26,6 +26,9 @@ namespace DiCor
                 => throw new ArgumentException($"'{Encoding.ASCII.GetString(bytes)}' contains invalid characters.", nameof(bytes));
         }
 
+        public static implicit operator AsciiString(ReadOnlySpan<byte> bytes)
+            => new AsciiString(bytes);
+
         public AsciiString(string s)
         {
             if (!string.IsNullOrEmpty(s))

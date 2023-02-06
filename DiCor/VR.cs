@@ -35,13 +35,13 @@ namespace DiCor
         ST = 0x5453,
         SV = 0x0000,
         TM = 0x4D54,
-        UC = 0x0000,
+        UC = 0x0000, // TODO encoded
         UI = 0x4955,
         UL = 0x4C55,
         UN = 0x0000,
         UR = 0x0000,
         US = 0x5355,
-        UT = 0x0000,
+        UT = 0x0000, // TODO encoded
         UV = 0x0000,
     }
 

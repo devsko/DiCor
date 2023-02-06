@@ -80,18 +80,10 @@ namespace DiCor.Test.Serialization
         [Fact]
         public async Task SmokeTest()
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-            var enc = Encoding.GetEncoding("shift_jis");
-
-            var str = enc.GetString(new byte[] { 0x5C });
-            str = enc.GetString(new byte[] { 0x7E });
-            str = enc.GetString(new byte[] { 0xA6 });
-
             using FileStream stream = new FileStream(
                 FileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            DataSet set = await new FileReader().ReadAsync(stream, CancellationToken.None).ConfigureAwait(false);
+            DataSet set = await new FileReader(new DataSetSerializerFactory() ).ReadAsync(stream, CancellationToken.None).ConfigureAwait(false);
 
             StringBuilder line = new();
             DumpDataset(set, 1);

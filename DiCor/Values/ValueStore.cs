@@ -148,14 +148,14 @@ namespace DiCor.Values
         public override string ToString()
             => $"({_indices.Count} elements)";
 
-        internal IEnumerable<(Tag, VR, object)> EnumerateValuesForDebugger()
+        internal IEnumerable<(Tag Tag, VR VR, object Value)> EnumerateValuesForDebugger()
         {
             Dictionary<TagIndex, ValueIndex>.Enumerator enumerator = _indices.GetEnumerator();
             if (!enumerator.MoveNext())
                 yield break;
 
             KeyValuePair<TagIndex, ValueIndex> previousPair = enumerator.Current;
-            Tag previousTag = default;
+            Tag previousTag = previousPair.Key.Tag;
             bool hasMore;
             do
             {

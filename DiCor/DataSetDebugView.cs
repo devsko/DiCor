@@ -16,7 +16,7 @@ namespace DiCor
             => _store = store;
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        public (Tag, VR, object)[] Items
+        public (Tag Tag, VR VR, object Value)[] Items
             => _store.EnumerateValuesForDebugger().ToArray();
     }
 }
