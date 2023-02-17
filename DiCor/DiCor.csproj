@@ -9,7 +9,7 @@
     <ProjectReference Include="..\..\BedrockFramework\src\Bedrock.Framework\Bedrock.Framework.csproj" />
     <ProjectReference Include="..\Dicor.Generator\DiCor.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <PackageReference Include="System.Collections.Immutable" Version="$(NetVersion)" />
-    <PackageReference Include="DotNext.Threading" Version="4.9.0" />
+    <PackageReference Include="DotNext.Threading" Version="4.10.0" />
   </ItemGroup>
 
   <Import Project="..\Dicor.Generator\Dicor.Generator.props" />

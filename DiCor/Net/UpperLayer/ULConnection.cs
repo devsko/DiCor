@@ -173,7 +173,7 @@ namespace DiCor.Net.UpperLayer
             _logger.LogTrace("Disposing");
 
             context.Transport.Input.CancelPendingRead();
-            _lifetime!.Cancel();
+            await _lifetime!.CancelAsync().ConfigureAwait(false);
             await context.DisposeAsync().ConfigureAwait(false);
 
             _logger.LogTrace("Disposed");
